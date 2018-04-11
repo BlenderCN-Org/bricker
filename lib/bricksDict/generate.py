@@ -639,5 +639,11 @@ def makeBricksDict(source, source_details, brickScale, origSource, cursorStatus=
                 )
     cm.numBricksGenerated = i
 
+    # update exposure of bricks
+    for k in bricksDict:
+        topExposed, botExposed = getLocExposure(cm, bricksDict, k)
+        bricksDict[k]["top_exposed"] = topExposed
+        bricksDict[k]["bot_exposed"] = botExposed
+
     # return list of created Brick objects
     return bricksDict
