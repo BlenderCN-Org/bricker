@@ -19,7 +19,7 @@ bl_info = {
     "name"        : "Bricker",
     "author"      : "Christopher Gearhart <chris@bblanimation.com>",
     "version"     : (1, 6, 0),
-    "blender"     : (2, 79, 0),
+    "blender"     : (2, 80, 0),
     "description" : "Turn any mesh into a 3D brick sculpture or simulation with the click of a button",
     "location"    : "View3D > Tools > Bricker",
     "warning"     : "",  # used for warning icon and text in addons panel
@@ -27,7 +27,7 @@ bl_info = {
     "tracker_url" : "https://github.com/bblanimation/bricker/issues",
     "category"    : "Object"}
 
-developer_mode = 2  # NOTE: Set to 0 for release, 1 for exposed dictionary, 2 for testBrickGenerators button
+developer_mode = 2  # NOTE: Set to 0 for release, 1 for exposed dictionary, 2 for 'BRICKER_OT_test_brick_generators' button
 # NOTE: Disable "LEGO Logo" for releases
 # NOTE: Disable "Slopes" brick type for releases
 # NOTE: Copy contents from 'bricksculpt_tools_backup' to 'bricksculpt_tools'
@@ -39,14 +39,17 @@ developer_mode = 2  # NOTE: Set to 0 for release, 1 for exposed dictionary, 2 fo
 import bpy
 from bpy.props import *
 from bpy.types import WindowManager, Object, Scene, Material
+from bpy.utils import register_class, unregister_class
 
 # Addon imports
 from .ui import *
 from .buttons import *
 from .buttons.customize import *
-from .operators import *
-from .lib import *
+from .lib import keymaps, preferences, classesToRegister
 from .lib.Brick.legal_brick_sizes import getLegalBrickSizes
+from .ui.timers import *
+from .ui.cmlist_attrs import CMLIST_UL_properties
+from .ui.other_property_groups import *
 from . import addon_updater_ops
 
 # store keymaps here to access after registration
@@ -54,10 +57,10 @@ addon_keymaps = []
 
 
 def register():
-    bpy.utils.register_module(__name__)
+    for cls in classesToRegister.classes:
+        bpy.utils.register_class(cls)
 
     bpy.props.bricker_version = str(bl_info["version"])[1:-1].replace(", ", ".")
-    bpy.props.bricker_preferences = bpy.context.user_preferences.addons[__package__].preferences
 
     bpy.props.bricker_initialized = False
     bpy.props.bricker_undoUpdating = False
@@ -69,6 +72,8 @@ def register():
     Object.isBrickifiedObject = BoolProperty(name='Is Brickified Object', default=False)
     Object.isBrick = BoolProperty(name='Is Brick', default=False)
     Object.cmlist_id = IntProperty(name='Custom Model ID', description="ID of cmlist entry to which this object refers", default=-1)
+    if b280():
+        Object.stored_parents = CollectionProperty(type=BRICKER_UL_collections_tuple)
     Material.num_averaged = IntProperty(name='Colors Averaged', description="Number of colors averaged together", default=0)
 
     WindowManager.Bricker_runningBlockingOperation = BoolProperty(default=False)
@@ -86,9 +91,9 @@ def register():
     # Add attribute for Bricker Instructions addon
     Scene.isBrickerInstalled = BoolProperty(default=True)
 
-    if not hasattr(bpy.types.Scene, "include_transparent"):
+    if not hasattr(Scene, "include_transparent"):
         Scene.include_transparent = False
-    if not hasattr(bpy.types.Scene, "include_uncommon"):
+    if not hasattr(Scene, "include_uncommon"):
         Scene.include_uncommon = False
 
     # Scene.Bricker_snapping = BoolProperty(
@@ -109,9 +114,11 @@ def register():
         addon_keymaps.append(km)
 
     # register app handlers
-    bpy.app.handlers.frame_change_pre.append(handle_animation)
-    bpy.app.handlers.scene_update_pre.append(handle_selections)
-    bpy.app.handlers.scene_update_pre.append(prevent_user_from_viewing_storage_scene)
+    bpy.app.handlers.frame_change_post.append(handle_animation)
+    if b280():
+        bpy.app.timers.register(handle_selections)
+    else:
+        bpy.app.handlers.scene_update_pre.append(handle_selections)
     bpy.app.handlers.load_pre.append(clear_bfm_cache)
     bpy.app.handlers.load_post.append(handle_loading_to_light_cache)
     bpy.app.handlers.save_pre.append(handle_storing_to_deep_cache)
@@ -138,9 +145,12 @@ def unregister():
     bpy.app.handlers.save_pre.remove(handle_storing_to_deep_cache)
     bpy.app.handlers.load_post.remove(handle_loading_to_light_cache)
     bpy.app.handlers.load_pre.remove(clear_bfm_cache)
-    bpy.app.handlers.scene_update_pre.remove(prevent_user_from_viewing_storage_scene)
-    bpy.app.handlers.scene_update_pre.remove(handle_selections)
-    bpy.app.handlers.frame_change_pre.remove(handle_animation)
+    if b280():
+        if bpy.app.timers.is_registered(handle_selections):
+            bpy.app.timers.unregister(handle_selections)
+    else:
+        bpy.app.handlers.scene_update_pre.remove(handle_selections)
+    bpy.app.handlers.frame_change_post.remove(handle_animation)
 
     # handle the keymaps
     wm = bpy.context.window_manager
@@ -160,6 +170,8 @@ def unregister():
     del Scene.Bricker_last_layers
     del WindowManager.Bricker_runningBlockingOperation
     del Material.num_averaged
+    if hasattr(Object, "stored_parents"):
+        del Object.stored_parents
     del Object.cmlist_id
     del Object.isBrick
     del Object.isBrickifiedObject
@@ -168,10 +180,10 @@ def unregister():
     del bpy.props.Bricker_developer_mode
     del bpy.props.bricker_undoUpdating
     del bpy.props.bricker_initialized
-    del bpy.props.bricker_preferences
     del bpy.props.bricker_version
 
-    bpy.utils.unregister_module(__name__)
+    for cls in reversed(classesToRegister.classes):
+        bpy.utils.unregister_class(cls)
 
 
 if __name__ == "__main__":

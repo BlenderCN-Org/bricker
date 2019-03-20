@@ -56,6 +56,7 @@ class OBJECT_OT_delete_override(Operator):
 
     def invoke(self, context, event):
         # Run confirmation popup for delete action
+        # TODO: support 'self.confirm'
         return context.window_manager.invoke_confirm(self, event)
 
     ################################################
@@ -74,6 +75,7 @@ class OBJECT_OT_delete_override(Operator):
     use_global = BoolProperty(default=False)
     update_model = BoolProperty(default=True)
     undo = BoolProperty(default=True)
+    confirm = BoolProperty(default=True)
 
     ################################################
     # class methods
@@ -200,6 +202,8 @@ class OBJECT_OT_delete_override(Operator):
                 print(obj.name + ' is protected')
                 protected.append(obj.name)
 
+        tag_redraw_viewport_in_all_screens()
+
         return protected
 
     @staticmethod
@@ -255,13 +259,13 @@ class OBJECT_OT_delete_override(Operator):
                 cm = cmCur
                 break
             elif obj.isBrick:
-                bGroup = bpy.data.groups.get("Bricker_%(n)s_bricks" % locals())
-                if bGroup and len(bGroup.objects) < 2:
+                curBricks = cmCur.collection
+                if curBricks is not None and len(curBricks.objects) < 2:
                     cm = cmCur
                     break
         if cm and update_model:
             BRICKER_OT_delete_model.runFullDelete(cm=cm)
-            bpy.context.active_object.select = False
+            deselect(bpy.context.active_object)
         else:
             obj_users_scene = len(obj.users_scene)
             if use_global or obj_users_scene == 1:

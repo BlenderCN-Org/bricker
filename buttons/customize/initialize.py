@@ -25,6 +25,7 @@ from bpy.types import Operator
 # Addon imports
 from .undo_stack import *
 from ...ui.app_handlers import brickerRunningBlockingOp
+from ...ui.timers import *
 from ...functions import *
 from ...ui.cmlist_actions import *
 
@@ -70,6 +71,9 @@ class BRICKER_OT_initialize(Operator):
         # add new scn.cmlist item
         if self.action == "ADD":
             CMLIST_OT_list_action.addItem()
+            # register timers
+            if b280() and not bpy.app.timers.is_registered(handle_selections):
+                bpy.app.timers.register(handle_selections)
         # run modal
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}

@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = [
-           "delete_object",
-           "move_to_layer",
-           "duplicate_object",
-           ]
+from .delete_object import *
+from .duplicate_object import *
+from .move_to_layer import *

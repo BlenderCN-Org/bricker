@@ -42,7 +42,7 @@ from .mat_utils import *
 
 
 @timed_call('Time Elapsed')
-def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, action, cm=None, split=False, brickScale=None, customData=None, group_name=None, clearExistingGroup=True, frameNum=None, cursorStatus=False, keys="ALL", printStatus=True, tempBrick=False, redraw=False):
+def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, action, cm=None, split=False, brickScale=None, customData=None, coll_name=None, clearExistingCollection=True, frameNum=None, cursorStatus=False, keys="ALL", printStatus=True, tempBrick=False, redraw=False):
     # set up variables
     scn, cm, n = getActiveContextInfo(cm=cm)
 
@@ -54,6 +54,17 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
     cm.zStep = getZStep(cm)
 
     mergeVertical = keys != "ALL" or cm.brickType == "BRICKS AND PLATES"
+
+    # get brick collection
+    coll_name = coll_name or 'Bricker_%(n)s_bricks' % locals()
+    bColl = bpy_collections().get(coll_name)
+    # create new collection if no existing collection found
+    if bColl is None:
+        bColl = bpy_collections().new(coll_name)
+    # else, replace existing collection
+    elif clearExistingCollection:
+        for obj0 in bColl.objects:
+            bColl.objects.unlink(obj0)
 
     # get bricksDict keys in sorted order
     if keys == "ALL":
@@ -67,17 +78,6 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
     if cm.activeKey[0] == -1 and len(keys) > 0:
         loc = getDictLoc(bricksDict, keys[0])
         cm.activeKey = loc
-
-    # get brick group
-    group_name = group_name or 'Bricker_%(n)s_bricks' % locals()
-    bGroup = bpy.data.groups.get(group_name)
-    # create new group if no existing group found
-    if bGroup is None:
-        bGroup = bpy.data.groups.new(group_name)
-    # else, replace existing group
-    elif clearExistingGroup:
-        for obj0 in bGroup.objects:
-            bGroup.objects.unlink(obj0)
 
     # initialize cmlist attributes (prevents 'update' function from running every time)
     cm_id = cm.id
@@ -272,15 +272,14 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
             vg = brick.vertex_groups.get("%(name)s_bvl" % locals())
             if vg:
                 brick.vertex_groups.remove(vg)
-            vg = brick.vertex_groups.new("%(name)s_bvl" % locals())
+            vg = brick.vertex_groups.new(name="%(name)s_bvl" % locals())
             vertList = [v.index for v in brick.data.vertices if not v.select]
             vg.add(vertList, 1, "ADD")
             # set up remaining brick info if brick object just created
-            if clearExistingGroup or brick.name not in bGroup.objects.keys():
-                bGroup.objects.link(brick)
+            if clearExistingCollection or brick.name not in bColl.objects.keys():
+                bColl.objects.link(brick)
             brick.parent = parent
             if not brick.isBrick:
-                scn.objects.link(brick)
                 brick.isBrick = True
         # end progress bars
         updateProgressBars(printStatus, cursorStatus, 1, 0, "Linking to Scene", end=True)
@@ -304,7 +303,7 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
             vg = allBricksObj.vertex_groups.get("%(name)s_bvl" % locals())
             if vg:
                 allBricksObj.vertex_groups.remove(vg)
-            vg = allBricksObj.vertex_groups.new("%(name)s_bvl" % locals())
+            vg = allBricksObj.vertex_groups.new(name="%(name)s_bvl" % locals())
             vertList = [v.index for v in allBricksObj.data.vertices if not v.select]
             vg.add(vertList, 1, "ADD")
         if materialType in ("CUSTOM", "NONE"):
@@ -315,12 +314,10 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
         # set parent
         allBricksObj.parent = parent
         # add bricks obj to scene and bricksCreated
-        bGroup.objects.link(allBricksObj)
-        if not allBricksObj.isBrickifiedObject:
-            scn.objects.link(allBricksObj)
-            # protect allBricksObj from being deleted
-            allBricksObj.isBrickifiedObject = True
+        bColl.objects.link(allBricksObj)
         bricksCreated.append(allBricksObj)
+        # protect allBricksObj from being deleted
+        allBricksObj.isBrickifiedObject = True
 
     # reset 'attempted_merge' for all items in bricksDict
     for key0 in bricksDict:

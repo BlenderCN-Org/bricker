@@ -90,13 +90,17 @@ class CMLIST_OT_list_action(bpy.types.Operator):
         scn = bpy.context.scene
         active_object = bpy.context.active_object
         # if active object isn't on visible layer, don't set it as default source for new model
-        if active_object:
-            objVisible = False
-            for i in range(20):
-                if active_object.layers[i] and scn.layers[i]:
-                    objVisible = True
-            if not objVisible:
+        if b280():
+            if active_object and not isObjVisibleInViewport(active_object):
                 active_object = None
+        else:
+            if active_object:
+                objVisible = False
+                for i in range(20):
+                    if active_object.layers[i] and scn.layers[i]:
+                        objVisible = True
+                if not objVisible:
+                    active_object = None
         # if active object already has a model or isn't on visible layer, don't set it as default source for new model
         # NOTE: active object may have been removed, so we need to re-check if none
         if active_object:
@@ -112,7 +116,7 @@ class CMLIST_OT_list_action(bpy.types.Operator):
             item.name = active_object.name
             item.version = bpy.props.bricker_version
             # get Bricker preferences
-            prefs = bpy.props.bricker_preferences
+            prefs = get_addon_preferences()
             if prefs.brickHeightDefault == "ABSOLUTE":
                 # set absolute brick height
                 item.brickHeight = prefs.absoluteBrickHeight
@@ -273,10 +277,16 @@ class CMLIST_OT_select_bricks(bpy.types.Operator):
 
     def execute(self, context):
         try:
-            select(getBricks(), deselect=self.deselect)
+            if self.deselect:
+                deselect(self.bricks)
+            else:
+                select(self.bricks)
         except:
             bricker_handle_exception()
         return{'FINISHED'}
+
+    def __init__(self):
+        self.bricks = getBricks()
 
 
 # -------------------------------------------------------------------
@@ -289,7 +299,7 @@ class CMLIST_UL_items(UIList):
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-        split = layout.split(0.9)
+        split = layout_split(layout, align=False, factor=0.9)
         split.prop(item, "name", text="", emboss=False, translate=False, icon='MOD_REMESH')
 
     def invoke(self, context, event):

@@ -28,7 +28,7 @@ from .functions import *
 from ..caches import bricker_bfm_cache, cacheExists
 from ...functions import *
 
-def getBricksDict(dType="MODEL", source=None, source_details=None, dimensions=None, brickScale=None, updateCursor=True, curFrame=None, cm=None, origSource=None, restrictContext=True):
+def getBricksDict(dType="MODEL", source=None, source_details=None, dimensions=None, brickScale=None, updateCursor=True, curFrame=None, cm=None, restrictContext=True):
     """ retrieve bricksDict from cache if possible, else create a new one """
     scn = bpy.context.scene
     cm = cm or scn.cmlist[scn.cmlist_index]
@@ -77,9 +77,13 @@ def deepToLightCache(bricker_bfm_cache):
         # make sure there is something to store to light cache
         if cm.BFMCache == "":
             continue
-        bricksDict = json.loads(cm.BFMCache)
-        bricker_bfm_cache[cm.id] = bricksDict
-        numPulledIDs += 1
+        try:
+            bricksDict = json.loads(cm.BFMCache)
+            bricker_bfm_cache[cm.id] = bricksDict
+            numPulledIDs += 1
+        except Exception as e:
+            print("ERROR in deepToLightCache:", e)
+            cm.BFMCache = ""
     if numPulledIDs > 0:
         print("[Bricker] pulled {numKeys} {pluralized_dicts} from deep cache to light cache".format(numKeys=numPulledIDs, pluralized_dicts="dict" if numPulledIDs == 1 else "dicts"))
 

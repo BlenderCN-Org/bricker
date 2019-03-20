@@ -215,7 +215,7 @@ def getRandomRotMatrix(randomRot, rand, brickSize):
     x_mat = Matrix.Rotation(x, 4, 'X')
     y_mat = Matrix.Rotation(y, 4, 'Y')
     z_mat = Matrix.Rotation(z, 4, 'Z')
-    combined_mat = x_mat * y_mat * z_mat
+    combined_mat = mathutils_mult(x_mat, y_mat, z_mat)
     return combined_mat
 
 

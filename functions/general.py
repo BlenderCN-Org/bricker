@@ -70,17 +70,32 @@ def getBricks(cm=None, typ=None):
     typ = typ or ("MODEL" if cm.modelCreated else "ANIM")
     bricks = list()
     if typ == "MODEL":
-        gn = "Bricker_%(n)s_bricks" % locals()
-        bGroup = bpy.data.groups.get(gn)
-        if bGroup:
-            bricks = list(bGroup.objects)
+        bColl = bpy_collections().get("Bricker_%(n)s_bricks" % locals())
+        if bColl:
+            bricks = list(bColl.objects)
     elif typ == "ANIM":
         for cf in range(cm.lastStartFrame, cm.lastStopFrame+1):
-            gn = "Bricker_%(n)s_bricks_f_%(cf)s" % locals()
-            bGroup = bpy.data.groups.get(gn)
-            if bGroup:
-                bricks += list(bGroup.objects)
+            bColl = bpy_collections().get("Bricker_%(n)s_bricks_f_%(cf)s" % locals())
+            if bColl:
+                bricks += list(bColl.objects)
     return bricks
+
+
+def getCollections(cm=None, typ=None):
+    """ get bricks collections in 'cm' model """
+    scn, cm, n = getActiveContextInfo(cm=cm)
+    typ = typ or ("MODEL" if cm.modelCreated else "ANIM")
+    if typ == "MODEL":
+        cn = "Bricker_%(n)s_bricks" % locals()
+        bColls = [bpy_collections()[cn]]
+    if typ == "ANIM":
+        bColls = list()
+        for cf in range(cm.lastStartFrame, cm.lastStopFrame+1):
+            cn = "Bricker_%(n)s_bricks_f_%(cf)s" % locals()
+            bColl = bpy_collections().get(cn)
+            if bColl:
+                bColls.append(bColl)
+    return bColls
 
 
 def getMatObject(cm_id, typ="RANDOM"):
@@ -442,18 +457,18 @@ def bricker_handle_exception():
 def createMatObjs(idx):
     """ create new matObjs for current cmlist id """
     matObjNames = ["Bricker_{}_RANDOM_mats".format(idx), "Bricker_{}_ABS_mats".format(idx)]
-    for n in matObjNames:
-        matObj = bpy.data.objects.get(n)
+    for mat_n in matObjNames:
+        matObj = bpy.data.objects.get(mat_n)
         if matObj is None:
-            matObj = bpy.data.objects.new(n, bpy.data.meshes.new(n + "_mesh"))
+            matObj = bpy.data.objects.new(mat_n, bpy.data.meshes.new(mat_n + "_mesh"))
             matObj.use_fake_user = True
 
 
 def removeMatObjs(idx):
     """ remove matObjs for current cmlist id """
     matObjNames = ["Bricker_{}_RANDOM_mats".format(idx), "Bricker_{}_ABS_mats".format(idx)]
-    for n in matObjNames:
-        matObj = bpy.data.objects.get(n)
+    for mat_n in matObjNames:
+        matObj = bpy.data.objects.get(mat_n)
         if matObj is not None:
             bpy.data.objects.remove(matObj, do_unlink=True)
 
@@ -484,5 +499,4 @@ def updateCanRun(type):
         if type == "ANIMATION":
             return commonNeedsUpdate or (cm.materialType != "CUSTOM" and cm.materialIsDirty)
         elif type == "MODEL":
-            group = bpy.data.groups.get("Bricker_%(n)s_bricks" % locals())
-            return commonNeedsUpdate or (group is not None and len(group.objects) == 0) or (cm.materialType != "CUSTOM" and (cm.materialType != "RANDOM" or cm.splitModel or cm.lastMaterialType != cm.materialType or cm.materialIsDirty) and cm.materialIsDirty) or cm.hasCustomObj1 or cm.hasCustomObj2 or cm.hasCustomObj3
+            return commonNeedsUpdate or (cm.collection is not None and len(cm.collection.objects) == 0) or (cm.materialType != "CUSTOM" and (cm.materialType != "RANDOM" or cm.splitModel or cm.lastMaterialType != cm.materialType or cm.materialIsDirty) and cm.materialIsDirty) or cm.hasCustomObj1 or cm.hasCustomObj2 or cm.hasCustomObj3

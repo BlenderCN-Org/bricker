@@ -15,4 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ["addAbsToMatObj", "bake", "customize", "bevel", "brickify", "brickifyInBackground", "cache", "delete_model", "exportLdraw", "exportModelData", "materials", "redrawCustomBricks", "revertSettings"]
+# System imports
+# NONE!
+
+# Blender imports
+import bpy
+from bpy.props import *
+
+
+class BRICKER_UL_collections_tuple(bpy.types.PropertyGroup):
+    collection: PointerProperty(type=bpy.types.Collection)

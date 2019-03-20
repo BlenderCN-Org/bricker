@@ -79,7 +79,6 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
         # push to undo stack
         self.undo_stack = UndoStack.get_instance()
         self.undo_stack.undo_push('delete', affected_ids=[cm.id])
-        self.undo_stack.iterateStates(cm)
 
     #############################################
     # class methods
@@ -91,20 +90,21 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
         scn, cm, n = getActiveContextInfo(cm=cm)
         source = bpy.data.objects.get(source_name or n)
 
-        # set all layers active temporarily
-        curLayers = list(scn.layers)
-        setLayers([True]*20)
-        # match source layers to brick layers
-        bGroup = bpy.data.groups.get("Bricker_%(n)s_bricks" % locals())
-        if bGroup is not None and len(bGroup.objects) > 0:
-            brick = bGroup.objects[0]
-            source.layers = brick.layers
+        if not b280():
+            # set all layers active temporarily
+            curLayers = list(scn.layers)
+            setLayers([True]*20)
+            # match source layers to brick layers
+            bGroup = bpy_collections().get("Bricker_%(n)s_bricks" % locals())
+            if bGroup is not None and len(bGroup.objects) > 0:
+                brick = bGroup.objects[0]
+                source.layers = brick.layers
 
-        # clean up 'Bricker_[source name]' group
+        # clean up 'Bricker_[source name]' collection
         if not skipSource:
             cls.cleanSource(cm, n, source, modelType)
 
-        # clean up 'Bricker_[source name]_dupes' group
+        # clean up source model duplicates
         if not skipDupes:
             cls.cleanDupes(cm, n, preservedFrames, modelType)
 
@@ -123,8 +123,9 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
         else:
             trans_and_anim_data = []
 
-        # set scene layers back to original layers
-        setLayers(curLayers)
+        if not b280():
+            # set scene layers back to original layers
+            setLayers(curLayers)
 
         return source, brickLoc, brickRot, brickScl, trans_and_anim_data
 
@@ -137,9 +138,7 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
         scn.frame_set(cm.modelCreatedOnFrame)
         # store pivot point for model
         if cm.lastSplitModel or cm.animated:
-            Bricker_parent_on = "Bricker_%(n)s_parent" % locals()
-            p = bpy.data.objects.get(Bricker_parent_on)
-            pivot_point = p.matrix_world.to_translation()
+            pivot_point = cm.parent_obj.matrix_world.to_translation()
         else:
             bricks = getBricks()
             pivot_obj = bricks[0] if len(bricks) > 0 else cm.source_obj
@@ -187,10 +186,10 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                     source.rotation_euler.rotate(rotateBy)
                 # set source origin back to original point (tracked by last vert)
                 scn.update()
-                setObjOrigin(source, source.matrix_world * source.data.vertices[0].co)
+                setObjOrigin(source, mathutils_mult(source.matrix_world, source.data.vertices[0].co))
                 source.data.vertices[0].co = last_co
                 source.rotation_mode = lastMode
-            # adjust source loc to account for local_orient_offset applied in BrickerBrickify.transformBricks
+            # adjust source loc to account for local_orient_offset applied in BRICKER_OT_brickify.transformBricks
             if cm.useLocalOrient and not cm.useAnimation:
                 try:
                     source.location -= Vector(source["local_orient_offset"])
@@ -215,17 +214,19 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
     @classmethod
     def cleanSource(cls, cm, n, source, modelType):
         scn = bpy.context.scene
-        Bricker_bricks_gn = "Bricker_%(n)s_bricks" % locals()
-        # link source to scene
-        if source not in list(scn.objects):
-            safeLink(source)
-        # set source layers to brick layers
-        frame = cm.lastStartFrame
-        bGroup = bpy.data.groups.get(Bricker_bricks_gn + ("_f_%(frame)s" % locals() if modelType == "ANIMATION" else ""))
-        if bGroup and len(bGroup.objects) > 0:
-            source.layers = list(bGroup.objects[0].layers)
+        if b280():
+            # link source to all collections containing Bricker model
+            brickColl = cm.collection
+            brickCollUsers = [cn for cn in bpy.data.collections if brickColl.name in cn.children] if brickColl is not None else [item.collection for item in source.stored_parents]
+        else:
+            # set source layers to brick layers
+            frame = cm.lastStartFrame
+            bGroup = bpy_collections().get("Bricker_%(n)s_bricks" % locals() + ("_f_%(frame)s" % locals() if modelType == "ANIMATION" else ""))
+            if bGroup and len(bGroup.objects) > 0:
+                source.layers = list(bGroup.objects[0].layers)
+            brickCollUsers = []
+        safeLink(source, collections=brickCollUsers)
         # reset source properties
-        source.name = n
         source.cmlist_id = -1
 
     @classmethod
@@ -254,10 +255,8 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
     @classmethod
     def cleanParents(cls, cm, n, preservedFrames, modelType):
         scn = bpy.context.scene
-        Bricker_bricks_gn = "Bricker_%(n)s_bricks" % locals()
-        Bricker_parent_on = "Bricker_%(n)s_parent" % locals()
         brickLoc, brickRot, brickScl = None, None, None
-        p = bpy.data.objects.get(Bricker_parent_on)
+        p = cm.parent_obj
         if p is None:
             return brickLoc, brickRot, brickScl
         if preservedFrames is None:
@@ -268,7 +267,7 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                 except KeyError:
                     loc_diff = None
                 storeTransformData(cm, p, offsetBy=loc_diff)
-            if not cm.lastSplitModel and Bricker_bricks_gn in bpy.data.groups.keys():
+            if not cm.lastSplitModel and cm.collection is not None:
                 bricks = getBricks()
                 if len(bricks) > 0:
                     b = bricks[0]
@@ -277,7 +276,7 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                     brickRot = b.matrix_world.to_euler().copy()
                     brickScl = b.matrix_world.to_scale().copy()  # currently unused
         # clean up Bricker_parent objects
-        parents = [p] + [bpy.data.objects.get(Bricker_parent_on + "_f_%(fn)s" % locals()) for fn in range(cm.lastStartFrame, cm.lastStopFrame + 1)]
+        parents = [p] + (list(p.children) if modelType == "ANIMATION" else [])
         for parent in parents:
             if parent is None:
                 continue
@@ -303,13 +302,11 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
     def cleanBricks(cls, scn, cm, n, preservedFrames, modelType, skipTransAndAnimData):
         trans_and_anim_data = []
         wm = bpy.context.window_manager
-        Bricker_bricks_gn = "Bricker_%(n)s_bricks" % locals()
         if modelType == "MODEL":
-            # clean up Bricker_bricks group
+            # clean up bricks collection
             sys.stdout.write("\rDeleting...")
             sys.stdout.flush()
-            brickGroup = bpy.data.groups.get(Bricker_bricks_gn)
-            if brickGroup is not None:
+            if cm.collection is not None:
                 bricks = getBricks()
                 if not cm.lastSplitModel:
                     if len(bricks) > 0:
@@ -319,10 +316,10 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                 last_percent = 0
                 # remove objects
                 delete(bricks)
-                bpy.data.groups.remove(brickGroup, do_unlink=True)
+                bpy_collections().remove(cm.collection, do_unlink=True)
             cm.modelCreated = False
         elif modelType == "ANIMATION":
-            # clean up Bricker_bricks group
+            # clean up bricks collection
             for i in range(cm.lastStartFrame, cm.lastStopFrame + 1):
                 if preservedFrames is not None and i >= preservedFrames[0] and i <= preservedFrames[1]:
                     continue
@@ -330,16 +327,17 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                 if percent < 1:
                     update_progress("Deleting", percent)
                     wm.progress_update(percent*100)
-                Bricker_bricks_curF_gn = Bricker_bricks_gn + "_f_" + str(i)
-                brickGroup = bpy.data.groups.get(Bricker_bricks_curF_gn)
-                if brickGroup:
-                    bricks = list(brickGroup.objects)
+                brickColl = bpy_collections().get("Bricker_{n}_bricks_f_{i}".format(n=n, i=str(i)))
+                if brickColl:
+                    bricks = list(brickColl.objects)
                     if not skipTransAndAnimData:
                         cls.updateAnimationData(bricks, trans_and_anim_data)
                     if len(bricks) > 0:
                         delete(bricks)
-                    bpy.data.groups.remove(brickGroup, do_unlink=True)
-            cm.animated = False
+                    bpy_collections().remove(brickColl, do_unlink=True)
+            if preservedFrames is None:
+                bpy_collections().remove(cm.collection, do_unlink=True)
+                cm.animated = False
         # finish status update
         update_progress("Deleting", 1)
         wm.progress_end()

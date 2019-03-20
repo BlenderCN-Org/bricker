@@ -66,11 +66,10 @@ class BRICKER_OT_bake_model(bpy.types.Operator):
                         bpy.data.objects.get("%(n)s_duplicate" % locals())]
         for obj in objsToDelete:
             bpy.data.objects.remove(obj, do_unlink=True)
-        # delete brick group
-        Bricker_bricks_gn = "Bricker_%(n)s_bricks" % locals()
-        brickGroup = bpy.data.groups.get(Bricker_bricks_gn)
-        if brickGroup is not None:
-            bpy.data.groups.remove(brickGroup, do_unlink=True)
+        # delete brick collection
+        brickColl = bpy_collections().get("Bricker_%(n)s_bricks" % locals())
+        if brickColl is not None:
+            bpy_collections().remove(brickColl, do_unlink=True)
         # remove current cmlist index
         cm.modelCreated = False
         CMLIST_OT_list_action.removeItem(self, scn.cmlist_index)
