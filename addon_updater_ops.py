@@ -1178,12 +1178,12 @@ def register(bl_info):
 	updater.user = "bblanimation"
 
 	# choose your own repository, must match git name
-	updater.repo = "assemblme"
+	updater.repo = "bricker"
 
 	#updater.addon = # define at top of module, MUST be done first
 
 	# Website for manual addon download, optional but recommended to set
-	updater.website = "https://github.com/bblanimation/assemblme/"
+	updater.website = "https://github.com/bblanimation/bricker/"
 
 	# Addon subfolder path
 	# "sample/path/to/addon"

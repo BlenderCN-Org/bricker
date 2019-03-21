@@ -231,10 +231,10 @@ class VIEW3D_PT_bricker_brick_models(Panel):
             split = layout_split(layout, factor=0.9)
             col = split.column(align=True)
             row = col.row(align=True)
-            row.operator("scene.report_error", text="Report Error", icon="URL")
+            row.operator("bricker.report_error", text="Report Error", icon="URL")
             col = split.column(align=True)
             row = col.row(align=True)
-            row.operator("scene.close_report_error", text="", icon="PANEL_CLOSE")
+            row.operator("bricker.close_report_error", text="", icon="PANEL_CLOSE")
 
 
 def is_baked(mod):
