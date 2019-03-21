@@ -102,7 +102,8 @@ class CMLIST_OT_list_action(bpy.types.Operator):
                 if not objVisible:
                     active_object = None
         # if active object already has a model or isn't on visible layer, don't set it as default source for new model
-        elif active_object:
+        # NOTE: active object may have been removed, so we need to re-check if none
+        if active_object:
             for cm in scn.cmlist:
                 if cm.source_obj is active_object:
                     active_object = None

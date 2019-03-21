@@ -27,7 +27,6 @@ from mathutils import Vector, Euler
 from ..functions import *
 from ..lib.bricksDict import lightToDeepCache, deepToLightCache, getDictKey
 from ..lib.caches import bricker_bfm_cache
-from ..buttons.customize.undo_stack import *
 from ..buttons.customize.tools import *
 from ..buttons.customize.undo_stack import *
 
@@ -295,7 +294,7 @@ def handle_upconversion(dummy):
     # remove storage scene
     sto_scn = bpy.data.scenes.get("Bricker_storage (DO NOT MODIFY)")
     if sto_scn is not None:
-        for obj in sto_scn.collection.objects:
+        for obj in sto_scn.objects:
             obj.use_fake_user = True
         bpy.data.scenes.remove(sto_scn)
     for scn in bpy.data.scenes:

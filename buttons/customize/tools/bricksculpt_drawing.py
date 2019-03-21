@@ -47,6 +47,8 @@ class bricksculpt_drawing:
     # from CG Cookie's retopoflow plugin
 
     def ui_start(self):
+        # # report something useful to user
+        # bpy.context.area.header_text_set("Click & drag to add bricks (+'ALT' to remove). Press 'RETURN' to commit changes")
         # update dpi
         ui_scale = get_preferences().view.ui_scale
         pixel_size = get_preferences().system.pixel_size

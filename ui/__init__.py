@@ -46,7 +46,7 @@ def settingsCanBeDrawn():
     scn = bpy.context.scene
     if scn.cmlist_index == -1:
         return False
-    if bversion() < '002.080':
+    if bversion() < '002.079':
         return False
     if not bpy.props.bricker_initialized:
         return False
@@ -65,6 +65,7 @@ class BRICKER_MT_specials(bpy.types.Menu):
         layout.operator("cmlist.paste_settings", icon="PASTEDOWN", text="Paste Settings")
         layout.operator("cmlist.select_bricks", icon="RESTRICT_SELECT_OFF", text="Select Bricks").deselect = False
         layout.operator("cmlist.select_bricks", icon="RESTRICT_SELECT_ON", text="Deselect Bricks").deselect = True
+
 
 class VIEW3D_PT_bricker_brick_models(Panel):
     bl_space_type  = "VIEW_3D"
@@ -89,11 +90,11 @@ class VIEW3D_PT_bricker_brick_models(Panel):
         # draw auto-updater update box
         addon_updater_ops.update_notice_box_ui(self, context)
 
-        # if blender version is before 2.80, ask user to upgrade Blender
-        if bversion() < '002.080':
+        # if blender version is before 2.79, ask user to upgrade Blender
+        if bversion() < '002.079':
             col = layout.column(align=True)
             col.label(text="ERROR: upgrade needed", icon='ERROR')
-            col.label(text="This version of Bricker requires Blender 2.80+")
+            col.label(text="Bricker requires Blender 2.79+")
             return
 
         # draw UI list and list actions
@@ -229,10 +230,10 @@ class VIEW3D_PT_bricker_brick_models(Panel):
             split = layout_split(layout, factor=0.9)
             col = split.column(align=True)
             row = col.row(align=True)
-            row.operator("scene.report_error", text="Report Error", icon="URL").addon_name = "Bricker"
+            row.operator("scene.report_error", text="Report Error", icon="URL")
             col = split.column(align=True)
             row = col.row(align=True)
-            row.operator("scene.close_report_error", text="", icon="PANEL_CLOSE").addon_name = "Bricker"
+            row.operator("scene.close_report_error", text="", icon="PANEL_CLOSE")
 
 
 def is_baked(mod):
@@ -246,7 +247,6 @@ class VIEW3D_PT_bricker_animation(Panel):
     bl_label       = "Animation"
     bl_idname      = "VIEW3D_PT_bricker_animation"
     bl_context     = "objectmode"
-    # bl_parent_id = "VIEW3D_PT_view3d_properties"
     bl_options     = {"DEFAULT_CLOSED"}
 
     @classmethod

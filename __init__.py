@@ -51,11 +51,6 @@ from .ui.timers import *
 from .ui.cmlist_attrs import CMLIST_UL_properties
 from .ui.other_property_groups import *
 from . import addon_updater_ops
-from .ui.timers import *
-from .ui.cmlist_attrs import CMLIST_UL_properties
-from .ui.other_property_groups import *
-from .lib import keymaps, preferences, classesToRegister
-from .lib.Brick.legal_brick_sizes import getLegalBrickSizes
 
 # store keymaps here to access after registration
 addon_keymaps = []
@@ -136,15 +131,8 @@ def register():
     # addon updater code and configurations
     addon_updater_ops.register(bl_info)
 
-    # register timers
-    bpy.app.timers.register(handle_selections)
-
 
 def unregister():
-    # unregister timers
-    if bpy.app.timers.is_registered(handle_selections):
-        bpy.app.timers.unregister(handle_selections)
-
     # addon updater unregister
     addon_updater_ops.unregister()
 

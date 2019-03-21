@@ -113,7 +113,7 @@ def getUVImages(obj):
         # TODO: Reinstate this 2.79 functionality
         images = []
     else:
-        uv_tex_data = getUVTextureData(obj)
+        uv_tex_data = getUVLayerData(obj)
         images = [uv_tex.image for uv_tex in uv_tex_data] if uv_tex_data else []
     images.append(cm.uvImage)
     images.append(getFirstImgTexNode(obj))
@@ -284,7 +284,7 @@ def createNewMaterial(model_name, rgba, rgba_vals, sss, sat_mat, specular, rough
                 rgba1 = first_node.inputs[0].default_value
                 newRGBA = getAverage(Vector(rgba), Vector(rgba1), mat.num_averaged)
                 first_node.inputs[0].default_value = newRGBA
-                first_node.inputs[3].default_value[:3] = (Vector(newRGBA[:3]) @ sat_mat).to_tuple()
+                first_node.inputs[3].default_value[:3] = mathutils_mult(Vector(newRGBA[:3]), sat_mat).to_tuple()
     mat.num_averaged += 1
     return mat_name
 

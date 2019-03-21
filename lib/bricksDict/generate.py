@@ -23,7 +23,7 @@ import numpy as np
 
 # Blender imports
 import bpy
-from bpy.types import Object, Depsgraph
+from bpy.types import Object
 from mathutils import Matrix, Vector
 
 # Addon imports
