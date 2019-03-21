@@ -57,10 +57,10 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
 
     # get brick collection
     coll_name = coll_name or 'Bricker_%(n)s_bricks' % locals()
-    bColl = bpy.data.collections.get(coll_name)
+    bColl = bpy_collections().get(coll_name)
     # create new collection if no existing collection found
     if bColl is None:
-        bColl = bpy.data.collections.new(coll_name)
+        bColl = bpy_collections().new(coll_name)
     # else, replace existing collection
     elif clearExistingCollection:
         for obj0 in bColl.objects:

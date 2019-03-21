@@ -19,6 +19,7 @@
 import bpy
 from bpy.app.handlers import persistent
 import os
+from .functions.common.blender import * #b280, get_preferences, layout_split
 
 # updater import, import safely
 # Prevents popups for users with invalid python installs e.g. missing libraries
@@ -180,7 +181,7 @@ class OBJECT_OT_addon_updater_check_now(bpy.types.Operator):
 			return {'CANCELLED'}
 
 		# apply the UI settings
-		settings = context.preferences.addons[__package__].preferences
+		settings = get_preferences().addons[__package__].preferences
 		updater.set_check_interval(enable=settings.auto_check_update,
 					months=settings.updater_intrval_months,
 					days=settings.updater_intrval_days,
@@ -275,8 +276,7 @@ class OBJECT_OT_addon_updater_update_target(bpy.types.Operator):
 		name="Target version to install",
 		description="Select the version to install",
 		items=target_version
-		)
-
+	)
 	# if true, run clean install - ie remove all files before adding new
 	# equivalent to deleting the addon and reinstalling, except the
 	# updater folder/backup folder remains
@@ -300,7 +300,7 @@ class OBJECT_OT_addon_updater_update_target(bpy.types.Operator):
 		if updater.invalidupdater == True:
 			layout.label(text="Updater error")
 			return
-		split = layout.split(factor=0.66)
+		split = layout_split(layout, factor=0.66)
 		subcol = split.column()
 		subcol.label(text="Select install version")
 		subcol = split.column()
@@ -339,7 +339,7 @@ class OBJECT_OT_addon_updater_install_manually(bpy.types.Operator):
 		name="Error Occurred",
 		default="",
 		options={'HIDDEN'}
-		)
+	)
 
 	def invoke(self, context, event):
 		return context.window_manager.invoke_popup(self)
@@ -401,7 +401,7 @@ class OBJECT_OT_addon_updater_updated_successful(bpy.types.Operator):
 		name="Error Occurred",
 		default="",
 		options={'HIDDEN'}
-		)
+	)
 
 	def invoke(self, context, event):
 		return context.window_manager.invoke_props_popup(self, event)
@@ -669,7 +669,7 @@ def check_for_update_background():
 		return
 
 	# apply the UI settings
-	addon_prefs = bpy.context.preferences.addons.get(__package__, None)
+	addon_prefs = get_preferences().addons.get(__package__, None)
 	if not addon_prefs:
 		return
 	settings = addon_prefs.preferences
@@ -700,7 +700,7 @@ def check_for_update_nonthreaded(self, context):
 	# only check if it's ready, ie after the time interval specified
 	# should be the async wrapper call here
 
-	settings = context.preferences.addons[__package__].preferences
+	settings = get_preferences().addons[__package__].preferences
 	updater.set_check_interval(enable=settings.auto_check_update,
 				months=settings.updater_intrval_months,
 				days=settings.updater_intrval_days,
@@ -777,7 +777,7 @@ def update_notice_box_ui(self, context):
 
 	if updater.update_ready != True: return
 
-	settings = context.preferences.addons[__package__].preferences
+	settings = get_preferences().addons[__package__].preferences
 	layout = self.layout
 	box = layout.box()
 	col = box.column(align=True)
@@ -817,7 +817,7 @@ def update_settings_ui(self, context, element=None):
 		box.label(text=updater.error_msg)
 		return
 
-	settings = context.preferences.addons[__package__].preferences
+	settings = get_preferences().addons[__package__].preferences
 
 	# auto-update settings
 	box.label(text="Updater Settings")
@@ -830,7 +830,7 @@ def update_settings_ui(self, context, element=None):
 			row.label(text="Restart blender to complete update", icon="ERROR")
 			return
 
-	split = row.split(factor=0.3)
+	split = layout_split(row, factor=0.3)
 	subcol = split.column()
 	subcol.prop(settings, "auto_check_update")
 	subcol = split.column()
@@ -974,7 +974,7 @@ def update_settings_ui_condensed(self, context, element=None):
 		row.label(text=updater.error_msg)
 		return
 
-	settings = context.preferences.addons[__package__].preferences
+	settings = get_preferences().addons[__package__].preferences
 
 	# special case to tell user to restart blender, if set that way
 	if updater.auto_reload_post_update == False:
@@ -1178,12 +1178,199 @@ def register(bl_info):
 	updater.user = "bblanimation"
 
 	# choose your own repository, must match git name
-	updater.repo = "bricker"
+	updater.repo = "assemblme"
 
 	#updater.addon = # define at top of module, MUST be done first
 
 	# Website for manual addon download, optional but recommended to set
-	updater.website = "https://github.com/bblanimation/bricker/"
+	updater.website = "https://github.com/bblanimation/assemblme/"
+
+	# Addon subfolder path
+	# "sample/path/to/addon"
+	# default is "" or None, meaning root
+	updater.subfolder_path = ""
+
+	# used to check/compare versions
+	updater.current_version = bl_info["version"]
+
+	# Optional, to hard-set update frequency, use this here - however,
+	# this demo has this set via UI properties.
+	# updater.set_check_interval(
+	# 		enable=False,months=0,days=0,hours=0,minutes=2)
+
+	# Optional, consider turning off for production or allow as an option
+	# This will print out additional debugging info to the console
+	updater.verbose = False # make False for production default
+
+	# Optional, customize where the addon updater processing subfolder is,
+	# essentially a staging folder used by the updater on its own
+	# Needs to be within the same folder as the addon itself
+	# Need to supply a full, absolute path to folder
+	# updater.updater_path = # set path of updater folder, by default:
+	#			/addons/{__package__}/{__package__}_updater
+
+	# auto create a backup of the addon when installing other versions
+	updater.backup_current = True # True by default
+
+	# Sample ignore patterns for when creating backup of current during update
+	updater.backup_ignore_patterns = ["__pycache__"]
+	# Alternate example patterns
+	# updater.backup_ignore_patterns = [".git", "__pycache__", "*.bat", ".gitignore", "*.exe"]
+
+	# Patterns for files to actively overwrite if found in new update
+	# file and are also found in the currently installed addon. Note that
+
+	# by default (ie if set to []), updates are installed in the same way as blender:
+	# .py files are replaced, but other file types (e.g. json, txt, blend)
+	# will NOT be overwritten if already present in current install. Thus
+	# if you want to automatically update resources/non py files, add them
+	# as a part of the pattern list below so they will always be overwritten by an
+	# update. If a pattern file is not found in new update, no action is taken
+	# This does NOT detele anything, only defines what is allowed to be overwritten
+	updater.overwrite_patterns = ["*.png","*.jpg","README.md","LICENSE.txt"]
+	# updater.overwrite_patterns = []
+	# other examples:
+	# ["*"] means ALL files/folders will be overwritten by update, was the behavior pre updater v1.0.4
+	# [] or ["*.py","*.pyc"] matches default blender behavior, ie same effect if user installs update manually without deleting the existing addon first
+	#    e.g. if existing install and update both have a resource.blend file, the existing installed one will remain
+	# ["some.py"] means if some.py is found in addon update, it will overwrite any existing some.py in current addon install, if any
+	# ["*.json"] means all json files found in addon update will overwrite those of same name in current install
+	# ["*.png","README.md","LICENSE.txt"] means the readme, license, and all pngs will be overwritten by update
+
+	# Patterns for files to actively remove prior to running update
+	# Useful if wanting to remove old code due to changes in filenames
+	# that otherwise would accumulate. Note: this runs after taking
+	# a backup (if enabled) but before placing in new update. If the same
+	# file name removed exists in the update, then it acts as if pattern
+	# is placed in the overwrite_patterns property. Note this is effectively
+	# ignored if clean=True in the run_update method
+	updater.remove_pre_update_patterns = ["*.py", "*.pyc"]
+	# Note setting ["*"] here is equivalent to always running updates with
+	# clean = True in the run_update method, ie the equivalent of a fresh,
+	# new install. This would also delete any resources or user-made/modified
+	# files setting ["__pycache__"] ensures the pycache folder is always removed
+	# The configuration of ["*.py","*.pyc"] is a safe option as this
+	# will ensure no old python files/caches remain in event different addon
+	# versions have different filenames or structures
+
+	# Allow branches like 'master' as an option to update to, regardless
+	# of release or version.
+	# Default behavior: releases will still be used for auto check (popup),
+	# but the user has the option from user preferences to directly
+	# update to the master branch or any other branches specified using
+	# the "install {branch}/older version" operator.
+	updater.include_branches = True
+
+	# (GitHub only) This options allows the user to use releases over tags for data,
+	# which enables pulling down release logs/notes, as well as specify installs from
+	# release-attached zips (instead of just the auto-packaged code generated with
+	# a release/tag). Setting has no impact on BitBucket or GitLab repos
+	updater.use_releases = False
+	# note: Releases always have a tag, but a tag may not always be a release
+	# Therefore, setting True above will filter out any non-annoted tags
+	# note 2: Using this option will also display the release name instead of
+	# just the tag name, bear this in mind given the skip_tag_function filtering above
+
+	# if using "include_branches",
+	# updater.include_branch_list defaults to ['master'] branch if set to none
+	# example targeting another multiple branches allowed to pull from
+	# updater.include_branch_list = ['master', 'dev'] # example with two branches
+	updater.include_branch_list = None  # None is the equivalent to setting ['master']
+
+	# Only allow manual install, thus prompting the user to open
+	# the addon's web page to download, specifically: updater.website
+	# Useful if only wanting to get notification of updates but not
+	# directly install.
+	updater.manual_only = False
+
+	# Used for development only, "pretend" to install an update to test
+	# reloading conditions
+	updater.fake_install = False # Set to true to test callback/reloading
+
+	# Show popups, ie if auto-check for update is enabled or a previous
+	# check for update in user preferences found a new version, show a popup
+	# (at most once per blender session, and it provides an option to ignore
+	# for future sessions); default behavior is set to True
+	updater.showpopups = True
+	# note: if set to false, there will still be an "update ready" box drawn
+	# using the `update_notice_box_ui` panel function.
+
+	# Override with a custom function on what tags
+	# to skip showing for updater; see code for function above.
+	# Set the min and max versions allowed to install.
+	# Optional, default None
+	# min install (>=) will install this and higher
+	updater.version_min_update = (0,0,0)
+	# updater.version_min_update = None  # if not wanting to define a min
+
+	# max install (<) will install strictly anything lower
+	# updater.version_max_update = (9,9,9)
+	updater.version_max_update = None  # if not wanting to define a max
+
+	# Function defined above, customize as appropriate per repository
+	updater.skip_tag = skip_tag_function # min and max used in this function
+
+	# Function defined above, customize as appropriate per repository; not required
+	updater.select_link = select_link_function
+
+	# special situation: we just updated the addon, show a popup
+	# to tell the user it worked
+	# should be enclosed in try/catch in case other issues arise
+	showReloadPopup()
+
+
+def unregister():
+	# clear global vars since they may persist if not restarting blender
+	updater.clear_state() # clear internal vars, avoids reloading oddities
+
+	global ran_autocheck_install_popup
+	ran_autocheck_install_popup = False
+
+	global ran_update_sucess_popup
+	ran_update_sucess_popup = False
+
+	global ran_background_check
+	ran_background_check = False
+
+
+# -----------------------------------------------------------------------------
+# Register, should be run in the register module itself
+# -----------------------------------------------------------------------------
+
+
+# registering the operators in this module
+def register(bl_info):
+
+	# See output to verify this register function is working properly
+	# print("Running updater reg")
+
+	# safer failure in case of issue loading module
+	if updater.error != None:
+		print("Exiting updater registration, error return")
+		return
+
+	# confirm your updater "engine" (Github is default if not specified)
+	updater.engine = "Github"
+	# updater.engine = "GitLab"
+	# updater.engine = "Bitbucket"
+
+	# If using private repository, indicate the token here
+	# Must be set after assigning the engine.
+	# **WARNING** Depending on the engine, this token can act like a password!!
+	# Only provide a token if the project is *non-public*, see readme for
+	# other considerations and suggestions from a security standpoint
+	updater.private_token = None # "tokenstring"
+
+	# choose your own username, must match website (not needed for GitLab)
+	updater.user = "bblanimation"
+
+	# choose your own repository, must match git name
+	updater.repo = "bricker"
+
+	#updater.addon = # define at top of ops files, MUST be done first
+
+	# Website for manual addon download, optional but recommended to set
+	updater.website = "https://blendermarket.com/products/bricker"
 
 	# Addon subfolder path
 	# "sample/path/to/addon"

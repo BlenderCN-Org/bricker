@@ -2,13 +2,17 @@
 # Pull objects and meshes from source file
 import sys
 scn = bpy.context.scene
-bpy.context.window.view_layer.objects.active = None
+if bpy.app.version < (2,80,0):
+    scn.objects.active = None
+else:
+    bpy.context.window.view_layer.objects.active = None
 scn.cmlist_index = cmlist_index
 cm = scn.cmlist[cmlist_index]
 n = cm.source_obj.name
 bpy.ops.bricker.brickify_in_background(frame=frame if frame is not None else -1, action=action)
 frameStr = "_f_%(frame)s" % locals() if cm.useAnimation else ""
-target_coll = bpy.data.collections.get("Bricker_%(n)s_bricks%(frameStr)s" % locals())
+bpy_collections = bpy.data.collections if bpy.app.version < (2,80,0) else bpy.data.groups
+target_coll = bpy_collections.get("Bricker_%(n)s_bricks%(frameStr)s" % locals())
 parent_obj = bpy.data.objects.get("Bricker_%(n)s_parent%(frameStr)s" % locals())
 
 ### SET 'data_blocks' EQUAL TO LIST OF OBJECT DATA TO BE SEND BACK TO THE BLENDER HOST ###

@@ -75,12 +75,13 @@ def getUVCoord(mesh, face, point, image):
 
 def getUVLayerData(obj):
     """ returns data of active uv texture for object """
-    if len(obj.data.uv_layers) == 0:
+    obj_uv_layers = obj.data.uv_layers if b280() else obj.data.uv_textures
+    if len(obj_uv_layers) == 0:
         return None
-    active_uv = obj.data.uv_layers.active
+    active_uv = obj_uv_layers.active
     if active_uv is None:
-        obj.data.uv_layers.active = obj.data.uv_layers[0]
-        active_uv = obj.data.uv_layers.active
+        obj_uv_layers.active = obj_uv_layers[0]
+        active_uv = obj_uv_layers.active
     return active_uv.data
 
 
@@ -108,10 +109,12 @@ def getUVImages(obj):
     """ returns dictionary with duplicate pixel arrays for all UV textures in object """
     scn, cm, _ = getActiveContextInfo()
     # get list of images to store
-    images = []
-    # TODO: Reinstate this functionality
-    # uv_tex_data = getUVTextureData(obj)
-    # images = [uv_tex.image for uv_tex in uv_tex_data] if uv_tex_data else []
+    if b280():
+        # TODO: Reinstate this 2.79 functionality
+        images = []
+    else:
+        uv_tex_data = getUVTextureData(obj)
+        images = [uv_tex.image for uv_tex in uv_tex_data] if uv_tex_data else []
     images.append(cm.uvImage)
     images.append(getFirstImgTexNode(obj))
     images = uniquify1(images)
@@ -195,17 +198,33 @@ def createNewMaterial(model_name, rgba, rgba_vals, sss, sat_mat, specular, rough
     # set diffuse and transparency of material
     if mat_is_new:
         mat.diffuse_color = rgba[:3]
-        if scn.render.engine in ("CYCLES", "BLENDER_EEVEE", "octane"):
+        if scn.render.engine == "BLENDER_RENDER":
+            mat.diffuse_intensity = 1.0
+            if a0 < 1.0:
+                mat.use_transparency = True
+                mat.alpha = rgba[3]
+        elif scn.render.engine in ("CYCLES", "BLENDER_EEVEE", "octane"):
             mat.use_nodes = True
             mat_nodes = mat.node_tree.nodes
             mat_links = mat.node_tree.links
-            if scn.render.engine == ("CYCLES", "BLENDER_EEVEE"):
-                # get principled material node
-                principled = mat_nodes.get('Principled BSDF')
+            if scn.render.engine in ("CYCLES", "BLENDER_EEVEE"):
+                if b280():
+                    # get principled material node
+                    principled = mat_nodes.get('Principled BSDF')
+                else:
+                    # a new material node tree already has a diffuse and material output node
+                    output = mat_nodes['Material Output']
+                    # remove default Diffuse BSDF
+                    diffuse = mat_nodes['Diffuse BSDF']
+                    mat_nodes.remove(diffuse)
+                    # add Principled BSDF
+                    principled = mat_nodes.new('ShaderNodeBsdfPrincipled')
+                    # link Principled BSDF to output node
+                    mat_links.new(principled.outputs['BSDF'], output.inputs['Surface'])
                 # set values for Principled BSDF
                 principled.inputs[0].default_value = rgba
                 principled.inputs[1].default_value = sss
-                principled.inputs[3].default_value[:3] = (Vector(rgba[:3]) @ sat_mat).to_tuple()
+                principled.inputs[3].default_value[:3] = mathutils_mult(Vector(rgba[:3]), sat_mat).to_tuple()
                 principled.inputs[5].default_value = specular
                 principled.inputs[7].default_value = roughness
                 principled.inputs[14].default_value = ior
@@ -245,6 +264,15 @@ def createNewMaterial(model_name, rgba, rgba_vals, sss, sat_mat, specular, rough
             #     matte.inputs[0].default_value = rgba
             #     matte.inputs['Opacity'].default_value = rgba[3]
     else:
+        if scn.render.engine == "BLENDER_RENDER":
+            # make sure 'use_nodes' is disabled
+            mat.use_nodes = False
+            # update material color
+            r1, g1, b1 = mat.diffuse_color
+            a1 = mat.alpha
+            r2, g2, b2, a2 = getAverage(Vector(rgba), Vector((r1, g1, b1, a1)), mat.num_averaged)
+            mat.diffuse_color = [r2, g2, b2]
+            mat.alpha = a2
         # if scn.render.engine in ("CYCLES", "BLENDER_EEVEE", "octane", "LUXCORE"):
         if scn.render.engine in ("CYCLES", "BLENDER_EEVEE", "octane"):
             # make sure 'use_nodes' is enabled
@@ -269,9 +297,9 @@ def verifyImg(im):
 def getUVImage(scn, obj, face_idx, uvImage):
     """ returns UV image (priority to user settings, then face index, then first one found in object """
     image = verifyImg(uvImage)
-    # TODO: Reinstate this functionality
-    # if image is None and obj.data.uv_layers.active:
-    #     image = verifyImg(obj.data.uv_layers.active.data[face_idx].image)
+    # TODO: Reinstate this functionality for b280()
+    if not b280() and image is None and obj.data.uv_textures.active:
+        image = verifyImg(obj.data.uv_textures.active.data[face_idx].image)
     if image is None:
         image = verifyImg(getFirstImgTexNode(obj))
     return image
@@ -373,7 +401,7 @@ def getArgumentsForBricksDict(cm, source=None, source_details=None, dimensions=N
             s_mat_z = Matrix.Scale((brickScale.z - dimensions["gap"]) / curCustomObj_details.dist.z, 4, Vector((0, 0, 1)))
             # apply transformation to custom object dup mesh
             customObj0.data.transform(t_mat)
-            customObj0.data.transform(s_mat_x @ s_mat_y @ s_mat_z)
+            customObj0.data.transform(mathutils_mult(s_mat_x, s_mat_y, s_mat_z))
             # center mesh origin
             centerMeshOrigin(customObj0.data, dimensions, brickSize)
             # store fresh data to customData variable

@@ -173,7 +173,7 @@ class bricksculpt_tools:
             brick = bpy.data.objects.get(self.bricksDict[key]["name"])
             if brick is None:
                 return
-            brick.hide_viewport = True
+            hide(brick, render=False)
             self.hiddenBricks.append(brick)
 
     def unSoloLayer(self):

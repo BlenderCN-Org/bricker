@@ -39,8 +39,6 @@ from ..lib.caches import cacheExists
 from ..buttons.revertSettings import *
 from ..buttons.customize.tools.bricksculpt import *
 from ..functions import *
-
-# updater import
 from .. import addon_updater_ops
 
 
@@ -70,7 +68,7 @@ class BRICKER_MT_specials(bpy.types.Menu):
 
 class VIEW3D_PT_bricker_brick_models(Panel):
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Brick Models"
     bl_idname      = "VIEW3D_PT_bricker_brick_models"
@@ -104,8 +102,8 @@ class VIEW3D_PT_bricker_brick_models(Panel):
         row.template_list("CMLIST_UL_items", "", scn, "cmlist", scn, "cmlist_index", rows=rows)
 
         col = row.column(align=True)
-        col.operator("cmlist.list_action" if bpy.props.bricker_initialized else "bricker.initialize", text="", icon="ADD").action = 'ADD'
-        col.operator("cmlist.list_action", icon='REMOVE', text="").action = 'REMOVE'
+        col.operator("cmlist.list_action" if bpy.props.bricker_initialized else "bricker.initialize", text="", icon="ADD" if b280() else "ZOOMIN").action = 'ADD'
+        col.operator("cmlist.list_action", icon='REMOVE' if b280() else 'ZOOMOUT', text="").action = 'REMOVE'
         col.menu("BRICKER_MT_specials", icon='DOWNARROW_HLT', text="")
         if len(scn.cmlist) > 1:
             col.separator()
@@ -114,7 +112,7 @@ class VIEW3D_PT_bricker_brick_models(Panel):
 
         # draw menu options below UI list
         if scn.cmlist_index == -1:
-            layout.operator("cmlist.list_action" if bpy.props.bricker_initialized else "bricker.initialize", text="New Brick Model", icon="ADD").action = 'ADD'
+            layout.operator("cmlist.list_action" if bpy.props.bricker_initialized else "bricker.initialize", text="New Brick Model", icon="ADD" if b280() else "ZOOMIN").action = 'ADD'
         else:
             cm, n = getActiveContextInfo()[1:]
             if not createdWithNewerVersion(cm):
@@ -228,7 +226,7 @@ class VIEW3D_PT_bricker_brick_models(Panel):
             row = col.row(align=True)
 
         if bpy.data.texts.find('Bricker log') >= 0:
-            split = layout.split(align=True, factor=0.9)
+            split = layout_split(layout, factor=0.9)
             col = split.column(align=True)
             row = col.row(align=True)
             row.operator("scene.report_error", text="Report Error", icon="URL").addon_name = "Bricker"
@@ -243,7 +241,7 @@ def is_baked(mod):
 
 class VIEW3D_PT_bricker_animation(Panel):
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Animation"
     bl_idname      = "VIEW3D_PT_bricker_animation"
@@ -272,7 +270,7 @@ class VIEW3D_PT_bricker_animation(Panel):
             col1.active = cm.animated or cm.useAnimation
             col1.scale_y = 0.85
             row = col1.row(align=True)
-            split = row.split(align=True, factor=0.5)
+            split = layout_split(row, factor=0.5)
             col = split.column(align=True)
             col.prop(cm, "startFrame")
             col = split.column(align=True)
@@ -309,7 +307,7 @@ class VIEW3D_PT_bricker_animation(Panel):
 
 class VIEW3D_PT_bricker_model_transform(Panel):
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Model Transform"
     bl_idname      = "VIEW3D_PT_bricker_model_transform"
@@ -361,7 +359,7 @@ class VIEW3D_PT_bricker_model_transform(Panel):
 
 class VIEW3D_PT_bricker_model_settings(Panel):
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Model Settings"
     bl_idname      = "VIEW3D_PT_bricker_model_settings"
@@ -413,7 +411,7 @@ class VIEW3D_PT_bricker_model_settings(Panel):
             if cm.brickType == "CUSTOM" and not customObjFound:
                 col.label(text="[Custom object not found]")
             else:
-                split = col.split(align=True, factor=0.5)
+                split = layout_split(col, factor=0.5)
                 col1 = split.column(align=True)
                 col1.label(text="Dimensions:")
                 col2 = split.column(align=True)
@@ -427,7 +425,7 @@ class VIEW3D_PT_bricker_model_settings(Panel):
         row = col.row(align=True)
         row.label(text="Randomize:")
         row = col.row(align=True)
-        split = row.split(align=True, factor=0.5)
+        split = layout_split(row, factor=0.5)
         col1 = split.column(align=True)
         col1.prop(cm, "randomLoc", text="Loc")
         col2 = split.column(align=True)
@@ -459,7 +457,7 @@ class VIEW3D_PT_bricker_model_settings(Panel):
 
 class VIEW3D_PT_bricker_customize(Panel):
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Customize Model"
     bl_idname      = "VIEW3D_PT_bricker_customize"
@@ -551,7 +549,7 @@ class VIEW3D_PT_bricker_customize(Panel):
 
         col1 = layout.column(align=True)
         col1.label(text="Selection:")
-        split = col1.split(align=True, factor=0.5)
+        split = layout_split(col1, factor=0.5)
         # set top exposed
         col = split.column(align=True)
         col.operator("bricker.select_bricks_by_type", text="By Type")
@@ -561,7 +559,7 @@ class VIEW3D_PT_bricker_customize(Panel):
 
         col1 = layout.column(align=True)
         col1.label(text="Toggle Exposure:")
-        split = col1.split(align=True, factor=0.5)
+        split = layout_split(col1, factor=0.5)
         # set top exposed
         col = split.column(align=True)
         col.operator("bricker.set_exposure", text="Top").side = "TOP"
@@ -571,7 +569,7 @@ class VIEW3D_PT_bricker_customize(Panel):
 
         col1 = layout.column(align=True)
         col1.label(text="Brick Operations:")
-        split = col1.split(align=True, factor=0.5)
+        split = layout_split(col1, factor=0.5)
         # split brick into 1x1s
         col = split.column(align=True)
         col.operator("bricker.split_bricks", text="Split")
@@ -597,7 +595,7 @@ class VIEW3D_PT_bricker_customize(Panel):
 
 class VIEW3D_PT_bricker_smoke_settings(Panel):
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Smoke Settings"
     bl_idname      = "VIEW3D_PT_bricker_smoke_settings"
@@ -648,7 +646,7 @@ class VIEW3D_PT_bricker_smoke_settings(Panel):
 
 class VIEW3D_PT_bricker_brick_types(Panel):
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Brick Types"
     bl_idname      = "VIEW3D_PT_bricker_brick_types"
@@ -692,7 +690,7 @@ class VIEW3D_PT_bricker_brick_types(Panel):
                     row.prop(cm, "distOffset", text="")
                     col = layout.column(align=True)
                     col.label(text="Other Objects:")
-                split = col.split(align=True, factor=0.825)
+                split = layout_split(col, factor=0.825)
                 col1 = split.column(align=True)
                 col1.prop_search(cm, prop, scn, "objects", text="")
                 col1 = split.column(align=True)
@@ -701,7 +699,7 @@ class VIEW3D_PT_bricker_brick_types(Panel):
 
 class VIEW3D_PT_bricker_merge_settings(Panel):
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Merge Settings"
     bl_idname      = "VIEW3D_PT_bricker_merge_settings"
@@ -743,7 +741,7 @@ class VIEW3D_PT_bricker_merge_settings(Panel):
 
 class VIEW3D_PT_bricker_materials(Panel):
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Materials"
     bl_idname      = "VIEW3D_PT_bricker_materials"
@@ -809,9 +807,9 @@ class VIEW3D_PT_bricker_materials(Panel):
             row = col.row(align=True)
             row.prop(cm, "useUVMap", text="UV Map")
             if cm.useUVMap:
-                split = row.split(align=True, factor=0.75)
+                split = layout_split(row, factor=0.75)
                 split.prop(cm, "uvImage", text="")
-                split.operator("image.open", icon="FILEBROWSER", text="")
+                split.operator("image.open", icon="FILEBROWSER" if b280() else "FILESEL", text="")
             if len(obj.data.vertex_colors) > 0:
                 col = layout.column(align=True)
                 col.scale_y = 0.7
@@ -853,22 +851,22 @@ class VIEW3D_PT_bricker_materials(Panel):
             else:
                 if not brick_materials_installed():
                     col.label(text="'ABS Plastic Materials' not installed")
-                elif scn.render.engine not in ("CYCLES", "BLENDER_EEVEE"):
+                elif scn.render.engine not in ('CYCLES', 'BLENDER_EEVEE'):
                     col.label(text="Switch to 'Cycles' or 'Eevee' for Brick Materials")
                 else:
                     # draw materials UI list and list actions
                     numMats = len(matObj.data.materials)
                     rows = 5 if numMats > 5 else (numMats if numMats > 2 else 2)
-                    split = col.split(align=True, factor=0.85)
+                    split = layout_split(col, factor=0.85)
                     col1 = split.column(align=True)
                     col1.template_list("MATERIAL_UL_matslots", "", matObj, "material_slots", matObj, "active_material_index", rows=rows)
                     col1 = split.column(align=True)
-                    col1.operator("bricker.mat_list_action", icon='REMOVE', text="").action = 'REMOVE'
+                    col1.operator("bricker.mat_list_action", icon='REMOVE' if b280() else 'ZOOMOUT', text="").action = 'REMOVE'
                     col1.scale_y = 1 + rows
                     if not brick_materials_loaded():
                         col.operator("abs.append_materials", text="Import Brick Materials", icon="IMPORT")
                     else:
-                        col.operator("bricker.add_abs_plastic_materials", text="Add ABS Plastic Materials", icon="ADD")
+                        col.operator("bricker.add_abs_plastic_materials", text="Add ABS Plastic Materials", icon="ADD" if b280() else "ZOOMIN")
                     # import settings
                     if hasattr(bpy.props, "abs_mats_common"): # checks that ABS plastic mats are at least v2.1
                         col = layout.column(align=True)
@@ -878,7 +876,7 @@ class VIEW3D_PT_bricker_materials(Panel):
                         row.prop(scn, "include_uncommon")
 
                     col = layout.column(align=True)
-                    split = col.split(align=True, factor=0.25)
+                    split = layout_split(col, factor=0.25)
                     col = split.column(align=True)
                     col.label(text="Add:")
                     col = split.column(align=True)
@@ -928,7 +926,7 @@ class VIEW3D_PT_bricker_materials(Panel):
 
 class VIEW3D_PT_bricker_detailing(Panel):
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Detailing"
     bl_idname      = "VIEW3D_PT_bricker_detailing"
@@ -1010,7 +1008,7 @@ class VIEW3D_PT_bricker_detailing(Panel):
 
 class VIEW3D_PT_bricker_supports(Panel):
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Supports"
     bl_idname      = "VIEW3D_PT_bricker_supports"
@@ -1052,7 +1050,7 @@ class VIEW3D_PT_bricker_supports(Panel):
 
 class VIEW3D_PT_bricker_advanced(Panel):
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Advanced"
     bl_idname      = "VIEW3D_PT_bricker_advanced"
@@ -1108,7 +1106,7 @@ class VIEW3D_PT_bricker_advanced(Panel):
 class VIEW3D_PT_bricker_matrix_details(Panel):
     """ Display Matrix details for specified brick location """
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Brick Details"
     bl_idname      = "VIEW3D_PT_bricker_matrix_details"
@@ -1167,7 +1165,7 @@ class VIEW3D_PT_bricker_matrix_details(Panel):
             return
 
         col1 = layout.column(align=True)
-        split = col1.split(align=True, factor=0.35)
+        split = layout_split(col1, factor=0.35)
         # hard code keys so that they are in the order I want
         keys = ["name", "val", "draw", "co", "near_face", "near_intersection", "near_normal", "mat_name", "custom_mat_name", "rgba", "parent", "size", "attempted_merge", "top_exposed", "bot_exposed", "type", "flipped", "rotated", "created_from"]
         # draw keys
@@ -1190,7 +1188,7 @@ class VIEW3D_PT_bricker_matrix_details(Panel):
 class VIEW3D_PT_bricker_export(Panel):
     """ Export Bricker Model """
     bl_space_type  = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_region_type = "UI" if b280() else "TOOLS"
     bl_category    = "Bricker"
     bl_label       = "Bake/Export"
     bl_idname      = "VIEW3D_PT_bricker_export"

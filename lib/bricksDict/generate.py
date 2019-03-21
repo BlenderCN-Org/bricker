@@ -35,6 +35,7 @@ from ...functions.wrappers import *
 from ...functions.smoke_sim import *
 from ..Brick import Bricks
 
+
 def VectorRound(vec, dec, roundType="ROUND"):
     """ round all vals in Vector 'vec' to 'dec' precision """
     if roundType == "ROUND":
@@ -45,7 +46,7 @@ def VectorRound(vec, dec, roundType="ROUND"):
         lst = [(math.ceil(vec[i] * 10**dec)) / 10**dec for i in range(len(vec))]
     return Vector(lst)
 
-def castRays(obj_eval:Object, depsgraph:Depsgraph, point:Vector, direction:Vector, miniDist:float, roundType:str="CEILING", edgeLen:int=0):
+def castRays(obj_eval:Object, point:Vector, direction:Vector, miniDist:float, roundType:str="CEILING", edgeLen:int=0):
     """
     obj_eval  -- source object to test intersections for
     point     -- origin point for ray casting
@@ -109,23 +110,26 @@ def rayObjIntersections(scn, point, direction, miniDist:Vector, edgeLen, obj, us
     intersections = 0
     noMoreChecks = False
     outsideL = []
-    depsgraph = bpy.context.depsgraph
-    # try:
-    #     depsgraph = obj.users_scene[0].view_layers[0].depsgraph
-    # except Exception as e:
-    #     depsgraph = bpy.context.depsgraph
-    obj_eval = depsgraph.objects.get(obj.name, None)
+    if b280():
+        depsgraph = bpy.context.depsgraph
+        # try:
+        #     depsgraph = obj.users_scene[0].view_layers[0].depsgraph
+        # except Exception as e:
+        #     depsgraph = bpy.context.depsgraph
+        obj_eval = depsgraph.objects.get(obj.name, None)
+    else:
+        obj_eval = obj
     # set axis of direction
     axes = "XYZ" if direction[0] > 0 else ("YZX" if direction[1] > 0 else "ZXY")
     # run initial intersection check
-    intersections, firstDirection, firstIntersection, nextIntersection, lastIntersection, edgeIntersects = castRays(obj_eval, depsgraph, point, direction, miniDist, edgeLen=edgeLen)
+    intersections, firstDirection, firstIntersection, nextIntersection, lastIntersection, edgeIntersects = castRays(obj_eval, point, direction, miniDist, edgeLen=edgeLen)
     if insidenessRayCastDir == "HIGH EFFICIENCY" or axes[0] in insidenessRayCastDir:
         outsideL.append(0)
         if intersections%2 == 0 and not (useNormals and firstDirection > 0):
             outsideL[0] = 1
         elif castDoubleCheckRays:
             # double check vert is inside mesh
-            count, firstDirection = castRays(obj_eval, depsgraph, point, -direction, -miniDist, roundType="FLOOR")
+            count, firstDirection = castRays(obj_eval, point, -direction, -miniDist, roundType="FLOOR")
             if count%2 == 0 and not (useNormals and firstDirection > 0):
                 outsideL[0] = 1
 
@@ -141,12 +145,12 @@ def rayObjIntersections(scn, point, direction, miniDist:Vector, edgeLen, obj, us
                 outsideL.append(0)
                 direction = dirs[i][0]
                 miniDist = dirs[i][1]
-                count, firstDirection = castRays(obj_eval, depsgraph, point, direction, miniDist)
+                count, firstDirection = castRays(obj_eval, point, direction, miniDist)
                 if count%2 == 0 and not (useNormals and firstDirection > 0):
                     outsideL[len(outsideL) - 1] = 1
                 elif castDoubleCheckRays:
                     # double check vert is inside mesh
-                    count, firstDirection = castRays(obj_eval, depsgraph, point, -direction, -miniDist, roundType="FLOOR")
+                    count, firstDirection = castRays(obj_eval, point, -direction, -miniDist, roundType="FLOOR")
                     if count%2 == 0 and not (useNormals and firstDirection > 0):
                         outsideL[len(outsideL) - 1] = 1
 
@@ -441,7 +445,7 @@ def getBrickMatrixSmoke(faceIdxMatrix, brickShell, source_details, printStatus=T
                 # add brightness
                 c_ave += brightness
                 # add saturation
-                c_ave = c_ave @ sat_mat
+                c_ave = mathutils_mult(c_ave, sat_mat)
                 brickFreqMatrix[x][y][z] = 0 if alpha < (1 - smokeDensity) else 1
                 colorMatrix[x][y][z] = list(c_ave) + [alpha]
 

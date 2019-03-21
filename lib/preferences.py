@@ -20,7 +20,7 @@ import bpy
 from bpy.types import AddonPreferences
 from bpy.props import *
 
-# updater import
+# Addon imports
 from .. import addon_updater_ops
 
 
@@ -75,13 +75,13 @@ class PREFS_Bricker_Props(AddonPreferences):
         col = layout.column(align=True)
 
         # draw addon prefs
-        prefs = bpy.props.bricker_preferences
+        prefs = get_addon_preferences()
         row = col.row(align=True)
-        split = row.split(align=True, factor=0.275)
+        split = layout_split(row, factor=0.275)
         col = split.column(align=True)
         col.label(text="Default Brick Height:")
         col = split.column(align=True)
-        split = col.split(align=True, factor=0.5)
+        split = layout_split(col, factor=0.5)
         col = split.column(align=True)
         col.prop(prefs, "brickHeightDefault", text="")
         col = split.column(align=True)

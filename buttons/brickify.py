@@ -79,7 +79,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                         # process retrieved bricker data
                         bricker_parent = bpy.data.objects.get("Bricker_%(n)s_parent%(objFrameStr)s" % locals())
                         bricker_parent.use_fake_user = True
-                        bricker_bricks_coll = bpy.data.collections.get("Bricker_%(n)s_bricks%(objFrameStr)s" % locals())
+                        bricker_bricks_coll = bpy_collections()["Bricker_%(n)s_bricks%(objFrameStr)s" % locals()]
                         for brick in bricker_bricks_coll.objects:
                             brick.parent = bricker_parent
                             for i,mat_slot in enumerate(brick.material_slots):
@@ -90,19 +90,27 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                                 if origMat is not None:
                                     brick.material_slots[i].material = origMat
                                     bpy.data.materials.remove(mat)
+                            if not b280():
+                                safeLink(brick)
+                                if animAction:
+                                    # hide obj unless on scene current frame
+                                    adjusted_frame_current = getAnimAdjustedFrame(scn.frame_current, cm.lastStartFrame, cm.lastStopFrame)
+                                    brick.hide        = frame != adjusted_frame_current
+                                    brick.hide_render = frame != adjusted_frame_current
                         if animAction:
                             bricker_parent.parent = cm.parent_obj
-                            # link animation frames to animation collection and hide if not active
-                            anim_coll = self.getAnimColl(n)
-                            anim_coll.children.link(bricker_bricks_coll)
-                            # hide obj unless on scene current frame
-                            adjusted_frame_current = getAnimAdjustedFrame(scn.frame_current, cm.lastStartFrame, cm.lastStopFrame)
-                            bricker_bricks_coll.hide_viewport = frame != adjusted_frame_current
-                            bricker_bricks_coll.hide_render   = frame != adjusted_frame_current
+                            if b280():
+                                # link animation frames to animation collection and hide if not active
+                                anim_coll = self.getAnimColl(n)
+                                anim_coll.children.link(bricker_bricks_coll)
+                                # hide obj unless on scene current frame
+                                adjusted_frame_current = getAnimAdjustedFrame(scn.frame_current, cm.lastStartFrame, cm.lastStopFrame)
+                                bricker_bricks_coll.hide_viewport = frame != adjusted_frame_current
+                                bricker_bricks_coll.hide_render   = frame != adjusted_frame_current
                             # incriment numAnimatedFrames and remove job
                             cm.numAnimatedFrames += 1
                             self.completed_frames.append(frame)
-                        else:
+                        elif b280():
                             self.linkBrickCollection(cm, bricker_bricks_coll)
                         self.jobs.remove(job)
                     elif self.JobManager.job_dropped(job):
@@ -127,15 +135,20 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                             # remove frames that cannot be saved
                             bricker_parent = bpy.data.objects.get("Bricker_%(n)s_parent_f_%(frame)s" % locals())
                             delete(bricker_parent)
-                            bricker_bricks_coll = bpy.data.collections.get("Bricker_%(n)s_bricks_f_%(frame)s" % locals())
+                            bricker_bricks_coll = bpy_collections().get("Bricker_%(n)s_bricks_f_%(frame)s" % locals())
                             delete(bricker_bricks_coll.objects)
-                            bpy.data.collections.remove(bricker_bricks_coll)
+                            bpy_collections().remove(bricker_bricks_coll)
                     for frame in range(cm.lastStartFrame, cm.lastStopFrame + 1):
-                        bricker_bricks_coll = bpy.data.collections.get("Bricker_%(n)s_bricks_f_%(frame)s" % locals())
+                        bricker_bricks_coll = bpy_collections().get("Bricker_%(n)s_bricks_f_%(frame)s" % locals())
                         # hide obj unless on scene current frame
                         adjusted_frame_current = getAnimAdjustedFrame(scn.frame_current, cm.lastStartFrame, cm.lastStopFrame)
-                        bricker_bricks_coll.hide_viewport = frame != adjusted_frame_current
-                        bricker_bricks_coll.hide_render   = frame != adjusted_frame_current
+                        if b280():
+                            bricker_bricks_coll.hide_viewport = frame != adjusted_frame_current
+                            bricker_bricks_coll.hide_render   = frame != adjusted_frame_current
+                        elif frame != adjusted_frame_current:
+                            hide(bricker_bricks_coll.objects)
+                        else:
+                            unhide(bricker_bricks_coll.objects)
                     # finish animation and kill running jobs
                     if "ANIM" in self.action:
                         self.finishAnimation()
@@ -177,7 +190,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                         bpy.data.objects.remove(obj, do_unlink=True)
                 for cn in getCollections(cm, typ="MODEL" if self.action == "CREATE" else "ANIM"):
                     if cn:
-                        bpy.data.collections.remove(cn, do_unlink=True)
+                        bpy_collections().remove(cn, do_unlink=True)
                 if self.source:
                     self.source.protected = False
                     select(self.source, active=True)
@@ -255,17 +268,18 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         if cm.brickifyInBackground:
             cm.brickifyingInBackground = True
 
-        # store parent collections to source
-        self.source.stored_parents.clear()
-        if len(self.source.users_collection) > 0:
-            # use parent collections of source
-            linkedColls = self.source.users_collection
-        else:
-            # use parent collections of brick collection
-            brickColl = cm.collection
-            linkedColls = [cn for cn in bpy.data.collections if brickColl.name in cn.children]
-        for cn in linkedColls:
-            self.source.stored_parents.add().collection = cn
+        if b280():
+            # store parent collections to source
+            self.source.stored_parents.clear()
+            if len(self.source.users_collection) > 0:
+                # use parent collections of source
+                linkedColls = self.source.users_collection
+            else:
+                # use parent collections of brick collection
+                brickColl = cm.collection
+                linkedColls = [cn for cn in bpy.data.collections if brickColl.name in cn.children]
+            for cn in linkedColls:
+                self.source.stored_parents.add().collection = cn
 
         # # check if source object is smoke simulation domain
         cm.isSmoke = is_smoke(self.source)
@@ -283,15 +297,24 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             if not matrixDirty and loadedFromCache:
                 cm.matrixIsDirty = False
 
-        # TODO: potentially necessary to ensure current View Layer includes collection with self.source
-        # TODO: potentially necessary to ensure self.source (and its parent collections) are viewable?
+        if b280():
+            # TODO: potentially necessary to ensure current View Layer includes collection with self.source
+            # TODO: potentially necessary to ensure self.source (and its parent collections) are viewable?
+            pass
+        else:
+            # set layers to source layers
+            oldLayers = list(scn.layers)
+            sourceLayers = list(self.source.layers)
+            if oldLayers != sourceLayers:
+                setLayers(sourceLayers)
 
         if "ANIM" not in self.action:
             self.brickifyModel(scn, cm, n, matrixDirty)
         else:
             self.brickifyAnimation(scn, cm, n, matrixDirty)
-            anim_coll = self.getAnimColl(n)
-            self.linkBrickCollection(cm, anim_coll)
+            if b280():
+                anim_coll = self.getAnimColl(n)
+                self.linkBrickCollection(cm, anim_coll)
             cm.animIsDirty = False
 
         # set cmlist_id for all created objects
@@ -327,6 +350,10 @@ class BRICKER_OT_brickify(bpy.types.Operator):
 
         # unlink source from scene
         safeUnlink(self.source)
+        if not b280():
+            # reset layers
+            if oldLayers != sourceLayers:
+                setLayers(oldLayers)
 
         disableRelationshipLines()
 
@@ -379,8 +406,11 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                 parent_clear(sourceDup)
             # send to new mesh
             if not cm.isSmoke:
-                # TODO: use view layer with smoke, not just the first view layer
-                sourceDup.data = self.source.to_mesh(bpy.context.depsgraph, True)
+                if b280():
+                    # TODO: use view layer with smoke, not just the first view layer
+                    sourceDup.data = self.source.to_mesh(bpy.context.depsgraph, True)
+                else:
+                    sourceDup.data = self.source.to_mesh(scn, True, 'PREVIEW')
             # apply transformation data
             apply_transform(sourceDup)
             sourceDup.animation_data_clear()
@@ -419,7 +449,8 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             self.jobs.append(curJob)
         else:
             bColl = self.brickifyActiveFrame(self.action)
-            self.linkBrickCollection(cm, bColl)
+            if b280():
+                self.linkBrickCollection(cm, bColl)
             # select the bricks object unless it's massive
             if not cm.splitModel and len(bColl.objects) > 0:
                 obj = bColl.objects[0]
@@ -508,7 +539,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                 if not success:
                     break
 
-        # unlink source duplicate
+        # unlink source duplicates
         for obj in duplicates.values():
             safeUnlink(obj)
 
@@ -533,7 +564,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         source = bpy.data.objects.get("Bricker_%(n)s_f_%(curFrame)s" % locals())
         # get source info to update
         if inBackground and scn not in source.users_scene:
-            scn.collection.objects.link(source)
+            safeLink(source)
             scn.update()
 
         # get source_details and dimensions
@@ -564,22 +595,24 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                 cm.animated = True
             return False
 
-        # get object with created bricks
-        cur_frame_coll = bpy.data.collections.get(coll_name)
-        if cur_frame_coll is not None:
-            # hide obj unless on scene current frame
+        # get collection with created bricks
+        cur_frame_coll = bpy_collections().get(coll_name)
+        if cur_frame_coll is not None and len(cur_frame_coll.objects) > 0:
+            # get allBricksObject
+            obj = cur_frame_coll.objects[0]
+            # hide collection/obj unless on scene current frame
             adjusted_frame_current = getAnimAdjustedFrame(scn.frame_current, cm.startFrame, cm.stopFrame)
-            cur_frame_coll.hide_viewport = curFrame != adjusted_frame_current
-            cur_frame_coll.hide_render   = curFrame != adjusted_frame_current
-            if len(cur_frame_coll.objects) > 0:
-                obj = cur_frame_coll.objects[0]
-                # lock location, rotation, and scale of created bricks
-                obj.lock_location = (True, True, True)
-                obj.lock_rotation = (True, True, True)
-                obj.lock_scale    = (True, True, True)
-                # add bevel if it was previously added
-                if cm.bevelAdded:
-                    BRICKER_OT_bevel.runBevelAction([obj], cm)
+            if curFrame != adjusted_frame_current:
+                hide(cur_frame_coll if b280() else obj)
+            else:
+                unhide(cur_frame_coll if b280() else obj)
+            # lock location, rotation, and scale of created bricks
+            obj.lock_location = (True, True, True)
+            obj.lock_rotation = (True, True, True)
+            obj.lock_scale    = (True, True, True)
+            # add bevel if it was previously added
+            if cm.bevelAdded:
+                BRICKER_OT_bevel.runBevelAction([obj], cm)
 
         wm.progress_update(curFrame-cm.startFrame)
         print('-'*100)
@@ -601,7 +634,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         # create new bricks
         coll_name = BRICKER_OT_brickify.createNewBricks(sourceDup, parent, sourceDup_details, dimensions, refLogo, logo_details, action, split=cm.splitModel, curFrame=None)
 
-        bColl = bpy.data.collections.get(coll_name)
+        bColl = bpy_collections().get(coll_name)
         if bColl:
             # transform bricks to appropriate location
             BRICKER_OT_brickify.transformBricks(bColl, cm, parent, cm.source_obj, sourceDup_details, action)
@@ -636,20 +669,18 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             anim_coll = bpy.data.collections.new(anim_coll_name)
         return anim_coll
 
-
     def finishAnimation(self):
         scn, cm, n = getActiveContextInfo(cm=self.cm)
         wm = bpy.context.window_manager
         wm.progress_end()
 
-        # link animation frames to animation collection
-        anim_coll = self.getAnimColl(n)
-        for cn in getCollections(cm, typ="ANIM"):
-            if cn.name not in anim_coll.children:
-                anim_coll.children.link(cn)
-
-        return anim_coll
-
+        if b280():
+            # link animation frames to animation collection
+            anim_coll = self.getAnimColl(n)
+            for cn in getCollections(cm, typ="ANIM"):
+                if cn.name not in anim_coll.children:
+                    anim_coll.children.link(cn)
+            return anim_coll
 
     def finishModel(self):
         pass
@@ -736,7 +767,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                 self.report({"WARNING"}, "No ABS Plastic Materials found in Materials to be used")
                 return False
 
-        if self.action in ("CREATE", "UPDATE_MODEL"):
+        if b280() and self.action in ("CREATE", "UPDATE_MODEL"):
             # ensure source is on current view layer
             if bpy.context.depsgraph.objects.get(source.name) is None:
                 self.report({"WARNING"}, "Source object could not be found in current view layer depsgraph")
@@ -745,7 +776,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         brick_coll_name = "Bricker_%(source_name)s_bricks" % locals()
         if self.action in ("CREATE", "ANIMATE"):
             # verify function can run
-            if brick_coll_name in bpy.data.collections.keys():
+            if brick_coll_name in bpy_collections().keys():
                 self.report({"WARNING"}, "Brickified Model already created.")
                 return False
             # verify source exists and is of type mesh
@@ -777,7 +808,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
 
         if self.action == "UPDATE_MODEL":
             # make sure 'Bricker_[source name]_bricks' collection exists
-            if brick_coll_name not in bpy.data.collections.keys():
+            if brick_coll_name not in bpy_collections().keys():
                 self.report({"WARNING"}, "Brickified Model doesn't exist. Create one with the 'Brickify Object' button.")
                 return False
 
@@ -911,7 +942,10 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             sourceDup.animation_data_clear()
             # send to new mesh
             if not cm.isSmoke:
-                sourceDup.data = self.source.to_mesh(bpy.context.depsgraph, True)
+                if b280():
+                    sourceDup.data = self.source.to_mesh(bpy.context.depsgraph, True)
+                else:
+                    sourceDup.data = self.source.to_mesh(scn, True, 'PREVIEW')
             # apply transform data
             apply_transform(sourceDup)
             duplicates[curFrame] = sourceDup

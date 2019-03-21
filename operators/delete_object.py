@@ -72,10 +72,10 @@ class OBJECT_OT_delete_override(Operator):
     ###################################################
     # class variables
 
-    use_global: BoolProperty(default=False)
-    update_model: BoolProperty(default=True)
-    undo: BoolProperty(default=True)
-    confirm: BoolProperty(default=True)
+    use_global = BoolProperty(default=False)
+    update_model = BoolProperty(default=True)
+    undo = BoolProperty(default=True)
+    confirm = BoolProperty(default=True)
 
     ################################################
     # class methods
@@ -259,8 +259,8 @@ class OBJECT_OT_delete_override(Operator):
                 cm = cmCur
                 break
             elif obj.isBrick:
-                bColl = cmCur.collection
-                if bColl and len(bColl.objects) < 2:
+                curBricks = cmCur.collection
+                if curBricks is not None and len(curBricks.objects) < 2:
                     cm = cmCur
                     break
         if cm and update_model:

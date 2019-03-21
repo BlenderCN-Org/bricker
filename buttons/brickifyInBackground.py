@@ -85,3 +85,20 @@ class BRICKER_OT_stop_brickifying_in_background(bpy.types.Operator):
         return {"FINISHED"}
 
     #############################################
+
+
+class BRICKER_OT_stop_brickifying_in_background(bpy.types.Operator):
+    """ Stop the background brickification process """
+    bl_idname = "bricker.stop_brickifying_in_background"
+    bl_label = "Stop the background brickification process"
+    bl_options = {"REGISTER"}
+
+    ################################################
+    # Blender Operator methods
+
+    def execute(self, context):
+        cm = getActiveContextInfo()[1]
+        cm.stopAnimationProcess = True
+        return {"FINISHED"}
+
+    #############################################

@@ -68,11 +68,11 @@ classes = (
     SCENE_OT_report_error,
     SCENE_OT_close_report_error,
     # bricker/operators
-    delete_object.OBJECT_OT_delete_override,
-    duplicate_object.OBJECT_OT_duplicate_override,
-    duplicate_object.OBJECT_OT_duplicate_move_override,
-    # move_to_layer.OBJECT_OT_move_to_layer_override,
-    # move_to_layer.OBJECT_OT_move_to_layer,
+    OBJECT_OT_delete_override,
+    OBJECT_OT_duplicate_override,
+    OBJECT_OT_duplicate_move_override,
+    # OBJECT_OT_move_to_layer_override,
+    # OBJECT_OT_move_to_layer,
     # bricker/ui
     BRICKER_MT_specials,
     VIEW3D_PT_bricker_brick_models,

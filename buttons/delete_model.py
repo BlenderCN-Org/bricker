@@ -90,11 +90,21 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
         scn, cm, n = getActiveContextInfo(cm=cm)
         source = bpy.data.objects.get(source_name or n)
 
+        if not b280():
+            # set all layers active temporarily
+            curLayers = list(scn.layers)
+            setLayers([True]*20)
+            # match source layers to brick layers
+            bGroup = bpy_collections().get("Bricker_%(n)s_bricks" % locals())
+            if bGroup is not None and len(bGroup.objects) > 0:
+                brick = bGroup.objects[0]
+                source.layers = brick.layers
+
         # clean up 'Bricker_[source name]' collection
         if not skipSource:
             cls.cleanSource(cm, n, source, modelType)
 
-        # clean up 'Bricker_[source name]_dupes' collection
+        # clean up source model duplicates
         if not skipDupes:
             cls.cleanDupes(cm, n, preservedFrames, modelType)
 
@@ -112,6 +122,10 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
             trans_and_anim_data = cls.cleanBricks(scn, cm, n, preservedFrames, modelType, skipTransAndAnimData)
         else:
             trans_and_anim_data = []
+
+        if not b280():
+            # set scene layers back to original layers
+            setLayers(curLayers)
 
         return source, brickLoc, brickRot, brickScl, trans_and_anim_data
 
@@ -172,7 +186,7 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                     source.rotation_euler.rotate(rotateBy)
                 # set source origin back to original point (tracked by last vert)
                 scn.update()
-                setObjOrigin(source, source.matrix_world @ source.data.vertices[0].co)
+                setObjOrigin(source, mathutils_mult(source.matrix_world, source.data.vertices[0].co))
                 source.data.vertices[0].co = last_co
                 source.rotation_mode = lastMode
             # adjust source loc to account for local_orient_offset applied in BRICKER_OT_brickify.transformBricks
@@ -199,9 +213,18 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
 
     @classmethod
     def cleanSource(cls, cm, n, source, modelType):
-        # link source to all collections containing Bricker model
-        brickColl = cm.collection
-        brickCollUsers = [cn for cn in bpy.data.collections if brickColl.name in cn.children] if brickColl is not None else [item.collection for item in source.stored_parents]
+        scn = bpy.context.scene
+        if b280():
+            # link source to all collections containing Bricker model
+            brickColl = cm.collection
+            brickCollUsers = [cn for cn in bpy.data.collections if brickColl.name in cn.children] if brickColl is not None else [item.collection for item in source.stored_parents]
+        else:
+            # set source layers to brick layers
+            frame = cm.lastStartFrame
+            bGroup = bpy_collections().get("Bricker_%(n)s_bricks" % locals() + ("_f_%(frame)s" % locals() if modelType == "ANIMATION" else ""))
+            if bGroup and len(bGroup.objects) > 0:
+                source.layers = list(bGroup.objects[0].layers)
+            brickCollUsers = []
         safeLink(source, collections=brickCollUsers)
         # reset source properties
         source.cmlist_id = -1
@@ -293,7 +316,7 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                 last_percent = 0
                 # remove objects
                 delete(bricks)
-                bpy.data.collections.remove(cm.collection, do_unlink=True)
+                bpy_collections().remove(cm.collection, do_unlink=True)
             cm.modelCreated = False
         elif modelType == "ANIMATION":
             # clean up bricks collection
@@ -304,16 +327,16 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                 if percent < 1:
                     update_progress("Deleting", percent)
                     wm.progress_update(percent*100)
-                brickColl = bpy.data.collections.get("Bricker_{n}_bricks_f_{i}".format(n=n, i=str(i)))
+                brickColl = bpy_collections().get("Bricker_{n}_bricks_f_{i}".format(n=n, i=str(i)))
                 if brickColl:
                     bricks = list(brickColl.objects)
                     if not skipTransAndAnimData:
                         cls.updateAnimationData(bricks, trans_and_anim_data)
                     if len(bricks) > 0:
                         delete(bricks)
-                    bpy.data.collections.remove(brickColl, do_unlink=True)
+                    bpy_collections().remove(brickColl, do_unlink=True)
             if preservedFrames is None:
-                bpy.data.collections.remove(cm.collection, do_unlink=True)
+                bpy_collections().remove(cm.collection, do_unlink=True)
                 cm.animated = False
         # finish status update
         update_progress("Deleting", 1)
