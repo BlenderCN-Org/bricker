@@ -26,7 +26,7 @@ from .reportError import *
 from .. import addon_updater_ops
 
 
-classes = (
+classes = [
     # bricker/addon_updater_ops.py
     addon_updater_ops.OBJECT_OT_addon_updater_install_popup,
     addon_updater_ops.OBJECT_OT_addon_updater_check_now,
@@ -101,7 +101,7 @@ classes = (
     # bricker/ui/ (matlist)
     BRICKER_OT_matlist_actions,
     MATERIAL_UL_matslots,
-)
+]
 
 if b280():
     # bricker/ui/ (other_property_groups)
