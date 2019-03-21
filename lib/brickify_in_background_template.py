@@ -11,7 +11,7 @@ cm = scn.cmlist[cmlist_index]
 n = cm.source_obj.name
 bpy.ops.bricker.brickify_in_background(frame=frame if frame is not None else -1, action=action)
 frameStr = "_f_%(frame)s" % locals() if cm.useAnimation else ""
-bpy_collections = bpy.data.collections if bpy.app.version < (2,80,0) else bpy.data.groups
+bpy_collections = bpy.data.groups if bpy.app.version < (2,80,0) else bpy.data.collections
 target_coll = bpy_collections.get("Bricker_%(n)s_bricks%(frameStr)s" % locals())
 parent_obj = bpy.data.objects.get("Bricker_%(n)s_parent%(frameStr)s" % locals())
 
