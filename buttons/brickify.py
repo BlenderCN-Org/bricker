@@ -769,7 +769,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                 self.report({"WARNING"}, "No ABS Plastic Materials found in Materials to be used")
                 return False
 
-        if b280() and self.action in ("CREATE", "UPDATE_MODEL"):
+        if b280() and self.action in ("CREATE", "ANIMATE"):
             # ensure source is on current view layer
             if bpy.context.depsgraph.objects.get(source.name) is None:
                 self.report({"WARNING"}, "Source object could not be found in current view layer depsgraph")
