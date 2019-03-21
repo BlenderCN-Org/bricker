@@ -170,7 +170,7 @@ class BRICKER_OT_bricksculpt(Operator, bricksculpt_framework, bricksculpt_tools,
     #     default=None)
 
     # define props for popup
-    mode: bpy.props.EnumProperty(
+    mode = bpy.props.EnumProperty(
         items=[("DRAW", "DRAW", ""),
                ("PAINT", "PAINT", ""),
                ("MERGE/SPLIT", "MERGE/SPLIT", ""),

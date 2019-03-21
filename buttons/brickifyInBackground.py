@@ -64,8 +64,8 @@ class BRICKER_OT_brickify_in_background(bpy.types.Operator):
     #############################################
     # class variables
 
-    frame: IntProperty(default=-1)
-    action: StringProperty(default="CREATE")
+    frame = IntProperty(default=-1)
+    action = StringProperty(default="CREATE")
 
     #############################################
 

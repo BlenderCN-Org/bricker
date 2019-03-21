@@ -110,8 +110,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                             # incriment numAnimatedFrames and remove job
                             cm.numAnimatedFrames += 1
                             self.completed_frames.append(frame)
-                        elif b280():
-                            self.linkBrickCollection(cm, bricker_bricks_coll)
+                        self.linkBrickCollection(cm, bricker_bricks_coll)
                         self.jobs.remove(job)
                     elif self.JobManager.job_dropped(job):
                         errormsg = self.JobManager.get_issue_string(job)
@@ -189,8 +188,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                     if obj:
                         bpy.data.objects.remove(obj, do_unlink=True)
                 for cn in getCollections(cm, typ="MODEL" if self.action == "CREATE" else "ANIM"):
-                    if cn:
-                        bpy_collections().remove(cn, do_unlink=True)
+                    if cn: bpy_collections().remove(cn, do_unlink=True)
                 if self.source:
                     self.source.protected = False
                     select(self.source, active=True)
@@ -248,7 +246,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
     ###################################################
     # class variables
 
-    splitBeforeUpdate: BoolProperty(default=False)
+    splitBeforeUpdate = BoolProperty(default=False)
 
     #############################################
     # class methods
@@ -312,9 +310,8 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             self.brickifyModel(scn, cm, n, matrixDirty)
         else:
             self.brickifyAnimation(scn, cm, n, matrixDirty)
-            if b280():
-                anim_coll = self.getAnimColl(n)
-                self.linkBrickCollection(cm, anim_coll)
+            anim_coll = self.getAnimColl(n)
+            self.linkBrickCollection(cm, anim_coll)
             cm.animIsDirty = False
 
         # set cmlist_id for all created objects
@@ -422,7 +419,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         sourceDup = sourceDup or self.source
 
         # link sourceDup if it isn't in scene
-        if sourceDup.name not in scn.collection.all_objects.keys():
+        if sourceDup.name not in scn.objects.keys():
             safeLink(sourceDup)
             scn.update()
 
@@ -449,8 +446,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             self.jobs.append(curJob)
         else:
             bColl = self.brickifyActiveFrame(self.action)
-            if b280():
-                self.linkBrickCollection(cm, bColl)
+            self.linkBrickCollection(cm, bColl)
             # select the bricks object unless it's massive
             if not cm.splitModel and len(bColl.objects) > 0:
                 obj = bColl.objects[0]
@@ -658,15 +654,18 @@ class BRICKER_OT_brickify(bpy.types.Operator):
 
     def linkBrickCollection(self, cm, coll):
         cm.collection = coll
-        for item in self.source.stored_parents:
-            if coll.name not in item.collection.children:
-                item.collection.children.link(coll)
+        if b280():
+            for item in self.source.stored_parents:
+                if coll.name not in item.collection.children:
+                    item.collection.children.link(coll)
+        else:
+            [safeLink(obj) for obj in coll.objects]
 
     def getAnimColl(self, n):
         anim_coll_name = "Bricker_%(n)s_bricks" % locals()
-        anim_coll = bpy.data.collections.get(anim_coll_name)
+        anim_coll = bpy_collections().get(anim_coll_name)
         if anim_coll is None:
-            anim_coll = bpy.data.collections.new(anim_coll_name)
+            anim_coll = bpy_collections().new(anim_coll_name)
         return anim_coll
 
     def finishAnimation(self):
@@ -674,13 +673,17 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         wm = bpy.context.window_manager
         wm.progress_end()
 
-        if b280():
-            # link animation frames to animation collection
-            anim_coll = self.getAnimColl(n)
-            for cn in getCollections(cm, typ="ANIM"):
+        # link animation frames to animation collection
+        anim_coll = self.getAnimColl(n)
+        for cn in getCollections(cm, typ="ANIM"):
+            if b280():
                 if cn.name not in anim_coll.children:
                     anim_coll.children.link(cn)
-            return anim_coll
+            else:
+                for obj in cn.objects:
+                    safeLink(obj)
+                    anim_coll.objects.link(obj)
+        return anim_coll
 
     def finishModel(self):
         pass

@@ -31,65 +31,65 @@ from .matlist_utils import *
 # Create custom property group
 class CMLIST_UL_properties(bpy.types.PropertyGroup):
     # CMLIST ITEM SETTINGS
-    name: StringProperty(update=uniquifyName)
-    id: IntProperty()
-    idx: IntProperty()
+    name = StringProperty(update=uniquifyName)
+    id = IntProperty()
+    idx = IntProperty()
 
     # NAME OF SOURCE
-    source_obj: PointerProperty(
+    source_obj = PointerProperty(
         type=bpy.types.Object,
         name="Source Object",
         description="Name of the source object to Brickify",
         update=setDefaultObjIfEmpty)
 
     # TRANSFORMATION SETTINGS
-    modelLoc: StringProperty(default="-1,-1,-1")
-    modelRot: StringProperty(default="-1,-1,-1")
-    modelScale: StringProperty(default="-1,-1,-1")
-    transformScale: FloatProperty(
+    modelLoc = StringProperty(default="-1,-1,-1")
+    modelRot = StringProperty(default="-1,-1,-1")
+    modelScale = StringProperty(default="-1,-1,-1")
+    transformScale = FloatProperty(
         name="Scale",
         description="Scale of the brick model",
         update=updateModelScale,
         step=1,
         default=1.0)
-    applyToSourceObject: BoolProperty(
+    applyToSourceObject = BoolProperty(
         name="Apply to source",
         description="Apply transformations to source object when Brick Model is deleted",
         default=True)
-    parent_obj: PointerProperty(
+    parent_obj = PointerProperty(
         type=bpy.types.Object,
         name="Parent Object",
         description="Name of the parent object used for model transformations")
-    exposeParent: BoolProperty(
+    exposeParent = BoolProperty(
         name="Show Manipulator",
         description="Expose the parent object for this brick model for viewport manipulation",
         update=updateParentExposure,
         default=False)
 
     # ANIMATION SETTINGS
-    useAnimation: BoolProperty(
+    useAnimation = BoolProperty(
         name="Use Animation",
         description="Create Brick Model for each frame, from start to stop frame (WARNING: Calculation takes time, and may result in large blend file )",
         default=False)
-    startFrame: IntProperty(
+    startFrame = IntProperty(
         name="Start Frame",
         description="Start frame of Brick animation",
         update=dirtyAnim,
         min=0, max=500000,
         default=1)
-    stopFrame: IntProperty(
+    stopFrame = IntProperty(
         name="Stop Frame",
         description="Stop frame of Brick animation",
         update=dirtyAnim,
         min=0, max=500000,
         default=10)
-    maxWorkers: IntProperty(
+    maxWorkers = IntProperty(
         name="Max Worker Instances",
         description="Maximum number of Blender instances allowed to run in background for Bricker calculations (larger numbers are faster at a higher CPU load; 0 for local calculation)",
         min=0, max=24,
         update=updateJobManagerProperties,
         default=5)
-    backProcTimeout: FloatProperty(
+    backProcTimeout = FloatProperty(
         name="Timeout",
         description="Max seconds allowed for each frame's model to calculate (0 for infinite; cancels process if time exceeded)",
         precision=0, min=0,
@@ -97,7 +97,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         default=0)
 
     # BASIC MODEL SETTINGS
-    brickHeight: FloatProperty(
+    brickHeight = FloatProperty(
         name="Brick Height",
         description="Height of the bricks in the final Brick Model",
         update=dirtyMatrix,
@@ -105,7 +105,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         precision=3,
         min=0.001, max=10,
         default=0.1)
-    gap: FloatProperty(
+    gap = FloatProperty(
         name="Gap Between Bricks",
         description="Distance between bricks",
         update=dirtyMatrix,
@@ -113,59 +113,59 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         precision=3,
         min=0, max=1,
         default=0.005)
-    mergeSeed: IntProperty(
+    mergeSeed = IntProperty(
         name="Random Seed",
         description="Random seed for brick merging calculations",
         update=dirtyBuild,
         min=-1, max=5000,
         default=1000)
-    connectThresh: IntProperty(
+    connectThresh = IntProperty(
         name="Connectivity",
         description="Quality of the model's brick connectivity (higher numbers are slower but bricks will be more interconnected)",
         update=dirtyBuild,
         min=1, max=100,
         default=1)
-    smokeDensity: FloatProperty(
+    smokeDensity = FloatProperty(
         name="Smoke Density",
         description="Density of brickified smoke (threshold for smoke: 1 - d)",
         update=dirtyMatrix,
         min=0, max=1,
         default=0.9)
-    smokeQuality: FloatProperty(
+    smokeQuality = FloatProperty(
         name="Smoke Quality",
         description="Amount of data to analyze for density and color of brickified smoke",
         update=dirtyMatrix,
         min=1, max=100,
         default=1)
-    smokeBrightness: FloatProperty(
+    smokeBrightness = FloatProperty(
         name="Smoke Brightness",
         description="Add brightness to smoke colors read from smoke data",
         update=dirtyMatrix,
         min=-4, max=100,
         default=1)
-    smokeSaturation: FloatProperty(
+    smokeSaturation = FloatProperty(
         name="Smoke Saturation",
         description="Change saturation level of smoke colors read from smoke data",
         update=dirtyMatrix,
         min=0, max=100,
         default=1)
-    flameColor: FloatVectorProperty(
+    flameColor = FloatVectorProperty(
         name="Hex Value",
         subtype='COLOR',
         update=dirtyMatrix,
         default=[1.0, 0.63, 0.2])
-    flameIntensity: FloatProperty(
+    flameIntensity = FloatProperty(
         name="Flame Intensity",
         description="Intensity of the flames",
         update=dirtyMatrix,
         min=1, max=50,
         default=4)
-    splitModel: BoolProperty(
+    splitModel = BoolProperty(
         name="Split Model",
         description="Split model into separate objects (slower)",
         update=dirtyModel,
         default=False)
-    randomLoc: FloatProperty(
+    randomLoc = FloatProperty(
         name="Random Location",
         description="Max random location applied to each brick",
         update=dirtyModel,
@@ -173,7 +173,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         precision=3,
         min=0, max=1,
         default=0.01)
-    randomRot: FloatProperty(
+    randomRot = FloatProperty(
         name="Random Rotation",
         description="Max random rotation applied to each brick",
         update=dirtyModel,
@@ -181,7 +181,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         precision=3,
         min=0, max=1,
         default=0.025)
-    brickShell: EnumProperty(
+    brickShell = EnumProperty(
         name="Brick Shell",
         description="Choose whether the outer shell of bricks will be inside or outside the source mesh",
         items=[("INSIDE", "Inside Mesh (recommended)", "Draw brick shell inside source mesh (Recommended)"),
@@ -189,7 +189,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("INSIDE AND OUTSIDE", "Inside and Outside", "Draw brick shell inside and outside source mesh (two layers)")],
         update=dirtyMatrix,
         default="INSIDE")
-    calculationAxes: EnumProperty(
+    calculationAxes = EnumProperty(
         name="Expanded Axes",
         description="The brick shell will be drawn on the outside in these directions",
         items=[("XYZ", "XYZ", "XYZ"),
@@ -201,7 +201,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("Z", "Z", "Z")],
         update=dirtyMatrix,
         default="XY")
-    shellThickness: IntProperty(
+    shellThickness = IntProperty(
         name="Shell Thickness",
         description="Thickness of the outer shell of bricks",
         update=dirtyBuild,
@@ -210,7 +210,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
 
     # BRICK TYPE SETTINGS
     description = "Use this brick type to build the model"
-    brickType: EnumProperty(
+    brickType = EnumProperty(
         name="Brick Type",
         description="Type of brick used to build the model",
         items=[("STUD_HOLLOWS", "Hollow Studs", description),
@@ -224,60 +224,60 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("BRICKS", "Bricks (fast)", description)],
         update=updateBrickType,
         default="BRICKS")
-    alignBricks: BoolProperty(
+    alignBricks = BoolProperty(
         name="Align Bricks Horizontally",
         description="Keep bricks aligned horizontally, and fill the gaps with plates",
         update=dirtyBuild,
         default=True)
-    offsetBrickLayers: IntProperty(
+    offsetBrickLayers = IntProperty(
         name="Offset Brick Layers",
         description="Offset the layers that will be merged into bricks if possible",
         update=dirtyBuild,
         step=1,
         min=0, max=2,
         default=0)
-    maxWidth: IntProperty(
+    maxWidth = IntProperty(
         name="Max Width",
         description="Maximum brick width in studs",
         update=dirtyBuild,
         step=1,
         min=1, max=1000,
         default=2)
-    maxDepth: IntProperty(
+    maxDepth = IntProperty(
         name="Max Depth",
         description="Maximum brick depth in studs",
         update=dirtyBuild,
         step=1,
         min=1, max=1000,
         default=10)
-    mergeType: EnumProperty(
+    mergeType = EnumProperty(
         name="Merge Type",
         description="Type of algorithm used for merging bricks together",
         items=[("GREEDY", "Greedy", "Creates fewest amount of bricks possible"),
                ("RANDOM", "Random", "Merges randomly for realistic build")],
         update=dirtyBuild,
         default="RANDOM")
-    legalBricksOnly: BoolProperty(
+    legalBricksOnly = BoolProperty(
         name="Legal Bricks Only",
         description="Construct model using only legal brick sizes",
         update=dirtyBuild,
         default=True)
-    customObject1: PointerProperty(
+    customObject1 = PointerProperty(
         type=bpy.types.Object,
         name="Custom Object Name 1",
         description="Name of custom object 1 to use as bricks",
         update=verifyCustomObject1)
-    customObject2: PointerProperty(
+    customObject2 = PointerProperty(
         type=bpy.types.Object,
         name="Custom Object Name 2",
         description="Name of custom object 2 to use as bricks",
         update=verifyCustomObject2)
-    customObject3: PointerProperty(
+    customObject3 = PointerProperty(
         type=bpy.types.Object,
         name="Custom Object Name 3",
         description="Name of custom object 3 to use as bricks",
         update=verifyCustomObject3)
-    distOffset: FloatVectorProperty(
+    distOffset = FloatVectorProperty(
         name="Offset Distance",
         description="Offset of custom bricks (1.0 = side-by-side)",
         update=dirtyMatrix,
@@ -288,17 +288,17 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         default=(1, 1, 1))
 
     # CUSTOMIZE SETTINGS
-    autoUpdateOnDelete: BoolProperty(
+    autoUpdateOnDelete = BoolProperty(
         name="Auto Update on Delete",
         description="Draw newly exposed bricks when existing bricks are deleted",
         default=True)
-    paintbrushMat: PointerProperty(
+    paintbrushMat = PointerProperty(
         type=bpy.types.Material,
         name="Paintbrush Material",
         description="Material for the BrickSculpt paintbrush tool")
 
     # MATERIAL & COLOR SETTINGS
-    materialType: EnumProperty(
+    materialType = EnumProperty(
         name="Material Type",
         description="Choose what materials will be applied to model",
         items=[("NONE", "None", "No material applied to bricks"),
@@ -307,23 +307,23 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("SOURCE", "Use Source Materials", "Apply material based on closest intersecting face")],
         update=dirtyMaterial,
         default="NONE")
-    customMat: PointerProperty(
+    customMat = PointerProperty(
         type=bpy.types.Material,
         name="Custom Material",
         description="Material to apply to all bricks")
-    internalMat: PointerProperty(
+    internalMat = PointerProperty(
         type=bpy.types.Material,
         name="Internal Material",
         description="Material to apply to bricks inside material shell",
         update=dirtyMaterial)
-    matShellDepth: IntProperty(
+    matShellDepth = IntProperty(
         name="Shell Material Depth",
         description="Depth to which the outer materials should be applied (1 = Only exposed bricks)",
         step=1,
         min=1, max=50,
         default=1,
         update=dirtyModel)
-    mergeInternals: EnumProperty(
+    mergeInternals = EnumProperty(
         name="Merge Shell with Internals",
         description="Merge bricks on shell with internal bricks",
         items=[("BOTH", "Horizontal & Vertical", "Merge shell bricks with internals in both directions"),
@@ -332,22 +332,22 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("NEITHER", "Neither", "Don't merge shell bricks with internals in either direction")],
         default="BOTH",
         update=dirtyBuild)
-    randomMatSeed: IntProperty(
+    randomMatSeed = IntProperty(
         name="Random Seed",
         description="Random seed for material assignment",
         min=-1, max=5000,
         default=1000)
-    useUVMap: BoolProperty(
+    useUVMap = BoolProperty(
         name="Use UV Map",
         description="Transfer colors from source UV map (source must be unwrapped)",
         default=True,
         update=dirtyMaterial)
-    uvImage: PointerProperty(
+    uvImage = PointerProperty(
         type=bpy.types.Image,
         name="UV Image",
         description="UV Image to use for UV Map color transfer (defaults to active UV if left blank)",
         update=dirtyBuild)
-    colorSnap: EnumProperty(
+    colorSnap = EnumProperty(
         name="Color Snaping",
         description="Snap nearest source materials",
         items=[("NONE", "None", "Use source materials as is"),
@@ -355,75 +355,75 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("RGB", "RGB Average", "Use average RGB value of snapped colors")],
         update=dirtyMaterial,
         default="RGB")
-    colorSnapAmount: FloatProperty(
+    colorSnapAmount = FloatProperty(
         name="Color Snap Amount",
         description="Threshold for combining colors together (higher numbers for fewer unique materials generated)",
         precision=3,
         min=0.00001, max=1.0,
         default=0.001,
         update=dirtyBuild)
-    colorSnapSpecular: FloatProperty(
+    colorSnapSpecular = FloatProperty(
         name="Specular",
         description="Specular value for the created materials",
         precision=3,
         min=0.0, max=1.0,
         default=0.5,
         update=dirtyMaterial)
-    colorSnapRoughness: FloatProperty(
+    colorSnapRoughness = FloatProperty(
         name="Roughness",
         description="Roughness value for the created materials",
         precision=3,
         min=0.0, max=1.0,
         default=0.5,
         update=dirtyMaterial)
-    colorSnapSubsurface: FloatProperty(
+    colorSnapSubsurface = FloatProperty(
         name="Subsurface Sattering",
         description="Subsurface scattering value for the created materials",
         precision=3,
         min=0.0, max=1.0,
         default=0.0,
         update=dirtyMaterial)
-    colorSnapSubsurfaceSaturation: FloatProperty(
+    colorSnapSubsurfaceSaturation = FloatProperty(
         name="SSS Saturation",
         description="Saturation of the subsurface scattering for the created materials (relative to base color value)",
         precision=3,
         min=0.0, max=10.0,
         default=1.0,
         update=dirtyMaterial)
-    colorSnapIOR: FloatProperty(
+    colorSnapIOR = FloatProperty(
         name="IOR",
         description="IOR value for the created materials",
         precision=3,
         min=0.0, max=1000.0,
         default=1.45,
         update=dirtyMaterial)
-    colorSnapTransmission: FloatProperty(
+    colorSnapTransmission = FloatProperty(
         name="Transmission",
         description="Transmission value for the created materials",
         precision=3,
         min=0.0, max=1.0,
         default=0.0,
         update=dirtyMaterial)
-    includeTransparency: BoolProperty(
+    includeTransparency = BoolProperty(
         name="Include Transparency",
         description="Mix in a transparency node to represent alpha value of original material color",
         default=False,
         update=dirtyMatrix)
-    transparentWeight: FloatProperty(
+    transparentWeight = FloatProperty(
         name="Transparency Weight",
         description="How much affect the original material's alpha value has on chosen ABS color",
         precision=3,
         min=0, max=2,
         default=1,
         update=dirtyMaterial)
-    targetMaterial: StringProperty(
+    targetMaterial = StringProperty(
         name="Target Material",
         description="Add material to materials list",
         update=addMaterialToList,
         default="")
 
     # BRICK DETAIL SETTINGS
-    studDetail: EnumProperty(
+    studDetail = EnumProperty(
         name="Stud Detailing",
         description="Choose where to draw brick studs",
         items=[("ALL", "On All Bricks", "Include Brick Logo only on bricks with studs exposed"),
@@ -431,7 +431,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("NONE", "None", "Don't include Brick Logo on bricks")],
         update=dirtyBricks,
         default="EXPOSED")
-    logoType: EnumProperty(
+    logoType = EnumProperty(
         name="Logo Type",
         description="Choose logo type to draw on brick studs",
         items=[("CUSTOM", "Custom Logo", "Choose a mesh object to use as the brick stud logo"),
@@ -439,31 +439,31 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("NONE", "None", "Don't include Brick Logo on bricks")],
         update=dirtyBricks,
         default="NONE")
-    logoResolution: IntProperty(
+    logoResolution = IntProperty(
         name="Resolution",
         description="Resolution of the brick logo",
         update=dirtyBricks,
         min=1, max=10,
         default=1)
-    logoResolution: IntProperty(
+    logoResolution = IntProperty(
         name="Resolution",
         description="Resolution of the brick logo",
         update=dirtyBricks,
         min=1, max=10,
         default=2)
-    logoDecimate: FloatProperty(
+    logoDecimate = FloatProperty(
         name="Decimate",
         description="Decimate the brick logo (lower number for higher resolution)",
         update=dirtyBricks,
         precision=0,
         min=0, max=10,
         default=7.25)
-    logoObject: PointerProperty(
+    logoObject = PointerProperty(
         type=bpy.types.Object,
         name="Logo Object",
         description="Select a custom logo object to use on top of each stud",
         update=dirtyBricks)
-    logoScale: FloatProperty(
+    logoScale = FloatProperty(
         name="Logo Scale",
         description="Logo scale relative to stud scale",
         step=1,
@@ -471,7 +471,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         precision=2,
         min=0.000001, max=2,
         default=0.78)
-    logoInset: FloatProperty(
+    logoInset = FloatProperty(
         name="Logo Inset",
         description="How far to inset logo to stud (0: none, 1: fully inset)",
         step=1,
@@ -479,7 +479,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         precision=2,
         min=0.0, max=1.0,
         default=0.5)
-    hiddenUndersideDetail: EnumProperty(
+    hiddenUndersideDetail = EnumProperty(
         name="Underside Detailing of Obstructed Bricks",
         description="Level of detail on underside of bricks with obstructed undersides",
         items=[("FLAT", "Flat", "draw single face on brick underside"),
@@ -488,7 +488,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("HIGH", "High", "Draw support ticks on 2 by x bricks")],
         update=dirtyBricks,
         default="FLAT")
-    exposedUndersideDetail: EnumProperty(
+    exposedUndersideDetail = EnumProperty(
         name="Underside Detailing of Exposed Bricks",
         description="Level of detail on underside of bricks with exposed undersides",
         items=[("FLAT", "Flat", "draw single face on brick underside"),
@@ -497,37 +497,37 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("HIGH", "High", "Draw support ticks on 2 by x bricks")],
         update=dirtyBricks,
         default="FLAT")
-    circleVerts: IntProperty(
+    circleVerts = IntProperty(
         name="Num Verts",
         description="Number of vertices in each circle in brick mesh",
         update=updateCircleVerts,
         min=4, max=64,
         default=16)
-    loopCut: BoolProperty(
+    loopCut = BoolProperty(
         name="Loop Cut Cylinders",
         description="Make loop cut on cylinders so that bevel operation can bevel base of studs",
         update=dirtyBricks,
         default=False)
     # BEVEL SETTINGS
-    bevelAdded: BoolProperty(
+    bevelAdded = BoolProperty(
         name="Bevel Bricks",
         description="Bevel brick edges and corners for added realism",
         default=False)
-    bevelWidth: FloatProperty(
+    bevelWidth = FloatProperty(
         name="Bevel Width",
         description="Bevel amount (relative to Brick Height)",
         step=1,
         min=0.000001, max=10,
         default=0.01,
         update=updateBevel)
-    bevelSegments: IntProperty(
+    bevelSegments = IntProperty(
         name="Bevel Resolution",
         description="Number of segments for round edges/verts",
         step=1,
         min=1, max=10,
         default=1,
         update=updateBevel)
-    bevelProfile: FloatProperty(
+    bevelProfile = FloatProperty(
         name="Bevel Profile",
         description="The profile shape (0.5 = round)",
         step=1,
@@ -536,7 +536,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         update=updateBevel)
 
     # INTERNAL SUPPORTS SETTINGS
-    internalSupports: EnumProperty(
+    internalSupports = EnumProperty(
         name="Internal Supports",
         description="Choose what type of brick support structure to use inside your model",
         items=[("NONE", "None", "No internal supports"),
@@ -544,32 +544,32 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("COLUMNS", "Columns", "Use columns inside model")],
         update=dirtyInternal,
         default="NONE")
-    latticeStep: IntProperty(
+    latticeStep = IntProperty(
         name="Step",
         description="Distance between cross-beams",
         update=dirtyInternal,
         step=1,
         min=2, max=25,
         default=4)
-    latticeHeight: IntProperty(
+    latticeHeight = IntProperty(
         name="Height",
         description="Height of the cross-beams",
         update=dirtyInternal,
         step=1,
         min=1, max=3,
         default=1)
-    alternateXY: BoolProperty(
+    alternateXY = BoolProperty(
         name="Alternate X and Y",
         description="Alternate back-and-forth and side-to-side beams",
         update=dirtyInternal,
         default=True)
-    colThickness: IntProperty(
+    colThickness = IntProperty(
         name="Thickness",
         description="Thickness of the columns",
         update=dirtyInternal,
         min=1, max=25,
         default=2)
-    colStep: IntProperty(
+    colStep = IntProperty(
         name="Step",
         description="Distance between columns",
         update=dirtyInternal,
@@ -578,7 +578,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         default=2)
 
     # ADVANCED SETTINGS
-    insidenessRayCastDir: EnumProperty(
+    insidenessRayCastDir = EnumProperty(
         name="Insideness Ray Cast Direction",
         description="Ray cast method for calculation of insideness",
         items=[("HIGH EFFICIENCY", "High Efficiency", "Reuses single intersection ray cast for insideness calculation"),
@@ -588,65 +588,65 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("XYZ", "XYZ (Best Result)", "Cast rays in all axis directions for insideness calculation (slowest; uses result consistent for at least 2 of the 3 rays)")],
         update=dirtyMatrix,
         default="HIGH EFFICIENCY")
-    castDoubleCheckRays: BoolProperty(
+    castDoubleCheckRays = BoolProperty(
         name="Cast Both Directions",
         description="Cast additional ray(s) the opposite direction for insideness calculation (Slightly slower but much more accurate if mesh is not single closed mesh)",
         default=True,
         update=dirtyMatrix)
-    useNormals: BoolProperty(
+    useNormals = BoolProperty(
         name="Use Normals",
         description="Use normals to calculate insideness of bricks (WARNING: May produce inaccurate model if source is not single closed mesh)",
         default=False,
         update=dirtyMatrix)
-    verifyExposure: BoolProperty(
+    verifyExposure = BoolProperty(
         name="Verify Exposure",
         description="Run insideness calculations on every brick location (slower, but may fix issue where row(s)/column(s) of extra bricks are drawn)",
         default=False,
         update=dirtyMatrix)
-    useLocalOrient: BoolProperty(
+    useLocalOrient = BoolProperty(
         name="Use Local Orient",
         description="Generate bricks based on local orientation of source object",
         default=False)
-    brickifyInBackground: BoolProperty(
+    brickifyInBackground = BoolProperty(
         name="Brickify in Background",
         description="Run brickify calculations in background (if disabled, user interface will freeze during calculation)",
         default=True)
     # EXPORT SETTINGS
-    exportPath: StringProperty(
+    exportPath = StringProperty(
         name="Export Path",
         description="Destination path for exported files",
         subtype="FILE_PATH",
         default="//")
 
     # Source Object Properties
-    modelScalePreview: FloatVectorProperty(default=(-1, -1, -1))
-    objVerts: IntProperty(default=0)
-    objPolys: IntProperty(default=0)
-    objEdges: IntProperty(default=0)
-    isWaterTight: BoolProperty(default=False)
+    modelScalePreview = FloatVectorProperty(default=(-1, -1, -1))
+    objVerts = IntProperty(default=0)
+    objPolys = IntProperty(default=0)
+    objEdges = IntProperty(default=0)
+    isWaterTight = BoolProperty(default=False)
 
     # Deep Cache of bricksDict
-    BFMCache: StringProperty(default="")
+    BFMCache = StringProperty(default="")
 
     # Blender State for Undo Stack
-    blender_undo_state: IntProperty(default=0)
+    blender_undo_state = IntProperty(default=0)
 
     # Back-End UI Properties
-    activeKey: IntVectorProperty(default=(-1,-1,-1))
-    firstKey: StringProperty(default="")
+    activeKey = IntVectorProperty(default=(-1,-1,-1))
+    firstKey = StringProperty(default="")
 
     # Internal Model Properties
     modelCreated = BoolProperty(default=False)
     brickifyingInBackground = BoolProperty(default=False)
     numAnimatedFrames = IntProperty(default=0)
     framesToAnimate = IntProperty(default=0)
-    stopAnimationProcess: BoolProperty(default=False)
+    stopAnimationProcess = BoolProperty(default=False)
     animated = BoolProperty(default=False)
     materialApplied = BoolProperty(default=False)
     armature = BoolProperty(default=False)
     zStep = IntProperty(default=3)
-    parent_obj: PointerProperty(type=bpy.types.Object)
-    collection: PointerProperty(type=bpy.types.Collection if b280() else bpy.types.Group)
+    parent_obj = PointerProperty(type=bpy.types.Object)
+    collection = PointerProperty(type=bpy.types.Collection if b280() else bpy.types.Group)
     customized = BoolProperty(default=True)
     brickSizesUsed = StringProperty(default="")  # list of brickSizes used separated by | (e.g. '5,4,3|7,4,5|8,6,5')
     brickTypesUsed = StringProperty(default="")  # list of brickTypes used separated by | (e.g. 'PLATE|BRICK|STUD')
@@ -657,32 +657,32 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
     hasCustomObj3 = BoolProperty(default=False)
 
     # Properties for checking of model needs updating
-    animIsDirty: BoolProperty(default=True)
-    materialIsDirty: BoolProperty(default=True)
-    modelIsDirty: BoolProperty(default=True)
-    buildIsDirty: BoolProperty(default=False)
-    bricksAreDirty: BoolProperty(default=True)
-    matrixIsDirty: BoolProperty(default=True)
-    matrixLost: BoolProperty(default=False)
-    internalIsDirty: BoolProperty(default=True)
-    lastLogoType: StringProperty(default="NONE")
-    lastSplitModel: BoolProperty(default=False)
-    lastStartFrame: IntProperty(default=-1)
-    lastStopFrame: IntProperty(default=-1)
-    lastSourceMid: StringProperty(default="-1,-1,-1")
-    lastMaterialType: StringProperty(default="SOURCE")
-    lastShellThickness: IntProperty(default=1)
-    lastBrickType: StringProperty(default="BRICKS")
-    lastMatrixSettings: StringProperty(default="")
-    lastLegalBricksOnly: BoolProperty(default=False)
-    lastMatShellDepth: IntProperty(default=1)
-    lastBevelWidth: FloatProperty()
-    lastBevelSegments: IntProperty()
-    lastBevelProfile: IntProperty()
-    lastIsSmoke: BoolProperty()
+    animIsDirty = BoolProperty(default=True)
+    materialIsDirty = BoolProperty(default=True)
+    modelIsDirty = BoolProperty(default=True)
+    buildIsDirty = BoolProperty(default=False)
+    bricksAreDirty = BoolProperty(default=True)
+    matrixIsDirty = BoolProperty(default=True)
+    matrixLost = BoolProperty(default=False)
+    internalIsDirty = BoolProperty(default=True)
+    lastLogoType = StringProperty(default="NONE")
+    lastSplitModel = BoolProperty(default=False)
+    lastStartFrame = IntProperty(default=-1)
+    lastStopFrame = IntProperty(default=-1)
+    lastSourceMid = StringProperty(default="-1,-1,-1")
+    lastMaterialType = StringProperty(default="SOURCE")
+    lastShellThickness = IntProperty(default=1)
+    lastBrickType = StringProperty(default="BRICKS")
+    lastMatrixSettings = StringProperty(default="")
+    lastLegalBricksOnly = BoolProperty(default=False)
+    lastMatShellDepth = IntProperty(default=1)
+    lastBevelWidth = FloatProperty()
+    lastBevelSegments = IntProperty()
+    lastBevelProfile = IntProperty()
+    lastIsSmoke = BoolProperty()
 
     # Bricker Version of Model
-    version: StringProperty(default="1.0.4")
+    version = StringProperty(default="1.0.4")
     # Left over attrs from earlier versions
     source_name = StringProperty(default="")
     parent_name = StringProperty(default="")

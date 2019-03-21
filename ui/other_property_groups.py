@@ -24,4 +24,4 @@ from bpy.props import *
 
 
 class BRICKER_UL_collections_tuple(bpy.types.PropertyGroup):
-    collection: PointerProperty(type=bpy.types.Collection)
+    collection = PointerProperty(type=bpy.types.Collection)

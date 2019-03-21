@@ -366,9 +366,7 @@ class bricksculpt_drawing:
     #         print(s)
     #
     # def draw_postview(self):
-    #     print("HERE")
     #     if not self.hit: return
-    #     print("HERE2")
     #
     #     cx,cy,cp = self.hit_x,self.hit_y,self.hit_p
     #     cs_outer = self.scale * self.radius

@@ -20,6 +20,7 @@ from ..ui import *
 from ..buttons import *
 from ..buttons.customize import *
 from ..operators import *
+from ..functions.common import *
 from .preferences import *
 from .reportError import *
 from .. import addon_updater_ops
@@ -64,7 +65,7 @@ classes = (
     BRICKER_OT_bricksculpt,
     # bricker/lib
     BRICKER_OT_test_brick_generators,
-    PREFS_Bricker_Props,
+    BRICKER_AP_preferences,
     SCENE_OT_report_error,
     SCENE_OT_close_report_error,
     # bricker/operators
@@ -100,6 +101,8 @@ classes = (
     # bricker/ui/ (matlist)
     BRICKER_OT_matlist_actions,
     MATERIAL_UL_matslots,
-    # bricker/ui/ (other_property_groups)
-    BRICKER_UL_collections_tuple,
 )
+
+if b280():
+    # bricker/ui/ (other_property_groups)
+    classes.append(BRICKER_UL_collections_tuple)

@@ -77,7 +77,7 @@ class OBJECT_OT_move_to_layer_override(Operator):
     ###################################################
     # class variables
 
-    layers: BoolVectorProperty(
+    layers = BoolVectorProperty(
         name="Layers",
         subtype="LAYER",
         description="Object Layers",

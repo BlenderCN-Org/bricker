@@ -49,7 +49,6 @@ from .lib import keymaps, preferences, classesToRegister
 from .lib.Brick.legal_brick_sizes import getLegalBrickSizes
 from .ui.timers import *
 from .ui.cmlist_attrs import CMLIST_UL_properties
-from .ui.other_property_groups import *
 from . import addon_updater_ops
 
 # store keymaps here to access after registration

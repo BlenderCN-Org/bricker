@@ -95,7 +95,7 @@ class BRICKER_OT_initialize(Operator):
     ###################################################
     # class variables
 
-    action: bpy.props.EnumProperty(
+    action = bpy.props.EnumProperty(
         items=(
             ("NONE", "None", ""),
             ("ADD", "Add Model", ""),
