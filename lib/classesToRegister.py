@@ -97,7 +97,7 @@ classes = [
     CMLIST_OT_paste_settings,
     CMLIST_OT_select_bricks,
     CMLIST_UL_items,
-    CMLIST_UL_properties,
+    CreatedModelProperties,
     # bricker/ui/ (matlist)
     BRICKER_OT_matlist_actions,
     MATERIAL_UL_matslots,

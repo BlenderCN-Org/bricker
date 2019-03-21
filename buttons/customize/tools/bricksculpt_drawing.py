@@ -55,51 +55,33 @@ class bricksculpt_drawing:
         self.dpi = int(72 * ui_scale * pixel_size)
 
         # add callback handlers
-        if not b280():
-            self.cb_pr_handle = SpaceView3D.draw_handler_add(self.draw_callback_preview,   (bpy.context, ), 'WINDOW', 'PRE_VIEW')
-            # self.cb_pv_handle = SpaceView3D.draw_handler_add(self.draw_callback_postview,  (bpy.context, ), 'WINDOW', 'POST_VIEW')
-            self.cb_pp_handle = SpaceView3D.draw_handler_add(self.draw_callback_postpixel, (bpy.context, ), 'WINDOW', 'POST_PIXEL')
+        self.cb_pr_handle = SpaceView3D.draw_handler_add(self.draw_callback_preview,   (bpy.context, ), 'WINDOW', 'PRE_VIEW')
+        # self.cb_pv_handle = SpaceView3D.draw_handler_add(self.draw_callback_postview,  (bpy.context, ), 'WINDOW', 'POST_VIEW')
+        self.cb_pp_handle = SpaceView3D.draw_handler_add(self.draw_callback_postpixel, (bpy.context, ), 'WINDOW', 'POST_PIXEL')
         # darken other spaces
+        self.spaces = [
+            bpy.types.SpaceClipEditor,
+            bpy.types.SpaceConsole,
+            bpy.types.SpaceDopeSheetEditor,
+            bpy.types.SpaceFileBrowser,
+            bpy.types.SpaceGraphEditor,
+            bpy.types.SpaceImageEditor,
+            bpy.types.SpaceInfo,
+            bpy.types.SpaceNLA,
+            bpy.types.SpaceNodeEditor,
+            bpy.types.SpaceOutliner,
+            bpy.types.SpaceProperties,
+            bpy.types.SpaceSequenceEditor,
+            bpy.types.SpaceTextEditor,
+            #'SpaceView3D',                 # <- specially handled
+        ]
         if b280():
-            self.spaces = [
-                bpy.types.SpaceClipEditor,
-                bpy.types.SpaceConsole,
-                bpy.types.SpaceDopeSheetEditor,
-                bpy.types.SpaceFileBrowser,
-                bpy.types.SpaceGraphEditor,
-                bpy.types.SpaceImageEditor,
-                bpy.types.SpaceInfo,
-                bpy.types.SpaceNLA,
-                bpy.types.SpaceNodeEditor,
-                bpy.types.SpaceOutliner,
-                bpy.types.SpacePreferences,
-                bpy.types.SpaceProperties,
-                bpy.types.SpaceSequenceEditor,
-                bpy.types.SpaceTextEditor,
-                bpy.types.SpaceUVEditor,
-                #'SpaceView3D',                 # <- specially handled
-                ]
+            self.spaces.append(bpy.types.SpacePreferences)
+            self.spaces.append(bpy.types.SpaceUVEditor)
         else:
-            self.spaces = [
-                bpy.types.SpaceClipEditor,
-                bpy.types.SpaceConsole,
-                bpy.types.SpaceDopeSheetEditor,
-                bpy.types.SpaceFileBrowser,
-                bpy.types.SpaceGraphEditor,
-                bpy.types.SpaceImageEditor,
-                bpy.types.SpaceInfo,
-                bpy.types.SpaceLogicEditor,
-                bpy.types.SpaceNLA,
-                bpy.types.SpaceNodeEditor,
-                bpy.types.SpaceOutliner,
-                bpy.types.SpaceProperties,
-                bpy.types.SpaceSequenceEditor,
-                bpy.types.SpaceTextEditor,
-                bpy.types.SpaceTimeline,
-                #bpy.types.SpaceUVEditor,       # <- does not exist?
-                bpy.types.SpaceUserPreferences,
-                #'SpaceView3D',                 # <- specially handled
-                ]
+            self.spaces.append(bpy.types.SpaceUserPreferences)
+            self.spaces.append(bpy.types.SpaceLogicEditor)
+            self.spaces.append(bpy.types.SpaceTimeline)
         self.areas = ('WINDOW', 'HEADER')
         if not b280():
             # ('WINDOW', 'HEADER', 'CHANNELS', 'TEMPORARY', 'UI', 'TOOLS', 'TOOL_PROPS', 'PREVIEW')
@@ -143,11 +125,16 @@ class bricksculpt_drawing:
             del self.cb_pp_all
         tag_redraw_areas()
 
+    @blender_version_wrapper("<=", "2.79")
     def draw_callback_preview(self, context):
         bgl.glPushAttrib(bgl.GL_ALL_ATTRIB_BITS)    # save OpenGL attributes
         try:    self.draw_preview()
         except: bricker_handle_exception()
         bgl.glPopAttrib()                           # restore OpenGL attributes
+    @blender_version_wrapper(">=", "2.80")
+    def draw_callback_preview(self, context):
+        try:    self.draw_preview()
+        except: bricker_handle_exception()
 
     # def draw_callback_postview(self, context):
     #     # self.drawing.update_dpi()
@@ -159,11 +146,16 @@ class bricksculpt_drawing:
     #     except: bricker_handle_exception()
     #     bgl.glPopAttrib()                           # restore OpenGL attributes
 
+    @blender_version_wrapper("<=", "2.79")
     def draw_callback_postpixel(self, context):
         bgl.glPushAttrib(bgl.GL_ALL_ATTRIB_BITS)    # save OpenGL attributes
         try:    self.draw_postpixel()
         except: bricker_handle_exception()
         bgl.glPopAttrib()                           # restore OpenGL attributes
+    @blender_version_wrapper(">=", "2.80")
+    def draw_callback_postpixel(self, context):
+        try:    self.draw_postpixel()
+        except: bricker_handle_exception()
 
     def draw_callback_cover(self, context):
         bgl.glPushAttrib(bgl.GL_ALL_ATTRIB_BITS)
@@ -182,6 +174,7 @@ class bricksculpt_drawing:
         bgl.glPopMatrix()
         bgl.glPopAttrib()
 
+    @blender_version_wrapper("<=", "2.79")
     def draw_preview(self):
         bgl.glEnable(bgl.GL_MULTISAMPLE)
         bgl.glEnable(bgl.GL_LINE_SMOOTH)
@@ -214,7 +207,41 @@ class bricksculpt_drawing:
         bgl.glPopMatrix()
         bgl.glMatrixMode(bgl.GL_MODELVIEW)
         bgl.glPopMatrix()
+    @blender_version_wrapper(">=", "2.80")
+    def draw_preview(self):
+        # bgl.glEnable(bgl.GL_MULTISAMPLE)
+        # bgl.glEnable(bgl.GL_LINE_SMOOTH)
+        # bgl.glHint(bgl.GL_LINE_SMOOTH_HINT, bgl.GL_NICEST)
+        # bgl.glEnable(bgl.GL_BLEND)
+        # bgl.glEnable(bgl.GL_POINT_SMOOTH)
+        # bgl.glDisable(bgl.GL_DEPTH_TEST)
+        #
+        # bgl.glMatrixMode(bgl.GL_MODELVIEW)
+        # bgl.glPushMatrix()
+        # bgl.glLoadIdentity()
+        # bgl.glMatrixMode(bgl.GL_PROJECTION)
+        # bgl.glPushMatrix()
+        # bgl.glLoadIdentity()
 
+        # add background gradient
+        bgl.glBegin(bgl.GL_TRIANGLES)
+        for i in range(0,360,10):
+            r0,r1 = i*math.pi/180.0, (i+10)*math.pi/180.0
+            x0,y0 = math.cos(r0)*2,math.sin(r0)*2
+            x1,y1 = math.cos(r1)*2,math.sin(r1)*2
+            bgl.glColor4f(0,0,0.01,0.0)
+            bgl.glVertex2f(0,0)
+            bgl.glColor4f(0,0,0.01,0.8)
+            bgl.glVertex2f(x0,y0)
+            bgl.glVertex2f(x1,y1)
+        bgl.glEnd()
+
+        # bgl.glMatrixMode(bgl.GL_PROJECTION)
+        # bgl.glPopMatrix()
+        # bgl.glMatrixMode(bgl.GL_MODELVIEW)
+        # bgl.glPopMatrix()
+
+    # @blender_version_wrapper("<=", "2.79")
     def draw_postpixel(self):
         dtext = "  'D' for Draw/Cut Tool"
         mtext = "  'M' for Merge/Split Tool"
@@ -267,7 +294,17 @@ class bricksculpt_drawing:
         # self.draw_text_2d(text, position=(127, 80))
         # text = "Press 'RETURN' to commit changes"
         # self.draw_text_2d(text, position=(127, 50))
+    # @blender_version_wrapper(">=", "2.80")
 
+    @blender_version_wrapper("<=", "2.79")
+    def draw_text_2d(self, text, font_id=0, color=(1, 1, 1, 1), position=(0, 0)):
+        # draw some text
+        bgl.glColor4f(*color)
+        blf.position(font_id, position[0], position[1], 0)
+        blf.size(font_id, 11, self.dpi)
+        blf.draw(font_id, text)
+        bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
+    @blender_version_wrapper(">=", "2.80")
     def draw_text_2d(self, text, font_id=0, color=(1, 1, 1, 1), position=(0, 0)):
         # draw some text
         bgl.glColor4f(*color)

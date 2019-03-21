@@ -27,7 +27,7 @@ bl_info = {
     "tracker_url" : "https://github.com/bblanimation/bricker/issues",
     "category"    : "Object"}
 
-developer_mode = 2  # NOTE: Set to 0 for release, 1 for exposed dictionary, 2 for 'BRICKER_OT_test_brick_generators' button
+developer_mode = 0  # NOTE: Set to 0 for release, 1 for exposed dictionary, 2 for 'BRICKER_OT_test_brick_generators' button
 # NOTE: Disable "LEGO Logo" for releases
 # NOTE: Disable "Slopes" brick type for releases
 # NOTE: Copy contents from 'bricksculpt_tools_backup' to 'bricksculpt_tools'
@@ -48,7 +48,7 @@ from .buttons.customize import *
 from .lib import keymaps, preferences, classesToRegister
 from .lib.Brick.legal_brick_sizes import getLegalBrickSizes
 from .ui.timers import *
-from .ui.cmlist_attrs import CMLIST_UL_properties
+from .ui.cmlist_attrs import CreatedModelProperties
 from . import addon_updater_ops
 
 # store keymaps here to access after registration
@@ -57,6 +57,7 @@ addon_keymaps = []
 
 def register():
     for cls in classesToRegister.classes:
+        make_annotations(cls)
         bpy.utils.register_class(cls)
 
     bpy.props.bricker_version = str(bl_info["version"])[1:-1].replace(", ", ".")
@@ -102,7 +103,7 @@ def register():
     # bpy.types.VIEW3D_HT_header.append(Bricker_snap_button)
 
     # other things (UI List)
-    Scene.cmlist = CollectionProperty(type=CMLIST_UL_properties)
+    Scene.cmlist = CollectionProperty(type=CreatedModelProperties)
     Scene.cmlist_index = IntProperty(default=-1)
 
     # handle the keymaps
