@@ -60,6 +60,7 @@ def register():
         make_annotations(cls)
         bpy.utils.register_class(cls)
 
+    bpy.props.bricker_module_name = __name__
     bpy.props.bricker_version = str(bl_info["version"])[1:-1].replace(", ", ".")
 
     bpy.props.bricker_initialized = False
@@ -180,6 +181,7 @@ def unregister():
     del bpy.props.Bricker_developer_mode
     del bpy.props.bricker_undoUpdating
     del bpy.props.bricker_initialized
+    del bpy.props.bricker_version
     del bpy.props.bricker_version
 
     for cls in reversed(classesToRegister.classes):

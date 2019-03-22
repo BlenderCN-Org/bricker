@@ -381,6 +381,6 @@ def handle_upconversion(dummy):
             # ensure parent object has no users
             if cm.parent_obj is not None:
                 # TODO: replace with this line when the function is fixed in 2.8
-                # cm.parent_obj.user_clear()
-                for coll in cm.parent_obj.users_collection:
-                    coll.objects.unlink(cm.parent_obj)
+                cm.parent_obj.user_clear()
+                # for coll in cm.parent_obj.users_collection:
+                #     coll.objects.unlink(cm.parent_obj)

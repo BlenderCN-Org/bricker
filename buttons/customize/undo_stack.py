@@ -60,7 +60,7 @@ class UndoStack():
     # class variables
 
     instance = None
-    undo_depth = 500    # set in User Preferences?
+    undo_depth = 500    # set in addon preferences?
 
     ###################################################
     # undo / redo stack operations

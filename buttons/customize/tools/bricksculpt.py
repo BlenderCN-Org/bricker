@@ -68,7 +68,7 @@ class BRICKER_OT_bricksculpt(Operator, bricksculpt_framework, bricksculpt_tools,
                     self.BrickSculptInstalled = True
             if self.BrickSculptLoaded:
                 if not hasattr(bpy.props, "bricksculpt_module_name"):
-                    self.report({"WARNING"}, "Please enable the 'BrickSculpt' addon in User Preferences")
+                    self.report({"WARNING"}, "Please enable the 'BrickSculpt' addon from the 'Preferences > Addons' menu")
                     return {"CANCELLED"}
                 if bpy.props.running_bricksculpt_tool:
                     return {"CANCELLED"}
@@ -93,7 +93,7 @@ class BRICKER_OT_bricksculpt(Operator, bricksculpt_framework, bricksculpt_tools,
                 self.report({"WARNING"}, "Please reload Blender to complete the BrickSculpt installation")
                 return {"CANCELLED"}
             else:
-                self.report({"WARNING"}, "Please install & enable BrickSculpt from the 'User Preferences > Addons' menu")
+                self.report({"WARNING"}, "Please install & enable BrickSculpt from the 'Preferences > Addons' menu")
                 return {"CANCELLED"}
         except:
             bricker_handle_exception()

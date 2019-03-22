@@ -522,30 +522,30 @@ class VIEW3D_PT_bricker_customize(Panel):
         # display BrickSculpt tools
         col = layout.column(align=True)
         row = col.row(align=True)
-        brickSculptInstalled = hasattr(bpy.props, "bricksculpt_module_name")
-        row.active = brickSculptInstalled
+        # brickSculptInstalled = hasattr(bpy.props, "bricksculpt_module_name")
+        # row.active = brickSculptInstalled
+        col.active = False
         row.label(text="BrickSculpt Tools:")
         row = col.row(align=True)
-        row.active = brickSculptInstalled
         row.operator("bricker.bricksculpt", text="Draw/Cut Tool", icon="MOD_DYNAMICPAINT").mode = "DRAW"
         row = col.row(align=True)
-        row.active = brickSculptInstalled
         row.operator("bricker.bricksculpt", text="Merge/Split Tool", icon="MOD_DYNAMICPAINT").mode = "MERGE/SPLIT"
         row = col.row(align=True)
-        row.active = brickSculptInstalled
         row.operator("bricker.bricksculpt", text="Paintbrush Tool", icon="MOD_DYNAMICPAINT").mode = "PAINT"
         row.prop_search(cm, "paintbrushMat", bpy.data, "materials", text="")
         if not BRICKER_OT_bricksculpt.BrickSculptInstalled:
             row = col.row(align=True)
             row.scale_y = 0.7
-            row.label(text="BrickSculpt available for purchase")
+            # row.label(text="BrickSculpt available for purchase")
+            row.label(text="Coming soon for purchase")
             row = col.row(align=True)
             row.scale_y = 0.7
-            row.label(text="at the Blender Market:")
-            col = layout.column(align=True)
-            row = col.row(align=True)
-            row.operator("wm.url_open", text="View Website", icon="WORLD").url = "http://www.blendermarket.com/products/bricksculpt"
-            layout.split()
+            # row.label(text="at the Blender Market:")
+            row.label(text="at the Blender Market")
+            # col = layout.column(align=True)
+            # row = col.row(align=True)
+            # row.operator("wm.url_open", text="View Website", icon="WORLD").url = "http://www.blendermarket.com/products/bricksculpt"
+            # layout.split()
             layout.split()
 
         col1 = layout.column(align=True)
