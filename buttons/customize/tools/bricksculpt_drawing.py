@@ -38,15 +38,88 @@ from ..functions import *
 from ...brickify import *
 from ....lib.Brick import *
 from ....functions import *
+from ....lib.addon_common.cookiecutter.cookiecutter import CookieCutter
+from ....lib.addon_common.common import ui
+from ....lib.addon_common.common.blender import show_error_message
+from ....lib.addon_common.common.ui import Drawing
 
 
 class bricksculpt_drawing:
 
     ##############################################
     # Draw handler function
-    # from CG Cookie's retopoflow plugin
 
-    def ui_start(self):
+    def ui_setup(self):
+        # UI Box functionality
+        def get_resolution(): return self.wax_opts["resolution"]
+        def get_resolution_print(): return "%0.3f" % self.wax_opts["resolution"]
+        def set_resolution(v):
+            self.wax_opts["resolution"] = round(min(max(0.05, float(v)), 2.0), 5)
+            self.meta_obj.data.resolution = self.wax_opts["resolution"]
+
+        def mode_getter(): return self._state
+        def mode_setter(m): self.fsm_change(m)
+
+        win_tools = self.wm.create_window('BrickSculpt Tools', {'pos':7, 'movable':True, 'bgcolor':(0.50, 0.50, 0.50, 0.90)})
+
+        precut_container = win_tools.add(ui.UI_Container())
+
+        container = precut_container.add(ui.UI_Frame('BrickSculpt Mode'))
+        wax_mode = container.add(ui.UI_Options(mode_getter, mode_setter, separation=0))
+        wax_mode.add_option('Draw', value='draw wait')
+        wax_mode.add_option('Merge/Split', value='merge_split wait')
+        wax_mode.add_option('Paint', value='paint wait')
+
+        # segmentation_container = win_tools.add(ui.UI_Container())
+        # container = segmentation_container.add(ui.UI_Frame('Wax Dropper Tools'))
+        # container.add(ui.UI_Button('Fuse and Continue', self.fuse_and_continue, align=0))
+        # container.add(ui.UI_Button('Commit', self.done, align=0))
+        # container.add(ui.UI_Button('Cancel', lambda:self.done(cancel=True), align=0))
+
+        info = self.wm.create_window('BrickSculpt Help', {'pos':9, 'movable':True})#, 'bgcolor':(0.30, 0.60, 0.30, 0.90)})
+        info.add(ui.UI_Label('Instructions', align=0, margin=4))
+        self.inst_paragraphs = [info.add(ui.UI_Markdown('', min_size=(200,10))) for i in range(3)]
+        self.last_state = "NONE"
+        self.set_ui_text()
+        #for i in self.inst_paragraphs: i.visible = False
+        #self.ui_instructions = info.add(ui.UI_Markdown('test', min_size=(200,200)))
+        # opts = info.add(ui.UI_Frame('Tool Options'))
+        # opts.add(ui.UI_Number("Size", get_blobsize, set_blobsize, fn_get_print_value=get_blobsize_print, fn_set_print_value=set_blobsize))
+        # # opts.add(ui.UI_Number("Paint Radius", get_radius, set_radius, fn_get_print_value=get_radius_print, fn_set_print_value=set_radius))
+        # opts.add(ui.UI_Number("Resolution", get_resolution, set_resolution, fn_get_print_value=get_resolution_print, fn_set_print_value=set_resolution, update_func=self.push_meta_to_wax, update_multiplier=0.05))
+        # opts.add(ui.UI_Number("Depth Offset", get_depth_offset, set_depth_offset, update_multiplier=0.05))
+        # action = opts.add(ui.UI_Options(get_action, set_action, label="Action: ", vertical=False))
+        # action.add_option("add")
+        # action.add_option("subtract")
+        # action.add_option("none")
+
+    def set_ui_text(self):
+        ''' sets the viewports text '''
+        if self._state == self.last_state:
+            return
+        self.reset_ui_text()
+        if self._state in ("draw wait", "add brick", "remove brick"):
+            self.inst_paragraphs[0].set_markdown(chr(65) + ") Click & drag to add bricks")
+            self.inst_paragraphs[1].set_markdown(chr(66) + ") +'ALT' to remove")
+            self.inst_paragraphs[2].set_markdown(chr(67) + ") +'SHIFT' to cut")
+        elif self._state in ("merge_split wait", "merge", "split"):
+            self.inst_paragraphs[0].set_markdown(chr(65) + ") Click & drag to merge bricks")
+            self.inst_paragraphs[1].set_markdown(chr(66) + ") +'ALT' to split horizontally")
+            self.inst_paragraphs[2].set_markdown(chr(67) + ") +'SHIFT' to split vertically (only works if brick type is 'Bricks and Plates')")
+        elif self._state in ("paint wait", "paint"):
+            scn = bpy.context.scene
+            mat = scn.cmlist[self.cm_idx].paintbrushMat
+            self.inst_paragraphs[0].set_markdown(chr(65) + ") Painting with Material: " + (mat.name if mat is not None else "None"))
+            self.inst_paragraphs[1].set_markdown(chr(66) + ") Click & drag to paint bricks with target material")
+        # for i,val in enumerate(['place wax', 'change state', 'sketch', 'paint', 'remove wax']):
+        #     self.inst_paragraphs[i].set_markdown(chr(65 + i) + ") " + self.instructions[val])
+        self.last_state = self._state
+
+    def reset_ui_text(self):
+        for inst_p in self.inst_paragraphs:
+            inst_p.set_markdown('')
+
+    def ui_setup2(self):
         # # report something useful to user
         # bpy.context.area.header_text_set("Click & drag to add bricks (+'ALT' to remove). Press 'RETURN' to commit changes")
         # update dpi
@@ -247,7 +320,7 @@ class bricksculpt_drawing:
         mtext = "  'M' for Merge/Split Tool"
         ptext = "  'P' for Paintbrush Tool"
         # draw instructions text
-        if self.mode == "DRAW":
+        if self._state in ("draw wait", "add brick", "remove brick"):
             text = "Click & drag to add bricks"
             self.draw_text_2d(text, position=(50, 280))
             text = "+'ALT' to remove"
@@ -255,7 +328,7 @@ class bricksculpt_drawing:
             text = "+'SHIFT' to cut"
             self.draw_text_2d(text, position=(50, 220))
             dtext = "*" + dtext[1:]
-        elif self.mode == "MERGE/SPLIT":
+        elif self._state in ("merge_split wait", "merge", "split"):
             text = "Click & drag to merge bricks"
             self.draw_text_2d(text, position=(50, 280))
             text = "+'ALT' to split horizontally"
@@ -263,7 +336,7 @@ class bricksculpt_drawing:
             text = "+'SHIFT' to split vertically (only works if brick type is 'Bricks and Plates')"
             self.draw_text_2d(text, position=(50, 220))
             mtext = "*" + mtext[1:]
-        elif self.mode == "PAINT":
+        elif self._state in ("paint wait", "paint"):
             scn = bpy.context.scene
             mat = scn.cmlist[self.cm_idx].paintbrushMat
             text = "Painting with Material: " + (mat.name if mat is not None else "None")

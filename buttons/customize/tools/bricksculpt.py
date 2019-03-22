@@ -41,68 +41,74 @@ from ...brickify import *
 from ....lib.Brick import *
 from ....functions import *
 from ....operators.delete_object import OBJECT_OT_delete_override
+from ....lib.addon_common.cookiecutter.cookiecutter import CookieCutter
+from ....lib.addon_common.common.blender import bversion
+from ....lib.addon_common.common.maths import Point, Point2D
+from ....lib.addon_common.common.decorators import PersistentOptions
 
 
-class BRICKER_OT_bricksculpt(Operator, bricksculpt_framework, bricksculpt_tools, bricksculpt_drawing):
+class BRICKER_OT_bricksculpt(bricksculpt_framework, bricksculpt_tools, bricksculpt_drawing, CookieCutter):
     """Run the BrickSculpt editing tool suite"""
-    bl_idname = "bricker.bricksculpt"
-    bl_label = "BrickSculpt Tools"
-    bl_options = {"REGISTER", "UNDO"}
+    operator_id = "bricker.bricksculpt"
+    bl_idname   = "bricker.bricksculpt"
+    bl_label    = "BrickSculpt Tools"
+    bl_options  = {"REGISTER", "UNDO"}
 
     ################################################
-    # Blender Operator methods
+    # CookieCutter Operator methods
 
     @classmethod
-    def poll(self, context):
+    def can_start(cls, context):
         """ ensures operator can execute (if not, returns False) """
         if not bpy.props.bricker_initialized:
             return False
         return True
 
-    def execute(self, context):
-        try:
-            # try installing BrickSculpt
-            if not self.BrickSculptInstalled:
-                status = installBrickSculpt()
-                if status:
-                    self.BrickSculptInstalled = True
-            if self.BrickSculptLoaded:
-                if not hasattr(bpy.props, "bricksculpt_module_name"):
-                    self.report({"WARNING"}, "Please enable the 'BrickSculpt' addon in User Preferences")
-                    return {"CANCELLED"}
-                if bpy.props.running_bricksculpt_tool:
-                    return {"CANCELLED"}
-                if self.mode == "DRAW" and self.brickType == "":
-                    self.report({"WARNING"}, "Please choose a target brick type")
-                    return {"CANCELLED"}
-                if self.mode == "PAINT" and self.matName == "":
-                    self.report({"WARNING"}, "Please choose a material for the paintbrush")
-                    return {"CANCELLED"}
-                self.ui_start()
-                bpy.props.running_bricksculpt_tool = True
-                scn, cm, _ = getActiveContextInfo()
-                self.undo_stack.iterateStates(cm)
-                cm.customized = True
-                # get fresh copy of self.bricksDict
-                self.bricksDict, _ = getBricksDict(cm=cm)
-                # create modal handler
-                wm = context.window_manager
-                wm.modal_handler_add(self)
-                return {"RUNNING_MODAL"}
-            elif self.BrickSculptInstalled and not self.BrickSculptLoaded:
-                self.report({"WARNING"}, "Please reload Blender to complete the BrickSculpt installation")
-                return {"CANCELLED"}
-            else:
-                self.report({"WARNING"}, "Please install & enable BrickSculpt from the 'User Preferences > Addons' menu")
-                return {"CANCELLED"}
-        except:
-            bricker_handle_exception()
-            return {"CANCELLED"}
+    def start(self):
+        """ ExtruCut tool is starting """
+        bpy.ops.ed.undo_push()  # push current state to undo
+
+        self.initialize()
+
+        if not self.brickSculptInstalledAndLoaded():
+            self.done(cancel=True)
+            return
+
+        self.header_text_set("BrickSculpt")
+        self.cursor_modal_set("CROSSHAIR")
+        self.manipulator_hide()
+
+        self.ui_setup()
+
+        # self.grab_undo_loc = None
+        # self.grab_undo_no = None
+        # self.mouse = (None, None)
+        self.start_post()
+
+    def end_commit(self):
+        """ Commit changes to mesh! """
+        self.commitChanges()
+
+    def end_cancel(self):
+        """ Cancel changes """
+        bpy.ops.ed.undo()   # undo geometry hide
+
+    def end(self):
+        """ Restore everything, because we're done """
+        bpy.props.running_bricksculpt_tool = False
+        self.ui_end()
+        self.manipulator_restore()
+        self.header_text_restore()
+        self.cursor_modal_restore()
+
+    def update(self):
+        """ Check if we need to update any internal data structures """
+        pass
 
     ################################################
     # initialization method
 
-    def __init__(self):
+    def initialize(self):
         scn, cm, n = getActiveContextInfo()
         # push to undo stack
         self.undo_stack = UndoStack.get_instance()
@@ -129,6 +135,12 @@ class BRICKER_OT_bricksculpt(Operator, bricksculpt_framework, bricksculpt_tools,
         self.junk_bme = bmesh.new()
         self.parent = bpy.data.objects.get("Bricker_%(n)s_parent" % locals())
         deselectAll()
+        # initialize properties
+        scn, cm, _ = getActiveContextInfo()
+        self.undo_stack.iterateStates(cm)
+        cm.customized = True
+        # get fresh copy of self.bricksDict
+        self.bricksDict, _ = getBricksDict(cm=cm)
         # ui properties
         self.left_click = False
         self.double_ctrl = False
@@ -176,3 +188,41 @@ class BRICKER_OT_bricksculpt(Operator, bricksculpt_framework, bricksculpt_tools,
                ("MERGE/SPLIT", "MERGE/SPLIT", ""),
                ],
     )
+
+    ###################################################
+    # class methods
+
+    def brickSculptInstalledAndLoaded(self):
+        try:
+            # try installing BrickSculpt
+            if not self.BrickSculptInstalled:
+                status = installBrickSculpt()
+                if status:
+                    self.BrickSculptInstalled = True
+            if self.BrickSculptLoaded:
+                if not hasattr(bpy.props, "bricksculpt_module_name"):
+                    self.report({"WARNING"}, "Please enable the 'BrickSculpt' addon in User Preferences")
+                    return False
+                if bpy.props.running_bricksculpt_tool:
+                    return False
+                else:
+                    bpy.props.running_bricksculpt_tool = True
+                if self.mode == "DRAW" and self.brickType == "":
+                    self.report({"WARNING"}, "Please choose a target brick type")
+                    return False
+                if self.mode == "PAINT" and self.matName == "":
+                    self.report({"WARNING"}, "Please choose a material for the paintbrush")
+                    return False
+                return True
+            elif self.BrickSculptInstalled and not self.BrickSculptLoaded:
+                self.report({"WARNING"}, "Please reload Blender to complete the BrickSculpt installation")
+                return False
+            else:
+                self.report({"WARNING"}, "Please install & enable BrickSculpt from the 'User Preferences > Addons' menu")
+                return False
+        except:
+            bricker_handle_exception()
+            return {"CANCELLED"}
+
+    def start_post(self):
+        pass

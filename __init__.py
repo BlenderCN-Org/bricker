@@ -30,7 +30,7 @@ bl_info = {
 developer_mode = 0  # NOTE: Set to 0 for release, 1 for exposed dictionary, 2 for 'BRICKER_OT_test_brick_generators' button
 # NOTE: Disable "LEGO Logo" for releases
 # NOTE: Disable "Slopes" brick type for releases
-# NOTE: Copy contents from 'bricksculpt_tools_backup' to 'bricksculpt_tools'
+# NOTE: Copy contents from 'bricksculpt_framework_backup' to 'bricksculpt_framework'
 
 # System imports
 # NONE!
@@ -49,6 +49,7 @@ from .lib import keymaps, preferences, classesToRegister
 from .lib.Brick.legal_brick_sizes import getLegalBrickSizes
 from .ui.timers import *
 from .ui.cmlist_attrs import CreatedModelProperties
+from .functions.common.blender import *
 from . import addon_updater_ops
 
 # store keymaps here to access after registration
