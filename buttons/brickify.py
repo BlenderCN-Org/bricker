@@ -110,7 +110,9 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                             # incriment numAnimatedFrames and remove job
                             cm.numAnimatedFrames += 1
                             self.completed_frames.append(frame)
-                        if not b280(): [safeLink(obj) for obj in bricker_bricks_coll.objects]
+                            if not b280(): [safeLink(obj) for obj in bricker_bricks_coll.objects]
+                        else:
+                            self.linkBrickCollection(cm, bricker_bricks_coll)
                         self.jobs.remove(job)
                     elif self.JobManager.job_dropped(job):
                         errormsg = self.JobManager.get_issue_string(job)
