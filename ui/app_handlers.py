@@ -62,10 +62,8 @@ def handle_animation(scn):
                 for brick in curBricks.objects:
                     # hide bricks from view and render unless on current frame
                     if onCurF:
-                        print(cf, True)
                         unhide(brick)
                     else:
-                        print(cf, False)
                         hide(brick)
                     if hasattr(bpy.context, "active_object") and bpy.context.active_object and bpy.context.active_object.name.startswith("Bricker_%(n)s_bricks" % locals()) and onCurF:
                         select(brick, active=True)
