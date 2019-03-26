@@ -45,7 +45,7 @@ from ..buttons.customize.tools import *
 #     return objVisible, obj
 
 
-def handle_selections():
+def handle_selections_timer():
     if brickerRunningBlockingOp():
         return 0.5
     scn = bpy.context.scene

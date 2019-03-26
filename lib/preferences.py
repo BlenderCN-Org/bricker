@@ -22,6 +22,7 @@ from bpy.props import *
 
 # Addon imports
 from .. import addon_updater_ops
+from ..functions.common import *
 
 
 class BRICKER_AP_preferences(AddonPreferences):

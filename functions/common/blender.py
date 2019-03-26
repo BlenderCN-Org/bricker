@@ -232,11 +232,13 @@ def isObjVisibleInViewport(obj:Object):
 
 
 @blender_version_wrapper('<=','2.79')
-def link_object(o:Object):
-    bpy.context.scene.objects.link(o)
+def link_object(o:Object, scene:Scene=None):
+    scene = scene or bpy.context.scene
+    scene.objects.link(o)
 @blender_version_wrapper('>=','2.80')
-def link_object(o:Object):
-    bpy.context.scene.collection.objects.link(o)
+def link_object(o:Object, scene:Scene=None):
+    scene = scene or bpy.context.scene
+    scene.collection.objects.link(o)
 
 
 @blender_version_wrapper('<=','2.79')
@@ -463,6 +465,14 @@ def bpy_collections():
 @blender_version_wrapper('>=','2.80')
 def bpy_collections():
     return bpy.data.collections
+
+
+@blender_version_wrapper('<=','2.79')
+def set_active_scene(scene:Scene):
+    bpy.context.screen.scene = scene
+@blender_version_wrapper('>=','2.80')
+def set_active_scene(scene:Scene):
+    bpy.context.window.scene = scene
 
 
 @blender_version_wrapper('<=','2.79')

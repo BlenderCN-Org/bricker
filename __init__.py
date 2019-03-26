@@ -117,7 +117,7 @@ def register():
     # register app handlers
     bpy.app.handlers.frame_change_post.append(handle_animation)
     if b280():
-        bpy.app.timers.register(handle_selections)
+        bpy.app.timers.register(handle_selections_timer)
     else:
         bpy.app.handlers.scene_update_pre.append(handle_selections)
     bpy.app.handlers.load_pre.append(clear_bfm_cache)
@@ -147,8 +147,8 @@ def unregister():
     bpy.app.handlers.load_post.remove(handle_loading_to_light_cache)
     bpy.app.handlers.load_pre.remove(clear_bfm_cache)
     if b280():
-        if bpy.app.timers.is_registered(handle_selections):
-            bpy.app.timers.unregister(handle_selections)
+        if bpy.app.timers.is_registered(handle_selections_timer):
+            bpy.app.timers.unregister(handle_selections_timer)
     else:
         bpy.app.handlers.scene_update_pre.remove(handle_selections)
     bpy.app.handlers.frame_change_post.remove(handle_animation)
@@ -182,7 +182,7 @@ def unregister():
     del bpy.props.bricker_undoUpdating
     del bpy.props.bricker_initialized
     del bpy.props.bricker_version
-    del bpy.props.bricker_version
+    del bpy.props.bricker_module_name
 
     for cls in reversed(classesToRegister.classes):
         bpy.utils.unregister_class(cls)

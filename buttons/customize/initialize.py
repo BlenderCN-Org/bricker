@@ -72,8 +72,8 @@ class BRICKER_OT_initialize(Operator):
         if self.action == "ADD":
             CMLIST_OT_list_action.addItem()
         # register timers
-        if b280() and not bpy.app.timers.is_registered(handle_selections):
-            bpy.app.timers.register(handle_selections)
+        if b280() and not bpy.app.timers.is_registered(handle_selections_timer):
+            bpy.app.timers.register(handle_selections_timer)
         # run modal
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}
