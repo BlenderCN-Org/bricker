@@ -27,16 +27,6 @@ from .. import addon_updater_ops
 
 
 classes = [
-    # bricker/addon_updater_ops.py
-    addon_updater_ops.OBJECT_OT_addon_updater_install_popup,
-    addon_updater_ops.OBJECT_OT_addon_updater_check_now,
-    addon_updater_ops.OBJECT_OT_addon_updater_update_now,
-    addon_updater_ops.OBJECT_OT_addon_updater_update_target,
-    addon_updater_ops.OBJECT_OT_addon_updater_install_manually,
-    addon_updater_ops.OBJECT_OT_addon_updater_updated_successful,
-    addon_updater_ops.OBJECT_OT_addon_updater_restore_backup,
-    addon_updater_ops.OBJECT_OT_addon_updater_ignore,
-    addon_updater_ops.OBJECT_OT_addon_updater_end_background,
     # bricker/buttons
     addAbsToMatObj.BRICKER_OT_add_abs_to_mat_obj,
     bake.BRICKER_OT_bake_model,

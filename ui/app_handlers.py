@@ -67,7 +67,7 @@ def handle_animation(scn):
                     else:
                         print(cf, False)
                         hide(brick)
-                    if bpy.context.active_object and bpy.context.active_object.name.startswith("Bricker_%(n)s_bricks" % locals()) and onCurF:
+                    if hasattr(bpy.context, "active_object") and bpy.context.active_object and bpy.context.active_object.name.startswith("Bricker_%(n)s_bricks" % locals()) and onCurF:
                         select(brick, active=True)
                     # prevent bricks from being selected on frame change
                     else:
@@ -111,7 +111,7 @@ def handle_selections(scn):
             for i, cm in enumerate(scn.cmlist):
                 if i != scn.cmlist_index:
                     nextObjVisible, obj = isObjVisible(scn, cm, getSourceName(cm))
-                    if nextObjVisible and bpy.context.active_object == obj:
+                    if nextObjVisible and hasattr(bpy.context, "active_object") and bpy.context.active_object == obj:
                         scn.cmlist_index = i
                         setIndex = True
                         break
@@ -152,7 +152,7 @@ def handle_selections(scn):
                     deselectAll()
                     break
     # if active object changes, open Brick Model settings for active object
-    elif bpy.context.active_object and scn.Bricker_last_active_object_name != bpy.context.active_object.name and len(scn.cmlist) > 0 and (scn.cmlist_index == -1 or scn.cmlist[scn.cmlist_index].source_obj is not None) and bpy.context.active_object.type == "MESH":
+    elif hasattr(bpy.context, "active_object") and bpy.context.active_object and scn.Bricker_last_active_object_name != bpy.context.active_object.name and len(scn.cmlist) > 0 and (scn.cmlist_index == -1 or scn.cmlist[scn.cmlist_index].source_obj is not None) and bpy.context.active_object.type == "MESH":
         scn.Bricker_last_active_object_name = bpy.context.active_object.name
         beginningString = "Bricker_"
         if bpy.context.active_object.name.startswith(beginningString):
