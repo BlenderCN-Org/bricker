@@ -163,7 +163,7 @@ class VIEW3D_PT_bricker_brick_models(Panel):
                         row.label(text=str(percentage) + "% completed")
                     else:
                         row.active = brickifyShouldRun(cm)
-                        row.operator("bricker.brickify", text="Update Animation", icon="FILE_REFRESH").splitBeforeUpdate = False
+                        row.operator("bricker.brickify", text="Update Animation", icon="FILE_REFRESH")
                     if createdWithUnsupportedVersion(cm):
                         v_str = cm.version[:3]
                         col = layout.column(align=True)
@@ -176,7 +176,7 @@ class VIEW3D_PT_bricker_brick_models(Panel):
                 else:
                     row = col1.row(align=True)
                     row.active = obj is not None and obj.type == 'MESH' and (obj.rigid_body is None or obj.rigid_body.type == "PASSIVE")
-                    row.operator("bricker.brickify", text="Brickify Animation", icon="MOD_REMESH").splitBeforeUpdate = False
+                    row.operator("bricker.brickify", text="Brickify Animation", icon="MOD_REMESH")
                     if obj and obj.rigid_body is not None:
                         col = layout.column(align=True)
                         col.scale_y = 0.7
@@ -192,7 +192,7 @@ class VIEW3D_PT_bricker_brick_models(Panel):
                 if not cm.animated and not cm.modelCreated:
                     row = col1.row(align=True)
                     row.active = obj is not None and obj.type == 'MESH' and (obj.rigid_body is None or obj.rigid_body.type == "PASSIVE")
-                    row.operator("bricker.brickify", text="Brickify Object", icon="MOD_REMESH").splitBeforeUpdate = False
+                    row.operator("bricker.brickify", text="Brickify Object", icon="MOD_REMESH")
                     if obj and obj.rigid_body is not None:
                         col = layout.column(align=True)
                         col.scale_y = 0.7
@@ -216,7 +216,7 @@ class VIEW3D_PT_bricker_brick_models(Panel):
                         # row.label(text=str(percentage) + "% completed")
                     else:
                         row.active = brickifyShouldRun(cm)
-                        row.operator("bricker.brickify", text="Update Animation", icon="FILE_REFRESH").splitBeforeUpdate = False
+                        row.operator("bricker.brickify", text="Update Animation", icon="FILE_REFRESH")
                     if createdWithUnsupportedVersion(cm):
                         col = layout.column(align=True)
                         col.scale_y = 0.7
@@ -491,7 +491,7 @@ class VIEW3D_PT_bricker_customize(Panel):
             layout.label(text="Matrix is dirty!")
             col = layout.column(align=True)
             col.label(text="Model must be updated to customize:")
-            col.operator("bricker.brickify", text="Update Model", icon="FILE_REFRESH").splitBeforeUpdate = False
+            col.operator("bricker.brickify", text="Update Model", icon="FILE_REFRESH")
             if cm.customized and not cm.matrixLost:
                 row = col.row(align=True)
                 row.label(text="Prior customizations will be lost")
@@ -509,13 +509,17 @@ class VIEW3D_PT_bricker_customize(Panel):
         if cm.buildIsDirty:
             col = layout.column(align=True)
             col.label(text="Model must be updated to customize:")
-            col.operator("bricker.brickify", text="Update Model", icon="FILE_REFRESH").splitBeforeUpdate = False
+            col.operator("bricker.brickify", text="Update Model", icon="FILE_REFRESH")
             return
-        if not cacheExists(cm):
+        if cm.brickifyingInBackground:
+            col = layout.column(align=True)
+            col.label(text="Model is brickifying...")
+            return
+        elif not cacheExists(cm):
             layout.label(text="Matrix not cached!")
             col = layout.column(align=True)
             col.label(text="Model must be updated to customize:")
-            col.operator("bricker.brickify", text="Update Model", icon="FILE_REFRESH").splitBeforeUpdate = False
+            col.operator("bricker.brickify", text="Update Model", icon="FILE_REFRESH")
             if cm.customized:
                 row = col.row(align=True)
                 row.label(text="Customizations will be lost")
@@ -526,34 +530,32 @@ class VIEW3D_PT_bricker_customize(Panel):
         #     layout.operator("bricker.initialize", icon="MODIFIER")
         #     return
 
-        # display BrickSculpt tools
-        col = layout.column(align=True)
-        row = col.row(align=True)
-        # brickSculptInstalled = hasattr(bpy.props, "bricksculpt_module_name")
-        # row.active = brickSculptInstalled
-        col.active = False
-        row.label(text="BrickSculpt Tools:")
-        row = col.row(align=True)
-        row.operator("bricker.bricksculpt", text="Draw/Cut Tool", icon="MOD_DYNAMICPAINT").mode = "DRAW"
-        row = col.row(align=True)
-        row.operator("bricker.bricksculpt", text="Merge/Split Tool", icon="MOD_DYNAMICPAINT").mode = "MERGE/SPLIT"
-        row = col.row(align=True)
-        row.operator("bricker.bricksculpt", text="Paintbrush Tool", icon="MOD_DYNAMICPAINT").mode = "PAINT"
-        row.prop_search(cm, "paintbrushMat", bpy.data, "materials", text="")
-        if not BRICKER_OT_bricksculpt.BrickSculptInstalled:
-            row = col.row(align=True)
-            row.scale_y = 0.7
-            # row.label(text="BrickSculpt available for purchase")
-            row.label(text="Coming soon for purchase")
-            row = col.row(align=True)
-            row.scale_y = 0.7
-            # row.label(text="at the Blender Market:")
-            row.label(text="at the Blender Market")
-            # col = layout.column(align=True)
-            # row = col.row(align=True)
-            # row.operator("wm.url_open", text="View Website", icon="WORLD").url = "http://www.blendermarket.com/products/bricksculpt"
-            # layout.split()
-            layout.split()
+        # # display BrickSculpt tools
+        # col = layout.column(align=True)
+        # row = col.row(align=True)
+        # # brickSculptInstalled = hasattr(bpy.props, "bricksculpt_module_name")
+        # # row.active = brickSculptInstalled
+        # col.active = False
+        # row.label(text="BrickSculpt Tools:")
+        # row = col.row(align=True)
+        # row.operator("bricker.bricksculpt", text="Draw/Cut Tool", icon="MOD_DYNAMICPAINT").mode = "DRAW"
+        # row = col.row(align=True)
+        # row.operator("bricker.bricksculpt", text="Merge/Split Tool", icon="MOD_DYNAMICPAINT").mode = "MERGE/SPLIT"
+        # row = col.row(align=True)
+        # row.operator("bricker.bricksculpt", text="Paintbrush Tool", icon="MOD_DYNAMICPAINT").mode = "PAINT"
+        # row.prop_search(cm, "paintbrushMat", bpy.data, "materials", text="")
+        # if not BRICKER_OT_bricksculpt.BrickSculptInstalled:
+        #     row = col.row(align=True)
+        #     row.scale_y = 0.7
+        #     row.label(text="BrickSculpt available for purchase")
+        #     row = col.row(align=True)
+        #     row.scale_y = 0.7
+        #     row.label(text="at the Blender Market:")
+        #     col = layout.column(align=True)
+        #     row = col.row(align=True)
+        #     row.operator("wm.url_open", text="View Website", icon="WORLD").url = "http://www.blendermarket.com/products/bricksculpt"
+        #     layout.split()
+        #     layout.split()
 
         col1 = layout.column(align=True)
         col1.label(text="Selection:")

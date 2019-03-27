@@ -184,6 +184,11 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         wm = bpy.context.window_manager
         wm.Bricker_runningBlockingOperation = True
         try:
+            if self.splitBeforeUpdate:
+                cm.splitModel = True
+            if cm.brickifyingInBackground:
+                bpy.ops.bricker.delete_model()
+                self.action = "CREATE" if self.action == "UPDATE_MODEL" else "ANIMATE"
             previously_animated = cm.animated
             previously_model_created = cm.modelCreated
             success = self.runBrickify(context)
@@ -246,9 +251,6 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         self.brickerAddonPath = dirname(dirname(abspath(__file__)))
         self.jobs = list()
         self.cm = cm
-
-        if self.splitBeforeUpdate:
-            cm.splitModel = True
 
     ###################################################
     # class variables
@@ -782,10 +784,6 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             if len(matObj.data.materials) == 0:
                 self.report({"WARNING"}, "No ABS Plastic Materials found in Materials to be used")
                 return False
-
-        if cm.brickifyingInBackground:
-            self.report({"WARNING"}, "Model is brickifying in the background. To cancel the process and brickify again, first delete the model.")
-            return False
 
         if b280() and self.action in ("CREATE", "ANIMATE"):
             # ensure source is on current view layer
