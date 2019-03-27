@@ -584,7 +584,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
 
         # create new bricks
         try:
-            coll_name = BRICKER_OT_brickify.createNewBricks(source, parent, source_details, dimensions, refLogo, logo_details, action, split=cm.splitModel, curFrame=curFrame, clearExistingCollection=False, origSource=cm.source_obj, selectCreated=False)
+            coll_name, _ = BRICKER_OT_brickify.createNewBricks(source, parent, source_details, dimensions, refLogo, logo_details, action, split=cm.splitModel, curFrame=curFrame, clearExistingCollection=False, origSource=cm.source_obj, selectCreated=False)
         except KeyboardInterrupt:
             if curFrame != cm.startFrame:
                 wm.progress_end()
@@ -630,7 +630,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         logo_details, refLogo = BRICKER_OT_brickify.getLogo(scn, cm, dimensions)
 
         # create new bricks
-        coll_name = BRICKER_OT_brickify.createNewBricks(sourceDup, parent, sourceDup_details, dimensions, refLogo, logo_details, action, split=cm.splitModel, curFrame=None)
+        coll_name, _ = BRICKER_OT_brickify.createNewBricks(sourceDup, parent, sourceDup_details, dimensions, refLogo, logo_details, action, split=cm.splitModel, curFrame=None)
 
         bColl = bpy_collections().get(coll_name)
         if bColl:
@@ -733,7 +733,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             select(bricksCreated)
         # store current bricksDict to cache
         cacheBricksDict(action, cm, bricksDict, curFrame=curFrame)
-        return coll_name
+        return coll_name, bricksCreated
 
     def isValid(self, scn, cm, source_name, source):
         """ returns True if brickify action can run, else report WARNING/ERROR and return False """
