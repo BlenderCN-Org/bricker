@@ -372,10 +372,10 @@ def handle_upconversion(dummy):
                 if int(cm.version[2]) < 6:
                     for cm in scn.cmlist:
                         cm.zStep = getZStep(cm)
-                    cm.source_obj = bpy.data.objects.get(cm.source_name)
-                    cm.parent_obj = bpy.data.objects.get(cm.parent_name)
+                    if cm.source_obj is None: cm.source_obj = bpy.data.objects.get(cm.source_name)
+                    if cm.parent_obj is None: cm.parent_obj = bpy.data.objects.get(cm.parent_name)
                     n = getSourceName(cm)
-                    cm.collection = bpy_collections().get("Bricker_%(n)s_bricks" % locals())
+                    if cm.collection is None: cm.collection = bpy_collections().get("Bricker_%(n)s_bricks" % locals())
                     dup = bpy.data.objects.get(n + "_duplicate")
                     if dup is not None: dup.name = n + "__dup__"
             # ensure parent object has no users

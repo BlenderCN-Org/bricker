@@ -67,7 +67,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                     animAction = "ANIM" in self.action
                     frame = int(job.split("__")[-1]) if animAction else None
                     objFrameStr = "_f_%(frame)s" % locals() if animAction else ""
-                    self.JobManager.process_job(job, debug_level=0, overwrite_data=True)
+                    self.JobManager.process_job(job, debug_level=3, overwrite_data=True)
                     if self.JobManager.job_complete(job):
                         if animAction: self.report({"INFO"}, "Completed frame %(frame)s of model '%(n)s'" % locals())
                         # cache bricksDict
@@ -189,6 +189,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             if cm.brickifyingInBackground:
                 bpy.ops.bricker.delete_model()
                 self.action = "CREATE" if self.action == "UPDATE_MODEL" else "ANIMATE"
+            cm.version = bpy.props.bricker_version
             previously_animated = cm.animated
             previously_model_created = cm.modelCreated
             success = self.runBrickify(context)
@@ -347,7 +348,6 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         cm.internalIsDirty = False
         cm.modelCreated = "ANIM" not in self.action
         cm.animated = "ANIM" in self.action
-        cm.version = bpy.props.bricker_version
         cm.exposeParent = False
 
         if cm.animated and not cm.brickifyInBackground:
