@@ -237,13 +237,13 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
     old_percent = updateProgressBars(printStatus, cursorStatus, 0, -1, "Building")
 
     # draw merged bricks
-    i = len(bricksDict) - len(keys)
+    dictKeys = sorted(list(bricksDict.keys()))
     for z in sorted(keysDict.keys()):
         for k2 in keysDict[z]:
-            i += 1
             if bricksDict[k2]["parent"] != "self" or not bricksDict[k2]["draw"]:
                 continue
             loc = getDictLoc(bricksDict, k2)
+            i = dictKeys.index(k2)
             # create brick based on the current brick info
             drawBrick(cm_id, bricksDict, k2, loc, i, parent, dimensions, cm.zStep, bricksDict[k2]["size"], brickType, split, lastSplitModel, cm.customObject1, cm.customObject2, cm.customObject3, cm.materialIsDirty or cm.matrixIsDirty or cm.buildIsDirty, customData, brickScale, bricksCreated, allMeshes, logo, logo_details, mats, brick_mats, internalMat, brickHeight, logoResolution, logoDecimate, loopCut, buildIsDirty, materialType, customMat, randomMatSeed, studDetail, exposedUndersideDetail, hiddenUndersideDetail, randomRot, randomLoc, logoType, logoScale, logoInset, circleVerts, randS1, randS2, randS3)
             # print status to terminal and cursor

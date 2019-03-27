@@ -143,17 +143,19 @@ class BRICKER_OT_apply_material(bpy.types.Operator):
         randomMatSeed = cm.randomMatSeed
         brick = bricks[0]
         lastMatSlots = list(brick.material_slots.keys())
+        dictKeys = sorted(list(bricksDict.keys()))
         # apply a random material to each brick
         if lastSplitModel:
             for i, brick in enumerate(bricks):
+                curKey = brick.name.split("__")[-1]
                 # iterate seed and set random index
-                randS0.seed(randomMatSeed + i)
+                randS0.seed(randomMatSeed + dictKeys.index(curKey))
                 randIdx = randS0.randint(0, len(brick_mats)) if len(brick_mats) > 1 else 0
                 # Assign random material to object
                 mat = bpy.data.materials.get(brick_mats[randIdx])
                 setMaterial(brick, mat)
                 # update bricksDict
-                bricksDict[brick.name.split("__")[-1]]["mat_name"] = mat.name
+                bricksDict[curKey]["mat_name"] = mat.name
         # apply a random material to each random material slot
         elif len(lastMatSlots) == len(brick_mats):
             for i in range(len(lastMatSlots)):
