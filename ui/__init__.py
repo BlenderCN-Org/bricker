@@ -209,7 +209,6 @@ class VIEW3D_PT_bricker_brick_models(Panel):
                     col = layout.column(align=True)
                     row = col.row(align=True)
                     if cm.brickifyingInBackground:
-                        col.scale_y = 0.75
                         row.label(text="Brickifying...")
                         row.operator("bricker.stop_brickifying_in_background", text="Stop", icon="PAUSE")
                         # row = col.row(align=True)

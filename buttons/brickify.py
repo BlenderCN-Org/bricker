@@ -67,7 +67,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                     animAction = "ANIM" in self.action
                     frame = int(job.split("__")[-1]) if animAction else None
                     objFrameStr = "_f_%(frame)s" % locals() if animAction else ""
-                    self.JobManager.process_job(job, debug_level=0)
+                    self.JobManager.process_job(job, debug_level=0, overwrite_data=True)
                     if self.JobManager.job_complete(job):
                         if animAction: self.report({"INFO"}, "Completed frame %(frame)s of model '%(n)s'" % locals())
                         # cache bricksDict
@@ -83,15 +83,15 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                         bricker_bricks_coll = bpy_collections()["Bricker_%(n)s_bricks%(objFrameStr)s" % locals()]
                         for brick in bricker_bricks_coll.objects:
                             brick.parent = bricker_parent
-                            for i,mat_slot in enumerate(brick.material_slots):
-                                mat = mat_slot.material
-                                if mat is None:
-                                    continue
-                                origMat = bpy.data.materials.get(mat.name[:-4])
-                                if origMat is not None:
-                                    brick.material_slots[i].material = origMat
-                                    mat.user_remap(origMat)
-                                    bpy.data.materials.remove(mat)
+                            # for i,mat_slot in enumerate(brick.material_slots):
+                            #     mat = mat_slot.material
+                            #     if mat is None:
+                            #         continue
+                            #     origMat = bpy.data.materials.get(mat.name[:-4])
+                            #     if origMat is not None:
+                            #         brick.material_slots[i].material = origMat
+                            #         mat.user_remap(origMat)
+                            #         bpy.data.materials.remove(mat)
                             if not b280():
                                 safeLink(brick)
                                 if animAction:
@@ -150,9 +150,9 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                                 bricker_bricks_coll.hide_viewport = frame != adjusted_frame_current
                                 bricker_bricks_coll.hide_render   = frame != adjusted_frame_current
                             elif frame != adjusted_frame_current:
-                                hide(bricker_bricks_coll.objects)
+                                [hide(obj) for obj in bricker_bricks_coll.objects]
                             else:
-                                unhide(bricker_bricks_coll.objects)
+                                [unhide(obj) for obj in bricker_bricks_coll.objects]
                         # finish animation and kill running jobs
                         self.finishAnimation()
                     else:
@@ -687,7 +687,8 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             else:
                 for obj in cn.objects:
                     safeLink(obj)
-                    anim_coll.objects.link(obj)
+                    if obj.name not in anim_coll.objects.keys():
+                        anim_coll.objects.link(obj)
         return anim_coll
 
     def finishModel(self):

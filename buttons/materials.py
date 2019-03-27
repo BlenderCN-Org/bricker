@@ -146,7 +146,7 @@ class BRICKER_OT_apply_material(bpy.types.Operator):
         dictKeys = sorted(list(bricksDict.keys()))
         # apply a random material to each brick
         if lastSplitModel:
-            for i, brick in enumerate(bricks):
+            for brick in bricks:
                 curKey = brick.name.split("__")[-1]
                 # iterate seed and set random index
                 randS0.seed(randomMatSeed + dictKeys.index(curKey))

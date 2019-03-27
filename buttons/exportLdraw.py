@@ -80,7 +80,7 @@ class BRICKER_OT_export_ldraw(Operator):
             # get dictionary of keys based on z value
             keysDict = getKeysDict(bricksDict)
             # iterate through z locations in bricksDict (bottom to top)
-            i = 0
+            dictKeys = sorted(list(bricksDict.keys()))
             for z in sorted(keysDict.keys()):
                 for key in keysDict[z]:
                     # skip bricks that aren't displayed
@@ -106,6 +106,7 @@ class BRICKER_OT_export_ldraw(Operator):
                     # get coordinate for brick in Ldraw units
                     co = self.blendToLdrawUnits(cm, bricksDict, cm.zStep, key, idx)
                     # get color code of brick
+                    i = dictKeys.index(key)
                     mat = getMaterial(bricksDict, key, size, cm.zStep, cm.materialType, cm.customMat.name if cm.customMat is not None else "z", cm.randomMatSeed, cm.materialIsDirty or cm.matrixIsDirty or cm.buildIsDirty, brick_mats=getBrickMats(cm.materialType, cm.id), seedInc=i)
                     mat_name = "" if mat is None else mat.name
                     rgba = bricksDict[key]["rgba"]
