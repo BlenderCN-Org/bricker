@@ -380,5 +380,6 @@ def handle_upconversion(dummy):
             if cm.parent_obj is not None:
                 # TODO: replace with this line when the function is fixed in 2.8
                 cm.parent_obj.user_clear()
+                cm.parent_obj.use_fake_user = True
                 # for coll in cm.parent_obj.users_collection:
                 #     coll.objects.unlink(cm.parent_obj)

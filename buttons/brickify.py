@@ -67,7 +67,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                     animAction = "ANIM" in self.action
                     frame = int(job.split("__")[-1]) if animAction else None
                     objFrameStr = "_f_%(frame)s" % locals() if animAction else ""
-                    self.JobManager.process_job(job, debug_level=0)
+                    self.JobManager.process_job(job, debug_level=3)
                     if self.JobManager.job_complete(job):
                         if animAction: self.report({"INFO"}, "Completed frame %(frame)s of model '%(n)s'" % locals())
                         # cache bricksDict
@@ -89,6 +89,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                                 origMat = bpy.data.materials.get(mat.name[:-4])
                                 if origMat is not None:
                                     brick.material_slots[i].material = origMat
+                                    mat.user_remap(origMat)
                                     bpy.data.materials.remove(mat)
                             if not b280():
                                 safeLink(brick)
@@ -624,7 +625,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
     def brickifyActiveFrame(action):
         # initialize vars
         scn, cm, n = getActiveContextInfo()
-        parent = bpy.data.objects.get("Bricker_%(n)s_parent" % locals())
+        parent = cm.parent_obj
         sourceDup = bpy.data.objects.get(cm.source_obj.name + "_duplicate")
         sourceDup_details, dimensions = getDetailsAndBounds(sourceDup)
 
