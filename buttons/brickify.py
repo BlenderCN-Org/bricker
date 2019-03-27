@@ -123,37 +123,39 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                         if animAction: cm.numAnimatedFrames += 1
                         self.jobs.remove(job)
                 # cancel and save finished frames if stopped
-                if cm.stopAnimationProcess:
-                    updatedStopFrame = False
-                    # set end frame to last consecutive completed frame and toss non-consecutive frames
-                    for frame in range(cm.lastStartFrame, cm.lastStopFrame + 1):
-                        if frame not in self.completed_frames and not updatedStopFrame:
-                            # set end frame to last consecutive completed frame
-                            updatedStopFrame = True
-                            cm.lastStopFrame = frame - 1
-                            cm.stopFrame = frame - 1
-                        if frame in self.completed_frames and updatedStopFrame:
-                            # remove frames that cannot be saved
-                            bricker_parent = bpy.data.objects.get("Bricker_%(n)s_parent_f_%(frame)s" % locals())
-                            delete(bricker_parent)
-                            bricker_bricks_coll = bpy_collections().get("Bricker_%(n)s_bricks_f_%(frame)s" % locals())
-                            delete(bricker_bricks_coll.objects)
-                            bpy_collections().remove(bricker_bricks_coll)
-                    for frame in range(cm.lastStartFrame, cm.lastStopFrame + 1):
-                        bricker_bricks_coll = bpy_collections().get("Bricker_%(n)s_bricks_f_%(frame)s" % locals())
-                        # hide obj unless on scene current frame
-                        adjusted_frame_current = getAnimAdjustedFrame(scn.frame_current, cm.lastStartFrame, cm.lastStopFrame)
-                        if b280():
-                            bricker_bricks_coll.hide_viewport = frame != adjusted_frame_current
-                            bricker_bricks_coll.hide_render   = frame != adjusted_frame_current
-                        elif frame != adjusted_frame_current:
-                            hide(bricker_bricks_coll.objects)
-                        else:
-                            unhide(bricker_bricks_coll.objects)
-                    # finish animation and kill running jobs
+                if cm.stopBackgroundProcess:
                     if "ANIM" in self.action:
+                        updatedStopFrame = False
+                        # set end frame to last consecutive completed frame and toss non-consecutive frames
+                        for frame in range(cm.lastStartFrame, cm.lastStopFrame + 1):
+                            if frame not in self.completed_frames and not updatedStopFrame:
+                                # set end frame to last consecutive completed frame
+                                updatedStopFrame = True
+                                cm.lastStopFrame = frame - 1
+                                cm.stopFrame = frame - 1
+                            if frame in self.completed_frames and updatedStopFrame:
+                                # remove frames that cannot be saved
+                                bricker_parent = bpy.data.objects.get("Bricker_%(n)s_parent_f_%(frame)s" % locals())
+                                delete(bricker_parent)
+                                bricker_bricks_coll = bpy_collections().get("Bricker_%(n)s_bricks_f_%(frame)s" % locals())
+                                delete(bricker_bricks_coll.objects)
+                                bpy_collections().remove(bricker_bricks_coll)
+                        for frame in range(cm.lastStartFrame, cm.lastStopFrame + 1):
+                            bricker_bricks_coll = bpy_collections().get("Bricker_%(n)s_bricks_f_%(frame)s" % locals())
+                            # hide obj unless on scene current frame
+                            adjusted_frame_current = getAnimAdjustedFrame(scn.frame_current, cm.lastStartFrame, cm.lastStopFrame)
+                            if b280():
+                                bricker_bricks_coll.hide_viewport = frame != adjusted_frame_current
+                                bricker_bricks_coll.hide_render   = frame != adjusted_frame_current
+                            elif frame != adjusted_frame_current:
+                                hide(bricker_bricks_coll.objects)
+                            else:
+                                unhide(bricker_bricks_coll.objects)
+                        # finish animation and kill running jobs
                         self.finishAnimation()
-                    cm.stopAnimationProcess = False
+                    else:
+                        bpy.ops.bricker.delete_model()
+                    cm.stopBackgroundProcess = False
                     self.cancel(context)
                     return {"CANCELLED"}
                 # cancel if model was deleted before process completed
@@ -770,6 +772,10 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             if len(matObj.data.materials) == 0:
                 self.report({"WARNING"}, "No ABS Plastic Materials found in Materials to be used")
                 return False
+
+        if cm.brickifyingInBackground:
+            self.report({"WARNING"}, "Model is brickifying in the background. To cancel the process and brickify again, first delete the model.")
+            return False
 
         if b280() and self.action in ("CREATE", "ANIMATE"):
             # ensure source is on current view layer

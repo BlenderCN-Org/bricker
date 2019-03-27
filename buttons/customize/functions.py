@@ -46,8 +46,9 @@ def drawUpdatedBricks(cm, bricksDict, keysToUpdate, action="redrawing", selectCr
     # actually draw the bricks
     _, bricksCreated = BRICKER_OT_brickify.createNewBricks(source, parent, source_details, dimensions, refLogo, logo_details, action, cm=cm, bricksDict=bricksDict, keys=keysToUpdate, clearExistingCollection=False, selectCreated=selectCreated, printStatus=False, tempBrick=tempBrick, redraw=True)
     # link new bricks to scene
-    for brick in bricksCreated:
-        safeLink(brick)
+    if not b280():
+        for brick in bricksCreated:
+            safeLink(brick)
     # add bevel if it was previously added
     if cm.bevelAdded and not tempBrick:
         bricks = getBricks(cm)

@@ -208,8 +208,16 @@ class VIEW3D_PT_bricker_brick_models(Panel):
                     row.operator("bricker.delete_model", text="Delete Brickified Model", icon="CANCEL")
                     col = layout.column(align=True)
                     row = col.row(align=True)
-                    row.active = brickifyShouldRun(cm)
-                    row.operator("bricker.brickify", text="Update Model", icon="FILE_REFRESH").splitBeforeUpdate = False
+                    if cm.brickifyingInBackground:
+                        col.scale_y = 0.75
+                        row.label(text="Brickifying...")
+                        row.operator("bricker.stop_brickifying_in_background", text="Stop", icon="PAUSE")
+                        # row = col.row(align=True)
+                        # percentage = round(cm.numAnimatedFrames * 100 / cm.framesToAnimate, 2)
+                        # row.label(text=str(percentage) + "% completed")
+                    else:
+                        row.active = brickifyShouldRun(cm)
+                        row.operator("bricker.brickify", text="Update Animation", icon="FILE_REFRESH").splitBeforeUpdate = False
                     if createdWithUnsupportedVersion(cm):
                         col = layout.column(align=True)
                         col.scale_y = 0.7

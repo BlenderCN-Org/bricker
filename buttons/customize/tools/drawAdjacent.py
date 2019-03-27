@@ -77,6 +77,7 @@ class BRICKER_OT_draw_adjacent(Operator):
             # initialize vars
             obj = bpy.context.active_object
             initial_active_obj_name = obj.name
+            cm.customized = True
             keysToMerge = []
             updateHasCustomObjs(cm, targetType)
 
@@ -146,7 +147,6 @@ class BRICKER_OT_draw_adjacent(Operator):
             scn, cm, _ = getActiveContextInfo()
             obj = bpy.context.active_object
             dictKey = getDictKey(obj.name)
-            cm.customized = True
 
             # initialize self.bricksDict
             self.bricksDict, _ = getBricksDict(cm=cm)

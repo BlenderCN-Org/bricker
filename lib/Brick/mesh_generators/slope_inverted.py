@@ -108,10 +108,6 @@ def makeInvertedSlope(dimensions:dict, brickSize:list, brickType:str, loopCut:bo
             coord2 = Vector((d.x * scalar.x - thick.x, d.y * scalar.y - thick.y / 2, d.z))
             # v13, v14, v15, v16, v17, v18, v19, v20 = makeCube(coord1, coord2, [0, 0, 1, 0 if sum(adjustedBrickSize[:2]) == 5 else 1, 1, 1], flipNormals=True, bme=bme)
             # TODO: replace the following line with line above to add support details later
-            print()
-            print(coord1)
-            print(coord2)
-            print(scalar)
             v13, v14, v15, v16, v17, v18, v19, v20 = makeCube(coord1, coord2, [0, 0, 1, 1, 1, 1], flipNormals=True, bme=bme)
             v15.co.z += (d.z * 2 - thick.z) * (0.9 if max(adjustedBrickSize[:2]) == 3 else 0.8)
             v16.co.z = v15.co.z
