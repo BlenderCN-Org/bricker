@@ -78,7 +78,8 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                         cacheBricksDict(self.action, cm, bricksDict, curFrame=frame)
                         # process retrieved bricker data
                         bricker_parent = bpy.data.objects.get("Bricker_%(n)s_parent%(objFrameStr)s" % locals())
-                        bricker_parent.use_fake_user = True
+                        safeLink(bricker_parent) # updates stale bricker_parent location
+                        safeUnlink(bricker_parent) # adds fake user to parent
                         bricker_bricks_coll = bpy_collections()["Bricker_%(n)s_bricks%(objFrameStr)s" % locals()]
                         for brick in bricker_bricks_coll.objects:
                             brick.parent = bricker_parent
@@ -446,8 +447,8 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             filename = bpy.path.basename(bpy.data.filepath)[:-6]
             curJob = "%(filename)s__%(n)s" % locals()
             script = os.path.join(self.brickerAddonPath, "lib", "brickify_in_background_template.py")
-            jobAdded = self.JobManager.add_job(curJob, script=script, passed_data={"frame":None, "cmlist_index":scn.cmlist_index, "action":self.action}, use_blend_file=True)
-            if not jobAdded: raise Exception("Job already added")
+            jobAdded, msg = self.JobManager.add_job(curJob, script=script, passed_data={"frame":None, "cmlist_index":scn.cmlist_index, "action":self.action}, use_blend_file=True)
+            if not jobAdded: raise Exception(msg)
             self.jobs.append(curJob)
         else:
             bColl = self.brickifyActiveFrame(self.action)
@@ -531,8 +532,8 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             if cm.brickifyInBackground:
                 curJob = "%(filename)s__%(n)s__%(curFrame)s" % locals()
                 script = os.path.join(self.brickerAddonPath, "lib", "brickify_in_background_template.py")
-                jobAdded = self.JobManager.add_job(curJob, script=script, passed_data={"frame":curFrame, "cmlist_index":scn.cmlist_index, "action":self.action}, use_blend_file=True, overwrite_blend=overwrite_blend)
-                if not jobAdded: raise Exception("Job for frame '%(curFrame)s' already added" % locals())
+                jobAdded, msg = self.JobManager.add_job(curJob, script=script, passed_data={"frame":curFrame, "cmlist_index":scn.cmlist_index, "action":self.action}, use_blend_file=True, overwrite_blend=overwrite_blend)
+                if not jobAdded: raise Exception(msg)
                 self.jobs.append(curJob)
                 overwrite_blend = False
             else:

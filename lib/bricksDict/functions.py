@@ -85,23 +85,23 @@ def getUVLayerData(obj):
     return active_uv.data
 
 
-def getFirstImgTexNode(obj):
+def getFirstImgTexNodes(obj):
     """ return first image texture found in object's material slots """
-    img = None
+    imgs = list()
     for mat_slot in obj.material_slots:
         mat = mat_slot.material
         if mat is None or not mat.use_nodes:
             continue
         active_node = mat.node_tree.nodes.active
         nodes_to_check = [active_node] + list(mat.node_tree.nodes)
+        img = None
         for node in nodes_to_check:
             if node and node.type == "TEX_IMAGE":
                 img = verifyImg(node.image)
                 if img is not None:
+                    imgs.append(img)
                     break
-        if img is not None:
-            break
-    return img
+    return imgs
 
 
 # reference: https://svn.blender.org/svnroot/bf-extensions/trunk/py/scripts/addons/uv_bake_texture_to_vcols.py
@@ -114,9 +114,10 @@ def getUVImages(obj):
         images = []
     else:
         uv_tex_data = getUVLayerData(obj)
-        images = [uv_tex.image for uv_tex in uv_tex_data] if uv_tex_data else []
+        images = [uv_tex.image for uv_tex in uv_tex_data if uv_tex.image is not None] if uv_tex_data else []
+        print(images)
     images.append(cm.uvImage)
-    images.append(getFirstImgTexNode(obj))
+    images += getFirstImgTexNodes(obj)
     images = uniquify1(images)
     # store images
     uv_images = {}
@@ -301,7 +302,13 @@ def getUVImage(scn, obj, face_idx, uvImage):
     if not b280() and image is None and obj.data.uv_textures.active:
         image = verifyImg(obj.data.uv_textures.active.data[face_idx].image)
     if image is None:
-        image = verifyImg(getFirstImgTexNode(obj))
+        try:
+            mat_idx = obj.data.polygons[face_idx].material_index
+            print(mat_idx)
+            image = verifyImg(getFirstImgTexNodes(obj)[mat_idx])
+        except IndexError:
+            imgs = getFirstImgTexNodes(obj)
+            image = verifyImg(imgs[0]) if len(imgs) > 0 else None
     return image
 
 
