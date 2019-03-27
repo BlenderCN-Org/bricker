@@ -96,6 +96,7 @@ def isObjVisible(scn, cm, n):
 def handle_selections(scn):
     if brickerRunningBlockingOp():
         return
+    obj = scn.objects.active
     curLayers = str(list(scn.layers))
     # if scn.layers changes and active object is no longer visible, set scn.cmlist_index to -1
     if scn.Bricker_last_layers != curLayers:
@@ -150,30 +151,29 @@ def handle_selections(scn):
                     deselectAll()
                     break
     # if active object changes, open Brick Model settings for active object
-    elif hasattr(bpy.context, "active_object") and bpy.context.active_object and scn.Bricker_last_active_object_name != bpy.context.active_object.name and len(scn.cmlist) > 0 and (scn.cmlist_index == -1 or scn.cmlist[scn.cmlist_index].source_obj is not None) and bpy.context.active_object.type == "MESH":
-        scn.Bricker_last_active_object_name = bpy.context.active_object.name
+    elif obj and scn.Bricker_last_active_object_name != obj.name and len(scn.cmlist) > 0 and (scn.cmlist_index == -1 or scn.cmlist[scn.cmlist_index].source_obj is not None) and obj.type == "MESH":
+        scn.Bricker_last_active_object_name = obj.name
         beginningString = "Bricker_"
-        if bpy.context.active_object.name.startswith(beginningString):
+        if obj.name.startswith(beginningString):
             usingSource = False
-            frameLoc = bpy.context.active_object.name.rfind("_bricks")
+            frameLoc = obj.name.rfind("_bricks")
             if frameLoc == -1:
                 frameLoc = obj.name.rfind("_parent")
                 if frameLoc == -1:
                     frameLoc = obj.name.rfind("__")
             if frameLoc != -1:
-                scn.Bricker_active_object_name = bpy.context.active_object.name[len(beginningString):frameLoc]
+                scn.Bricker_active_object_name = obj.name[len(beginningString):frameLoc]
         else:
             usingSource = True
-            scn.Bricker_active_object_name = bpy.context.active_object.name
+            scn.Bricker_active_object_name = obj.name
         for i,cm in enumerate(scn.cmlist):
             if getSourceName(cm) != scn.Bricker_active_object_name or (usingSource and cm.modelCreated):
                 continue
             scn.cmlist_index = i
             scn.Bricker_last_cmlist_index = scn.cmlist_index
-            active_obj = bpy.context.active_object
-            if active_obj.isBrick:
+            if obj.isBrick:
                 # adjust scn.active_brick_detail based on active brick
-                x0, y0, z0 = strToList(getDictKey(active_obj.name))
+                x0, y0, z0 = strToList(getDictKey(obj.name))
                 cm.activeKey = (x0, y0, z0)
             return
         # if no matching cmlist item found, set cmlist_index to -1

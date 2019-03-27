@@ -385,10 +385,10 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         if self.action.startswith("UPDATE") and (matrixDirty or cm.buildIsDirty or cm.lastSplitModel != cm.splitModel or cm.brickifyInBackground):
             # skip source, dupes, and parents
             skipTransAndAnimData = cm.animated or (cm.splitModel or cm.lastSplitModel) and (matrixDirty or cm.buildIsDirty)
-            bpy.props.trans_and_anim_data = BRICKER_OT_delete_model.cleanUp("MODEL", skipDupes=True, skipParents=True, skipSource=True, skipTransAndAnimData=skipTransAndAnimData)[4]
+            bpy.props.bricker_trans_and_anim_data = BRICKER_OT_delete_model.cleanUp("MODEL", skipDupes=True, skipParents=True, skipSource=True, skipTransAndAnimData=skipTransAndAnimData)[4]
         else:
             storeTransformData(cm, None)
-            bpy.props.trans_and_anim_data = []
+            bpy.props.bricker_trans_and_anim_data = []
 
         if self.action == "CREATE":
             # duplicate source
@@ -641,7 +641,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             # transform bricks to appropriate location
             BRICKER_OT_brickify.transformBricks(bColl, cm, parent, cm.source_obj, sourceDup_details, action)
             # apply old animation data to objects
-            for d0 in bpy.props.trans_and_anim_data:
+            for d0 in bpy.props.bricker_trans_and_anim_data:
                 obj = bpy.data.objects.get(d0["name"])
                 if obj is not None:
                     obj.location = d0["loc"]
@@ -736,7 +736,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             updateInternal(bricksDict, cm, keys, clearExisting=loadedFromCache)
             cm.buildIsDirty = True
         # update materials in bricksDict
-        if cm.materialType != "NONE" and (cm.materialIsDirty or cm.matrixIsDirty or cm.animIsDirty): bricksDict = updateMaterials(bricksDict, source, uv_images, curFrame)
+        if cm.materialType != "NONE" and (cm.materialIsDirty or cm.matrixIsDirty or cm.animIsDirty): bricksDict = updateMaterials(bricksDict, source, uv_images, keys, curFrame)
         # make bricks
         coll_name = 'Bricker_%(n)s_bricks_f_%(curFrame)s' % locals() if curFrame is not None else "Bricker_%(n)s_bricks" % locals()
         bricksCreated, bricksDict = makeBricks(source, parent, refLogo, logo_details, dimensions, bricksDict, action, cm=cm, split=split, brickScale=brickScale, customData=customData, coll_name=coll_name, clearExistingCollection=clearExistingCollection, frameNum=curFrame, cursorStatus=updateCursor, keys=keys, printStatus=printStatus, tempBrick=tempBrick, redraw=redraw)

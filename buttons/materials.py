@@ -95,7 +95,7 @@ class BRICKER_OT_apply_material(bpy.types.Operator):
                 return
             # apply random material
             if self.action == "RANDOM":
-                self.applyRandomMaterial(scn, cm, context, bricks, bricksDict)
+                self.applyRandomMaterials(scn, cm, context, bricks, bricksDict)
             # apply custom or internal material
             else:
                 # get material
@@ -129,7 +129,7 @@ class BRICKER_OT_apply_material(bpy.types.Operator):
         cm.lastMatShellDepth = cm.matShellDepth
 
     @classmethod
-    def applyRandomMaterial(self, scn, cm, context, bricks, bricksDict):
+    def applyRandomMaterials(self, scn, cm, context, bricks, bricksDict):
         # initialize list of brick materials
         brick_mats = []
         matObj = getMatObject(cm.id, typ="RANDOM")
@@ -137,15 +137,12 @@ class BRICKER_OT_apply_material(bpy.types.Operator):
             brick_mats.append(mat)
         if len(brick_mats) == 0:
             return
-        randS0 = np.random.RandomState(0)
         # initialize variables
-        lastSplitModel = cm.lastSplitModel
+        randS0 = np.random.RandomState(0)
         randomMatSeed = cm.randomMatSeed
-        brick = bricks[0]
-        lastMatSlots = list(brick.material_slots.keys())
-        dictKeys = sorted(list(bricksDict.keys()))
-        # apply a random material to each brick
-        if lastSplitModel:
+        if cm.lastSplitModel:
+            # apply a random material to each brick
+            dictKeys = sorted(list(bricksDict.keys()))
             for brick in bricks:
                 curKey = brick.name.split("__")[-1]
                 # iterate seed and set random index
@@ -156,13 +153,16 @@ class BRICKER_OT_apply_material(bpy.types.Operator):
                 setMaterial(brick, mat)
                 # update bricksDict
                 bricksDict[curKey]["mat_name"] = mat.name
-        # apply a random material to each random material slot
-        elif len(lastMatSlots) == len(brick_mats):
-            for i in range(len(lastMatSlots)):
-                # iterate seed and set random index
-                randS0.seed(randomMatSeed + i)
-                randIdx = 0 if len(brick_mats) == 1 else randS0.randint(0, len(brick_mats))
-                # Assign random material to object
-                matName = brick_mats.pop(randIdx)
-                mat = bpy.data.materials.get(matName)
-                brick.material_slots[i].material = mat
+        else:
+            # apply a random material to each random material slot
+            brick = bricks[0]
+            lastMatSlots = list(brick.material_slots.keys())
+            if len(lastMatSlots) == len(brick_mats):
+                for i in range(len(lastMatSlots)):
+                    # iterate seed and set random index
+                    randS0.seed(randomMatSeed + i)
+                    randIdx = 0 if len(brick_mats) == 1 else randS0.randint(0, len(brick_mats))
+                    # Assign random material to object
+                    matName = brick_mats.pop(randIdx)
+                    mat = bpy.data.materials.get(matName)
+                    brick.material_slots[i].material = mat
