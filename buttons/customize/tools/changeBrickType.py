@@ -87,7 +87,7 @@ class BRICKER_OT_change_brick_type(Operator):
                 # get cmlist item referred to by object
                 cm = getItemByID(scn.cmlist, obj.cmlist_id)
                 # get bricksDict from cache
-                bricksDict, _ = getBricksDict(cm=cm)
+                bricksDict = getBricksDict(cm)
                 dictKey = getDictKey(obj.name)
                 # initialize properties
                 curBrickType = bricksDict[dictKey]["type"]

@@ -115,7 +115,6 @@ def getUVImages(obj):
     else:
         uv_tex_data = getUVLayerData(obj)
         images = [uv_tex.image for uv_tex in uv_tex_data if uv_tex.image is not None] if uv_tex_data else []
-        print(images)
     images.append(cm.uvImage)
     images += getFirstImgTexNodes(obj)
     images = uniquify1(images)
@@ -304,7 +303,6 @@ def getUVImage(scn, obj, face_idx, uvImage):
     if image is None:
         try:
             mat_idx = obj.data.polygons[face_idx].material_index
-            print(mat_idx)
             image = verifyImg(getFirstImgTexNodes(obj)[mat_idx])
         except IndexError:
             imgs = getFirstImgTexNodes(obj)
@@ -372,12 +370,12 @@ def getDetailsAndBounds(obj, cm=None):
     return obj_details, dimensions
 
 
-def getArgumentsForBricksDict(cm, source=None, source_details=None, dimensions=None, brickSize=[1, 1, 3]):
+def getArgumentsForBricksDict(cm, source=None, dimensions=None, brickSize=[1, 1, 3]):
     """ returns arguments for makeBricksDict function """
     source = source or cm.source_obj
     customData = [None] * 3
-    if source_details is None or dimensions is None:
-        source_details, dimensions = getDetailsAndBounds(source, cm)
+    if dimensions is None:
+        dimensions = Bricks.get_dimensions(cm.brickHeight, cm.zStep, cm.gap)
     for i, customInfo in enumerate([[cm.hasCustomObj1, cm.customObject1], [cm.hasCustomObj2, cm.customObject2], [cm.hasCustomObj3, cm.customObject3]]):
         hasCustomObj, customObj = customInfo
         if (i == 0 and cm.brickType == "CUSTOM") or hasCustomObj:
@@ -421,7 +419,7 @@ def getArgumentsForBricksDict(cm, source=None, source_details=None, dimensions=N
         brickScale = Vector((dimensions["width"] + dimensions["gap"],
                     dimensions["width"] + dimensions["gap"],
                     dimensions["height"]+ dimensions["gap"]))
-    return source, source_details, dimensions, brickScale, customData
+    return brickScale, customData
 
 
 def isBrickExposed(bricksDict, zStep, key=None, loc=None):

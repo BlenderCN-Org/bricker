@@ -67,15 +67,15 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                     animAction = "ANIM" in self.action
                     frame = int(job.split("__")[-1]) if animAction else None
                     objFrameStr = "_f_%(frame)s" % locals() if animAction else ""
-                    self.JobManager.process_job(job, debug_level=3)
+                    self.JobManager.process_job(job, debug_level=0)
                     if self.JobManager.job_complete(job):
                         if animAction: self.report({"INFO"}, "Completed frame %(frame)s of model '%(n)s'" % locals())
                         # cache bricksDict
                         retrieved_data = self.JobManager.get_retrieved_python_data(job)
-                        bricksDict = json.loads(retrieved_data["bricksDict"])
+                        bricksDict = None if retrieved_data["bricksDict"] in ("", "null") else json.loads(retrieved_data["bricksDict"])
                         cm.brickSizesUsed = retrieved_data["brickSizesUsed"]
                         cm.brickTypesUsed = retrieved_data["brickTypesUsed"]
-                        cacheBricksDict(self.action, cm, bricksDict, curFrame=frame)
+                        if bricksDict is not None: cacheBricksDict(self.action, cm, bricksDict[str(frame)] if animAction else bricksDict, curFrame=frame)
                         # process retrieved bricker data
                         bricker_parent = bpy.data.objects.get("Bricker_%(n)s_parent%(objFrameStr)s" % locals())
                         safeLink(bricker_parent) # updates stale bricker_parent location
@@ -297,8 +297,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
 
         # make sure matrix really is dirty
         if cm.matrixIsDirty:
-            _, loadedFromCache = getBricksDict(dType="MODEL", cm=cm)
-            if not matrixDirty and loadedFromCache:
+            if not matrixDirty and getBricksDict(cm) is not None:
                 cm.matrixIsDirty = False
 
         if b280():
@@ -698,13 +697,19 @@ class BRICKER_OT_brickify(bpy.types.Operator):
     def createNewBricks(source, parent, source_details, dimensions, refLogo, logo_details, action, split=True, cm=None, curFrame=None, bricksDict=None, keys="ALL", clearExistingCollection=True, selectCreated=False, printStatus=True, tempBrick=False, redraw=False, origSource=None):
         """ gets/creates bricksDict, runs makeBricks, and caches the final bricksDict """
         scn, cm, n = getActiveContextInfo(cm=cm)
-        _, _, _, brickScale, customData = getArgumentsForBricksDict(cm, source=source, source_details=source_details, dimensions=dimensions)
+        brickScale, customData = getArgumentsForBricksDict(cm, source=source, dimensions=dimensions)
         updateCursor = action in ("CREATE", "UPDATE_MODEL")
+        uv_images = getUVImages(source)  # get uv_layer image and pixels for material calculation
         if bricksDict is None:
-            # multiply brickScale by offset distance
-            brickScale2 = brickScale if cm.brickType != "CUSTOM" else vec_mult(brickScale, Vector(cm.distOffset))
-            # get bricks dictionary
-            bricksDict, loadedFromCache = getBricksDict(dType=action, source=source, source_details=source_details, dimensions=dimensions, brickScale=brickScale2, updateCursor=updateCursor, curFrame=curFrame, restrictContext=False)
+            # load bricksDict from cache
+            bricksDict = getBricksDict(cm, dType=action, curFrame=curFrame)
+            loadedFromCache = bricksDict is not None
+            # if not loaded, new bricksDict must be created
+            if not loadedFromCache:
+                # multiply brickScale by offset distance
+                brickScale2 = brickScale if cm.brickType != "CUSTOM" else vec_mult(brickScale, Vector(cm.distOffset))
+                # create new bricksDict
+                bricksDict = makeBricksDict(source, source_details, brickScale2, uv_images, cursorStatus=updateCursor)
         else:
             loadedFromCache = True
         # reset all values for certain keys in bricksDict dictionaries
@@ -729,7 +734,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             updateInternal(bricksDict, cm, keys, clearExisting=loadedFromCache)
             cm.buildIsDirty = True
         # update materials in bricksDict
-        if cm.materialType != "NONE" and (cm.materialIsDirty or cm.matrixIsDirty or cm.animIsDirty): bricksDict = updateMaterials(bricksDict, source, curFrame)
+        if cm.materialType != "NONE" and (cm.materialIsDirty or cm.matrixIsDirty or cm.animIsDirty): bricksDict = updateMaterials(bricksDict, source, uv_images, curFrame)
         # make bricks
         coll_name = 'Bricker_%(n)s_bricks_f_%(curFrame)s' % locals() if curFrame is not None else "Bricker_%(n)s_bricks" % locals()
         bricksCreated, bricksDict = makeBricks(source, parent, refLogo, logo_details, dimensions, bricksDict, action, cm=cm, split=split, brickScale=brickScale, customData=customData, coll_name=coll_name, clearExistingCollection=clearExistingCollection, frameNum=curFrame, cursorStatus=updateCursor, keys=keys, printStatus=printStatus, tempBrick=tempBrick, redraw=redraw)

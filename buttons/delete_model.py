@@ -157,7 +157,7 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
             select(source, active=True)
 
             # apply transformation to source
-            if not cm.armature and ((modelType == "MODEL" and (cm.applyToSourceObject or not cm.lastSplitModel)) or (modelType == "ANIMATION" and cm.applyToSourceObject)):
+            if not cm.armature and len(getBricks()) > 0 and ((modelType == "MODEL" and (cm.applyToSourceObject or not cm.lastSplitModel)) or (modelType == "ANIMATION" and cm.applyToSourceObject)):
                 l, r, s = getTransformData(cm)
                 if modelType == "MODEL":
                     loc = strToTuple(cm.lastSourceMid, float)

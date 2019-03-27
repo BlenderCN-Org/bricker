@@ -88,7 +88,7 @@ class BRICKER_OT_apply_material(bpy.types.Operator):
         lastSplitModel = cm.lastSplitModel
         for frame in range(cm.startFrame, cm.stopFrame + 1) if cm.animated else [-1]:
             # get bricksDict
-            bricksDict, _ = getBricksDict(dType="ANIM" if cm.animated else "MODEL", curFrame=frame, cm=cm)
+            bricksDict = getBricksDict(cm, dType="ANIM" if cm.animated else "MODEL", curFrame=frame)
             if bricksDict is None:
                 self.report({"WARNING"}, "Materials could not be applied manually. Please run 'Update Model'")
                 cm.matrixIsDirty = True

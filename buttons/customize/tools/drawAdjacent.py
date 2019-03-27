@@ -73,7 +73,7 @@ class BRICKER_OT_draw_adjacent(Operator):
             scn.update()
             self.undo_stack.iterateStates(cm)
             # get fresh copy of self.bricksDict
-            self.bricksDict, _ = getBricksDict(cm=cm)
+            self.bricksDict = getBricksDict(cm)
             # initialize vars
             obj = bpy.context.active_object
             initial_active_obj_name = obj.name
@@ -149,7 +149,7 @@ class BRICKER_OT_draw_adjacent(Operator):
             dictKey = getDictKey(obj.name)
 
             # initialize self.bricksDict
-            self.bricksDict, _ = getBricksDict(cm=cm)
+            self.bricksDict = getBricksDict(cm)
             # initialize direction bools
             self.zPos, self.zNeg, self.yPos, self.yNeg, self.xPos, self.xNeg = [False] * 6
             # initialize self.dimensions

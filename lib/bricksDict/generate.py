@@ -613,7 +613,7 @@ def createBricksDictEntry(name:str, loc:list, val:float=0, draw:bool=False, co:t
            }
 
 @timed_call('Time Elapsed')
-def makeBricksDict(source, source_details, brickScale, cursorStatus=False):
+def makeBricksDict(source, source_details, brickScale, uv_images, cursorStatus=False):
     """ make dictionary with brick information at each coordinate of lattice surrounding source
     source         -- source object to construct lattice around
     source_details -- object details with subattributes for distance and midpoint of x, y, z axes
@@ -649,8 +649,6 @@ def makeBricksDict(source, source_details, brickScale, cursorStatus=False):
     brickType = cm.brickType  # prevents cm.brickType update function from running over and over in for loop
     uvImage = cm.uvImage
     noOffset = vec_round(offset, precision=5) == Vector((0, 0, 0))
-    # get uv_layer image and pixels for material calculation
-    uv_images = getUVImages(source)
     for x in range(len(coordMatrix)):
         for y in range(len(coordMatrix[0])):
             for z in range(len(coordMatrix[0][0])):

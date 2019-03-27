@@ -71,7 +71,7 @@ class BRICKER_OT_export_ldraw(Operator):
             f.write("0 Name:\n" % locals())
             f.write("0 Unofficial model\n" % locals())
             # f.write("0 Author: Unknown\n" % locals())
-            bricksDict, _ = getBricksDict(dType="ANIM" if cm.animated else "MODEL", curFrame=frame, cm=cm)
+            bricksDict = getBricksDict(cm, dType="ANIM" if cm.animated else "MODEL", curFrame=frame)
             # get small offset for model to get close to Ldraw units
             offset = vec_conv(bricksDict[list(bricksDict.keys())[0]]["co"], int)
             offset.x = offset.x % 10

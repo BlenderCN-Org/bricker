@@ -26,16 +26,14 @@ from .functions import *
 from ...functions import *
 
 
-def updateMaterials(bricksDict, source, curFrame=None):
+def updateMaterials(bricksDict, source, uv_images, curFrame=None):
     """ sets all matNames in bricksDict based on near_face """
     scn, cm, n = getActiveContextInfo()
     useUVMap = cm.useUVMap and (len(source.data.uv_layers) > 0 or cm.uvImage is not None)
-    if useUVMap:
-        uv_images = getUVImages(source)
-        if len(uv_images) == 0:
-            useUVMap = False
-    else:
+    if not useUVMap:
         uv_images = None
+    elif len(uv_images) == 0:
+        useUVMap = False
     rgba_vals = []
     # initialize variables
     isSmoke = cm.isSmoke

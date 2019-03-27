@@ -254,7 +254,7 @@ def createObjNamesAndBricksDictsDs(objs):
         cm = getItemByID(scn.cmlist, cm_id)
         if cm is None: continue
         # get bricksDict from cache
-        bricksDict, _ = getBricksDict(cm=cm)
+        bricksDict = getBricksDict(cm)
         # add to bricksDicts
         bricksDicts[cm_id] = bricksDict
     return objNamesD, bricksDicts

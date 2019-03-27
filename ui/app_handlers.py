@@ -222,7 +222,7 @@ def handle_loading_to_light_cache(dummy):
             cm.blender_undo_state = 0
             python_undo_state[cm.id] = 0
             # load bricksDict
-            bricksDict = getBricksDict(cm=cm)[0]
+            bricksDict = getBricksDict(cm)[0]
             if bricksDict is None:
                 cm.matrixLost = True
                 cm.matrixIsDirty = True

@@ -50,7 +50,7 @@ class BRICKER_OT_export_model_data(Operator):
                 self.report({"WARNING"}, errorMsg)
                 return {"CANCELLED"}
             bType = "Frames" if cm.animated else "Bricks"
-            bricksDict, _ = getBricksDict(dType="ANIM" if cm.animated else "MODEL", curFrame=scn.frame_current, cm=cm)
+            bricksDict = getBricksDict(cm, dType="ANIM" if cm.animated else "MODEL", curFrame=scn.frame_current)
             numBs = len([b for b in bricksDict.values() if b["draw"] and b["parent"] == "self"])
             # get model info
             modelInfoStrings = ["# Model Name:  " + cm.name,

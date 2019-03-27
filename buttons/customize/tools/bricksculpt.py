@@ -84,7 +84,7 @@ class BRICKER_OT_bricksculpt(Operator, bricksculpt_framework, bricksculpt_tools,
                 self.undo_stack.iterateStates(cm)
                 cm.customized = True
                 # get fresh copy of self.bricksDict
-                self.bricksDict, _ = getBricksDict(cm=cm)
+                self.bricksDict = getBricksDict(cm)
                 # create modal handler
                 wm = context.window_manager
                 wm.modal_handler_add(self)
