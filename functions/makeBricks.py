@@ -314,7 +314,8 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
         # set parent
         allBricksObj.parent = parent
         # add bricks obj to scene and bricksCreated
-        bColl.objects.link(allBricksObj)
+        if allBricksObj.name not in bColl.objects.keys():
+            bColl.objects.link(allBricksObj)
         bricksCreated.append(allBricksObj)
         # protect allBricksObj from being deleted
         allBricksObj.isBrickifiedObject = True
