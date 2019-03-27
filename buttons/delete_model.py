@@ -136,11 +136,11 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
         modelType = getModelType(cm)
         origFrame = scn.frame_current
         scn.frame_set(cm.modelCreatedOnFrame)
+        bricks = getBricks()
         # store pivot point for model
         if cm.lastSplitModel or cm.animated:
             pivot_point = cm.parent_obj.matrix_world.to_translation()
         else:
-            bricks = getBricks()
             pivot_obj = bricks[0] if len(bricks) > 0 else cm.source_obj
             pivot_point = pivot_obj.matrix_world.to_translation()
 
@@ -157,7 +157,7 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
             select(source, active=True)
 
             # apply transformation to source
-            if not cm.armature and len(getBricks()) > 0 and ((modelType == "MODEL" and (cm.applyToSourceObject or not cm.lastSplitModel)) or (modelType == "ANIMATION" and cm.applyToSourceObject)):
+            if not cm.armature and len(bricks) > 0 and ((modelType == "MODEL" and (cm.applyToSourceObject or not cm.lastSplitModel)) or (modelType == "ANIMATION" and cm.applyToSourceObject)):
                 l, r, s = getTransformData(cm)
                 if modelType == "MODEL":
                     loc = strToTuple(cm.lastSourceMid, float)
