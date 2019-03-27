@@ -214,7 +214,7 @@ def updateBrickSizeAndDict(dimensions, source_name, bricksDict, brickSize, key, 
 
 def createAddlBricksDictEntry(source_name, bricksDict, source_key, key, full_d, x, y, z):
     brickD = bricksDict[source_key]
-    newName = "Bricker_%(source_name)s_brick__%(key)s" % locals()
+    newName = "Bricker_%(source_name)s__%(key)s" % locals()
     newCO = (Vector(brickD["co"]) + vec_mult(Vector((x, y, z)), full_d)).to_tuple()
     bricksDict[key] = createBricksDictEntry(
         name=              newName,

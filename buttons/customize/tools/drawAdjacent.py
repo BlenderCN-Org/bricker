@@ -253,7 +253,7 @@ class BRICKER_OT_draw_adjacent(Operator):
         if not adjBrickD:
             co = BRICKER_OT_draw_adjacent.getNewCoord(cm, bricksDict, dictKey, dictLoc, adjacent_key, adjacent_loc, dimensions)
             bricksDict[adjacent_key] = createBricksDictEntry(
-                name=              'Bricker_%(n)s_brick__%(adjacent_key)s' % locals(),
+                name=              'Bricker_%(n)s__%(adjacent_key)s' % locals(),
                 loc=               adjacent_loc,
                 co=                co,
                 near_face=         bricksDict[dictKey]["near_face"],

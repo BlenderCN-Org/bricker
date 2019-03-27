@@ -381,7 +381,7 @@ def getArgumentsForBricksDict(cm, source=None, dimensions=None, brickSize=[1, 1,
         if (i == 0 and cm.brickType == "CUSTOM") or hasCustomObj:
             scn = bpy.context.scene
             # duplicate custom object
-            customObjName = customObj.name + "_duplicate"
+            customObjName = customObj.name + "__dup__"
             customObj1 = bpy.data.objects.get(customObjName)
             customObj0 = duplicate(customObj)
             # TODO: remove this object on delete action

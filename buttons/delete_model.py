@@ -236,7 +236,7 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
             dupe_name = "Bricker_%(n)s_f_" % locals()
             dObjects = [bpy.data.objects.get(dupe_name + str(fn)) for fn in range(cm.lastStartFrame, cm.lastStopFrame + 1)]
         else:
-            dObjects = [bpy.data.objects.get("%(n)s_duplicate" % locals())]
+            dObjects = [bpy.data.objects.get("%(n)s__dup__" % locals())]
         # # if preserve frames, remove those objects from dObjects
         # objsToRemove = []
         # if modelType == "ANIMATION" and preservedFrames is not None:

@@ -133,7 +133,7 @@ class bricksculpt_tools:
             if len(self.keysToMergeOnRelease) > 1:
                 # delete outdated bricks
                 for key in self.keysToMergeOnRelease:
-                    brickName = "Bricker_%(source_name)s_brick__%(key)s" % locals()
+                    brickName = "Bricker_%(source_name)s__%(key)s" % locals()
                     delete(bpy.data.objects.get(brickName))
                 # split up bricks
                 Bricks.splitAll(self.bricksDict, cm.zStep, keys=self.keysToMergeOnRelease)

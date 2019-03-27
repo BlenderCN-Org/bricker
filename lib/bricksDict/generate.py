@@ -672,7 +672,7 @@ def makeBricksDict(source, source_details, brickScale, uv_images, cursorStatus=F
                 draw = brickFreqMatrix[x][y][z] >= threshold
                 # create bricksDict entry for current brick
                 bricksDict[bKey] = createBricksDictEntry(
-                    name= 'Bricker_%(n)s_brick__%(bKey)s' % locals(),
+                    name= 'Bricker_%(n)s__%(bKey)s' % locals(),
                     loc= [x, y, z],
                     val= brickFreqMatrix[x][y][z],
                     draw= draw,

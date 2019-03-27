@@ -392,7 +392,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         if self.action == "CREATE":
             # duplicate source
             sourceDup = duplicate(self.source, link_to_scene=True)
-            sourceDup.name = self.source.name + "_duplicate"
+            sourceDup.name = self.source.name + "__dup__"
             if cm.useLocalOrient:
                 sourceDup.rotation_mode = "XYZ"
                 sourceDup.rotation_euler = Euler((0, 0, 0))
@@ -419,7 +419,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             scn.update()
         else:
             # get previously created source duplicate
-            sourceDup = bpy.data.objects.get(n + "_duplicate")
+            sourceDup = bpy.data.objects.get(n + "__dup__")
         # if duplicate not created, sourceDup is just original source
         sourceDup = sourceDup or self.source
 
@@ -626,7 +626,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         # initialize vars
         scn, cm, n = getActiveContextInfo()
         parent = cm.parent_obj
-        sourceDup = bpy.data.objects.get(cm.source_obj.name + "_duplicate")
+        sourceDup = bpy.data.objects.get(cm.source_obj.name + "__dup__")
         sourceDup_details, dimensions = getDetailsAndBounds(sourceDup)
 
         # update refLogo
@@ -758,8 +758,9 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             self.report({"WARNING"}, "Source object '%(source_name)s' could not be found" % locals())
             return False
         # ensure source name isn't too long
-        if len(source_name) > 30:
-            self.report({"WARNING"}, "Source object name too long (must be <= 30 characters)")
+        if len(source_name) > 39:
+            self.report({"WARNING"}, "Source object name too long (must be <= 39 characters)")
+            return False
         # verify Blender file is saved if running in background
         if cm.brickifyInBackground and bpy.data.filepath == "":
             self.report({"WARNING"}, "Please save the file first")
