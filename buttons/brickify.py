@@ -104,7 +104,8 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                             if b280():
                                 # link animation frames to animation collection and hide if not active
                                 anim_coll = self.getAnimColl(n)
-                                anim_coll.children.link(bricker_bricks_coll)
+                                if bricker_bricks_coll.name not in anim_coll.children:
+                                    anim_coll.children.link(bricker_bricks_coll)
                                 # hide obj unless on scene current frame
                                 adjusted_frame_current = getAnimAdjustedFrame(scn.frame_current, cm.lastStartFrame, cm.lastStopFrame)
                                 bricker_bricks_coll.hide_viewport = frame != adjusted_frame_current

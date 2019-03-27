@@ -268,8 +268,11 @@ def createNewMaterial(model_name, rgba, rgba_vals, sss, sat_mat, specular, rough
             # make sure 'use_nodes' is disabled
             mat.use_nodes = False
             # update material color
-            r1, g1, b1 = mat.diffuse_color
-            a1 = mat.alpha
+            if b280():
+                r1, g1, b1, a1 = mat.diffuse_color
+            else:
+                r1, g1, b1 = mat.diffuse_color
+                a1 = mat.alpha
             r2, g2, b2, a2 = getAverage(Vector(rgba), Vector((r1, g1, b1, a1)), mat.num_averaged)
             mat.diffuse_color = [r2, g2, b2]
             mat.alpha = a2
@@ -338,12 +341,15 @@ def getMaterialColor(matName):
             return None
         r, g, b, a = node.inputs[0].default_value
     else:
-        r, g, b = mat.diffuse_color
-        intensity = mat.diffuse_intensity
-        r = r * intensity
-        g = g * intensity
-        b = b * intensity
-        a = mat.alpha if mat.use_transparency else 1.0
+        if b280():
+            r, g, b, a = mat.diffuse_color
+        else:
+            r, g, b = mat.diffuse_color
+            intensity = mat.diffuse_intensity
+            r = r * intensity
+            g = g * intensity
+            b = b * intensity
+            a = mat.alpha if mat.use_transparency else 1.0
     return [r, g, b, a]
 
 

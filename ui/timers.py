@@ -106,9 +106,9 @@ def handle_selections_timer():
             usingSource = False
             frameLoc = obj.name.rfind("_bricks")
             if frameLoc == -1:
-                frameLoc = obj.name.rfind("_brick_")
+                frameLoc = obj.name.rfind("_parent")
                 if frameLoc == -1:
-                    frameLoc = obj.name.rfind("_parent")
+                    frameLoc = obj.name.rfind("__")
             if frameLoc != -1:
                 scn.Bricker_active_object_name = obj.name[len(beginningString):frameLoc]
         else:

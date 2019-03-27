@@ -157,9 +157,9 @@ def handle_selections(scn):
             usingSource = False
             frameLoc = bpy.context.active_object.name.rfind("_bricks")
             if frameLoc == -1:
-                frameLoc = bpy.context.active_object.name.rfind("_brick_")
+                frameLoc = obj.name.rfind("_parent")
                 if frameLoc == -1:
-                    frameLoc = bpy.context.active_object.name.rfind("_parent")
+                    frameLoc = obj.name.rfind("__")
             if frameLoc != -1:
                 scn.Bricker_active_object_name = bpy.context.active_object.name[len(beginningString):frameLoc]
         else:
