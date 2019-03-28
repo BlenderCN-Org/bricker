@@ -691,7 +691,6 @@ class BRICKER_OT_brickify(bpy.types.Operator):
 
         # link animation frames to animation collection
         anim_coll = BRICKER_OT_brickify.getAnimColl(n)
-        print(anim_coll)
         for cn in getCollections(cm, typ="ANIM"):
             if b280():
                 if cn.name not in anim_coll.children:
