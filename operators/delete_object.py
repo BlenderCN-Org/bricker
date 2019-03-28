@@ -219,7 +219,6 @@ class OBJECT_OT_delete_override(Operator):
                     bricksDict[k0]["draw"] = True
                     bricksDict[k0]["size"] = [1, 1, zStep]
                     bricksDict[k0]["parent"] = "self"
-                    bricksDict[k0]["mat_name"] = bricksDict[curKey]["mat_name"]
                     bricksDict[k0]["type"] = bricksDict[curKey]["type"]
                     bricksDict[k0]["flipped"] = bricksDict[curKey]["flipped"]
                     bricksDict[k0]["rotated"] = bricksDict[curKey]["rotated"]

@@ -99,7 +99,10 @@ def drawBrick(cm_id, bricksDict, key, loc, i, parent, dimensions, zStep, brickSi
         brick.location = brickLoc
         # set brick material
         setMaterial(brick, mat or internalMat)
-        if mat or internalMat: brickD["mat_name"] = (mat or internalMat).name
+        if mat or internalMat:
+            keysInBrick = getKeysInBrick(bricksDict, brickSize, zStep, loc)
+            for k in keysInBrick:
+                bricksDict[k]["mat_name"] = (mat or internalMat).name
         # append to bricksCreated
         bricksCreated.append(brick)
     else:

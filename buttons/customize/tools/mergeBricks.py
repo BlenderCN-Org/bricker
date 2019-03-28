@@ -21,6 +21,7 @@ import copy
 # Blender imports
 import bpy
 from bpy.types import Operator
+from bpy.props import *
 
 # Addon imports
 from ..undo_stack import *
@@ -70,7 +71,7 @@ class BRICKER_OT_merge_bricks(Operator):
                 self.undo_stack.iterateStates(cm)
                 # initialize vars
                 bricksDict = self.bricksDicts[cm_id]
-                allSplitKeys = []
+                allSplitKeys = list()
                 cm.customized = True
                 brickType = cm.brickType
 
@@ -86,7 +87,7 @@ class BRICKER_OT_merge_bricks(Operator):
                     delete(bpy.data.objects.get(obj_name))
 
                 # run self.mergeBricks
-                keysToUpdate = BRICKER_OT_merge_bricks.mergeBricks(bricksDict, allSplitKeys, cm, anyHeight=True)
+                keysToUpdate = BRICKER_OT_merge_bricks.mergeBricks(bricksDict, allSplitKeys, cm, anyHeight=True, mergeInconsistentMats=self.mergeInconsistentMats)
 
                 # draw modified bricks
                 drawUpdatedBricks(cm, bricksDict, keysToUpdate)
@@ -95,6 +96,7 @@ class BRICKER_OT_merge_bricks(Operator):
                 objsToSelect += bpy.context.selected_objects
             # select the new objects created
             select(objsToSelect)
+            bpy.props.bricker_last_selected = [obj.name for obj in bpy.context.selected_objects]
         except:
             bricker_handle_exception()
         return{"FINISHED"}
@@ -110,6 +112,8 @@ class BRICKER_OT_merge_bricks(Operator):
         # push to undo stack
         self.undo_stack = UndoStack.get_instance()
         self.undo_stack.undo_push('merge', list(self.objNamesD.keys()))
+        # set mergeInconsistentMats
+        self.mergeInconsistentMats = bpy.props.bricker_last_selected == [obj.name for obj in selected_objects]
 
     ###################################################
     # class variables
@@ -122,7 +126,7 @@ class BRICKER_OT_merge_bricks(Operator):
     # class methods
 
     @staticmethod
-    def mergeBricks(bricksDict, keys, cm, targetType="BRICK", anyHeight=False):
+    def mergeBricks(bricksDict, keys, cm, targetType="BRICK", anyHeight=False, mergeInconsistentMats=False):
         # initialize vars
         updatedKeys = []
         brickType = cm.brickType
@@ -143,7 +147,7 @@ class BRICKER_OT_merge_bricks(Operator):
             if bricksDict[key]["parent"] not in (None, "self"):
                 continue
             # attempt to merge current brick with other bricks in keys, according to available brick types
-            brickSize = attemptMerge(bricksDict, key, keys, bricksDict[key]["size"], cm.zStep, randState, brickType, maxWidth, maxDepth, legalBricksOnly, mergeInternals, materialType, preferLargest=True, mergeVertical=mergeVertical, targetType=targetType, height3Only=height3Only)
+            brickSize = attemptMerge(bricksDict, key, keys, bricksDict[key]["size"], cm.zStep, randState, brickType, maxWidth, maxDepth, legalBricksOnly, mergeInternals, materialType, mergeInconsistentMats=mergeInconsistentMats, preferLargest=True, mergeVertical=mergeVertical, targetType=targetType, height3Only=height3Only)
             updatedKeys.append(key)
         return updatedKeys
 

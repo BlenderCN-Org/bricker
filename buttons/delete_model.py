@@ -119,15 +119,15 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
         print()
 
         if not skipBricks:
-            trans_and_anim_data = cls.cleanBricks(scn, cm, n, preservedFrames, modelType, skipTransAndAnimData)
+            bricker_trans_and_anim_data = cls.cleanBricks(scn, cm, n, preservedFrames, modelType, skipTransAndAnimData)
         else:
-            trans_and_anim_data = []
+            bricker_trans_and_anim_data = []
 
         if not b280():
             # set scene layers back to original layers
             setLayers(curLayers)
 
-        return source, brickLoc, brickRot, brickScl, trans_and_anim_data
+        return source, brickLoc, brickRot, brickScl, bricker_trans_and_anim_data
 
     @classmethod
     def runFullDelete(cls, cm=None):
@@ -292,15 +292,15 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
             bpy.data.objects.remove(parent, do_unlink=True)
         return brickLoc, brickRot, brickScl
 
-    def updateAnimationData(objs, trans_and_anim_data):
-        """ add anim data for objs to 'trans_and_anim_data' """
+    def updateAnimationData(objs, bricker_trans_and_anim_data):
+        """ add anim data for objs to 'bricker_trans_and_anim_data' """
         for obj in objs:
             obj.rotation_mode = "XYZ"
-            trans_and_anim_data.append({"name":obj.name, "loc":obj.location.to_tuple(), "rot":tuple(obj.rotation_euler), "scale":obj.scale.to_tuple(), "action":obj.animation_data.action.copy() if obj.animation_data and obj.animation_data.action else None})
+            bricker_trans_and_anim_data.append({"name":obj.name, "loc":obj.location.to_tuple(), "rot":tuple(obj.rotation_euler), "scale":obj.scale.to_tuple(), "action":obj.animation_data.action.copy() if obj.animation_data and obj.animation_data.action else None})
 
     @classmethod
     def cleanBricks(cls, scn, cm, n, preservedFrames, modelType, skipTransAndAnimData):
-        trans_and_anim_data = []
+        bricker_trans_and_anim_data = []
         wm = bpy.context.window_manager
         if modelType == "MODEL":
             # clean up bricks collection
@@ -312,7 +312,7 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                     if len(bricks) > 0:
                         storeTransformData(cm, bricks[0])
                 if not skipTransAndAnimData:
-                    cls.updateAnimationData(bricks, trans_and_anim_data)
+                    cls.updateAnimationData(bricks, bricker_trans_and_anim_data)
                 last_percent = 0
                 # remove objects
                 delete(bricks)
@@ -331,7 +331,7 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                 if brickColl:
                     bricks = list(brickColl.objects)
                     if not skipTransAndAnimData:
-                        cls.updateAnimationData(bricks, trans_and_anim_data)
+                        cls.updateAnimationData(bricks, bricker_trans_and_anim_data)
                     if len(bricks) > 0:
                         delete(bricks)
                     bpy_collections().remove(brickColl, do_unlink=True)
@@ -341,7 +341,7 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
         # finish status update
         update_progress("Deleting", 1)
         wm.progress_end()
-        return trans_and_anim_data
+        return bricker_trans_and_anim_data
 
     def resetCmlistAttrs():
         scn, cm, n = getActiveContextInfo()
