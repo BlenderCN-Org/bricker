@@ -1077,10 +1077,6 @@ class VIEW3D_PT_bricker_advanced(Panel):
             row.label(text="Model Orientation:")
             row = col.row(align=True)
             row.prop(cm, "useLocalOrient", text="Use Source Local")
-        row = col.row(align=True)
-        row.label(text="Other:")
-        row = col.row(align=True)
-        row.prop(cm, "brickifyInBackground")
         # draw test brick generator button (for testing purposes only)
         if BRICKER_OT_test_brick_generators.drawUIButton():
             col = layout.column(align=True)

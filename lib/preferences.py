@@ -102,7 +102,7 @@ class BRICKER_AP_preferences(AddonPreferences):
         row = col1.row(align=False)
         split = layout_split(row, factor=0.275)
         col = split.column(align=True)
-        col.label("Brickify in Background:")
+        col.label(text="Brickify in Background:")
         col = split.column(align=True)
         col.prop(prefs, "brickifyInBackground", text="")
         col1.separator()
