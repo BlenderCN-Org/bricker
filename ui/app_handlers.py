@@ -375,7 +375,11 @@ def handle_upconversion(dummy):
                     if cm.source_obj is None: cm.source_obj = bpy.data.objects.get(cm.source_name)
                     if cm.parent_obj is None: cm.parent_obj = bpy.data.objects.get(cm.parent_name)
                     n = getSourceName(cm)
-                    if cm.collection is None: cm.collection = bpy_collections().get("Bricker_%(n)s_bricks" % locals())
+                    if cm.animated:
+                        coll = BRICKER_OT_brickify.finishAnimation(cm)
+                    else:
+                        coll = bpy_collections().get("Bricker_%(n)s_bricks" % locals())
+                    if cm.collection is None: cm.collection = coll
                     dup = bpy.data.objects.get(n + "_duplicate")
                     if dup is not None: dup.name = n + "__dup__"
             # ensure parent object has no users

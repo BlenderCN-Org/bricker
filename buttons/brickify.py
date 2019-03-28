@@ -155,7 +155,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                             else:
                                 [unhide(obj) for obj in bricker_bricks_coll.objects]
                         # finish animation and kill running jobs
-                        self.finishAnimation()
+                        self.finishAnimation(self.cm)
                     else:
                         bpy.ops.bricker.delete_model()
                     cm.stopBackgroundProcess = False
@@ -168,7 +168,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                 # finish if all jobs completed
                 elif self.JobManager.jobs_complete():
                     if "ANIM" in self.action:
-                        self.finishAnimation()
+                        self.finishAnimation(self.cm)
                     cm.brickifyingInBackground = False
                     self.report({"INFO"}, "Brickify background process complete for model '%(n)s'" % locals())
                     stopwatch("Total Time Elapsed", self.start_time, precision=2)
@@ -357,7 +357,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         cm.exposeParent = False
 
         if cm.animated and not self.brickifyInBackground:
-            self.finishAnimation()
+            self.finishAnimation(self.cm)
 
         # unlink source from scene
         safeUnlink(self.source)
@@ -675,20 +675,23 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         else:
             [safeLink(obj) for obj in coll.objects]
 
-    def getAnimColl(self, n):
+    @staticmethod
+    def getAnimColl(n):
         anim_coll_name = "Bricker_%(n)s_bricks" % locals()
         anim_coll = bpy_collections().get(anim_coll_name)
         if anim_coll is None:
             anim_coll = bpy_collections().new(anim_coll_name)
         return anim_coll
 
-    def finishAnimation(self):
-        scn, cm, n = getActiveContextInfo(cm=self.cm)
+    @staticmethod
+    def finishAnimation(cm):
+        scn, cm, n = getActiveContextInfo(cm=cm)
         wm = bpy.context.window_manager
         wm.progress_end()
 
         # link animation frames to animation collection
-        anim_coll = self.getAnimColl(n)
+        anim_coll = BRICKER_OT_brickify.getAnimColl(n)
+        print(anim_coll)
         for cn in getCollections(cm, typ="ANIM"):
             if b280():
                 if cn.name not in anim_coll.children:
