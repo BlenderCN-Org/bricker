@@ -50,25 +50,6 @@ def handle_selections_timer():
         return 0.5
     scn = bpy.context.scene
     obj = bpy.context.view_layer.objects.active
-    # curLayers = str(list(scn.layers))
-    # # if scn.layers changes and active object is no longer visible, set scn.cmlist_index to -1
-    # if scn.Bricker_last_layers != curLayers:
-    #     scn.Bricker_last_layers = curLayers
-    #     curObjVisible = False
-    #     if scn.cmlist_index != -1:
-    #         cm0 = scn.cmlist[scn.cmlist_index]
-    #         curObjVisible, _ = isBrickerObjVisible(scn, cm0, getSourceName(cm0))
-    #     if not curObjVisible or scn.cmlist_index == -1:
-    #         setIndex = False
-    #         for i, cm in enumerate(scn.cmlist):
-    #             if i != scn.cmlist_index:
-    #                 nextObjVisible, obj0 = isBrickerObjVisible(scn, cm, getSourceName(cm))
-    #                 if nextObjVisible and obj == obj0:
-    #                     scn.cmlist_index = i
-    #                     setIndex = True
-    #                     break
-    #         if not setIndex:
-    #             scn.cmlist_index = -1
     # TODO: Check if active object (with active cmlist index) is no longer visible
     # if scn.cmlist_index changes, select and make source or Brick Model active
     if scn.Bricker_last_cmlist_index != scn.cmlist_index and scn.cmlist_index != -1:
