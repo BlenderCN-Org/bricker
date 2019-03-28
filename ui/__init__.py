@@ -36,6 +36,7 @@ from ..lib.bricksDict import *
 from ..lib.Brick.test_brick_generators import *
 from ..lib.caches import cacheExists
 from ..buttons.revertSettings import *
+from ..buttons.brickify import *
 from ..buttons.customize.tools.bricksculpt import *
 from ..functions import *
 from .. import addon_updater_ops
@@ -303,7 +304,7 @@ class VIEW3D_PT_bricker_animation(Panel):
                         if totalSkipped > 0:
                             row = col1.row(align=True)
                             row.label(text="Frames %(s)s-%(e)s outside of %(t)s simulation" % locals())
-            if cm.brickifyInBackground:
+            if get_addon_preferences().brickifyInBackground != "OFF":
                 col = layout.column(align=True)
                 row = col.row(align=True)
                 row.label(text="Background Processing:")
@@ -386,37 +387,10 @@ class VIEW3D_PT_bricker_model_settings(Panel):
         source = cm.source_obj
 
         col = layout.column(align=True)
-        # set up model dimensions variables sX, sY, and sZ
-        s = Vector((-1, -1, -1))
-        if -1 in cm.modelScalePreview:
-            if source:
-                source_details = bounds(source, use_adaptive_domain=False)
-                s.x = round(source_details.dist.x, 2)
-                s.y = round(source_details.dist.y, 2)
-                s.z = round(source_details.dist.z, 2)
-        else:
-            s = Vector(cm.modelScalePreview)
-        # draw Brick Model dimensions to UI if set
-        if -1 not in s:
-            if cm.brickType != "CUSTOM":
-                dimensions = Bricks.get_dimensions(cm.brickHeight, cm.zStep, cm.gap)
-                full_d = Vector((dimensions["width"],
-                                 dimensions["width"],
-                                 dimensions["height"]))
-                r = vec_div(s, full_d)
-            elif cm.brickType == "CUSTOM":
-                customObjFound = False
-                customObj = cm.customObject1
-                if customObj and customObj.type == "MESH":
-                    custom_details = bounds(customObj)
-                    if 0 not in custom_details.dist.to_tuple():
-                        mult = (cm.brickHeight / custom_details.dist.z)
-                        full_d = Vector((custom_details.dist.x * mult,
-                                         custom_details.dist.y * mult,
-                                         cm.brickHeight))
-                        r = vec_div(s, full_d)
-                        customObjFound = True
-            if cm.brickType == "CUSTOM" and not customObjFound:
+        # draw Brick Model dimensions to UI
+        if source:
+            r = BRICKER_OT_brickify.getModelResolution(source, cm)
+            if cm.brickType == "CUSTOM" and r is None:
                 col.label(text="[Custom object not found]")
             else:
                 split = layout_split(col, factor=0.5)

@@ -46,6 +46,13 @@ class BRICKER_AP_preferences(AddonPreferences):
         min=0.00001,
         precision=3,
         default=0.096)
+    brickifyInBackground = EnumProperty(
+        name="Brickify in Background",
+        description="Run brickify calculations in background (if disabled, user interface will freeze during calculation)",
+        items=[("AUTO", "Auto", "Automatically determine whether to brickify in background or active Blender window based on model complexity"),
+               ("ON", "On", "Run brickify calculations in background"),
+               ("OFF", "Off", "Run brickify calculations in active Blender window (user interface will freeze during calculation)")],
+        default="AUTO")
 
 	# addon updater preferences
     auto_check_update = bpy.props.BoolProperty(
@@ -73,11 +80,11 @@ class BRICKER_AP_preferences(AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
-        col = layout.column(align=True)
+        col1 = layout.column(align=True)
 
         # draw addon prefs
         prefs = get_addon_preferences()
-        row = col.row(align=True)
+        row = col1.row(align=False)
         split = layout_split(row, factor=0.275)
         col = split.column(align=True)
         col.label(text="Default Brick Height:")
@@ -90,6 +97,15 @@ class BRICKER_AP_preferences(AddonPreferences):
             col.prop(prefs, "relativeBrickHeight")
         else:
             col.prop(prefs, "absoluteBrickHeight")
+        col1.separator()
+        col1.separator()
+        row = col1.row(align=False)
+        split = layout_split(row, factor=0.275)
+        col = split.column(align=True)
+        col.label("Brickify in Background:")
+        col = split.column(align=True)
+        col.prop(prefs, "brickifyInBackground", text="")
+        col1.separator()
 
         # updater draw function
         addon_updater_ops.update_settings_ui(self,context)

@@ -607,10 +607,6 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
         name="Use Local Orient",
         description="Generate bricks based on local orientation of source object",
         default=False)
-    brickifyInBackground = BoolProperty(
-        name="Brickify in Background",
-        description="Run brickify calculations in background (if disabled, user interface will freeze during calculation)",
-        default=True)
     # EXPORT SETTINGS
     exportPath = StringProperty(
         name="Export Path",
@@ -619,7 +615,6 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
         default="//")
 
     # Source Object Properties
-    modelScalePreview = FloatVectorProperty(default=(-1, -1, -1))
     objVerts = IntProperty(default=0)
     objPolys = IntProperty(default=0)
     objEdges = IntProperty(default=0)
