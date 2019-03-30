@@ -56,9 +56,11 @@ class CMLIST_OT_list_action(bpy.types.Operator):
                 pass
 
             if self.action == 'REMOVE' and len(scn.cmlist) > 0 and scn.cmlist_index >= 0:
+                bpy.ops.ed.undo_push(message="Bricker: Remove Item")
                 self.removeItem(idx)
 
             elif self.action == 'ADD':
+                bpy.ops.ed.undo_push(message="Bricker: Remove Item")
                 self.addItem()
 
             elif self.action == 'DOWN' and idx < len(scn.cmlist) - 1:
@@ -187,6 +189,7 @@ class CMLIST_OT_copy_settings_to_others(bpy.types.Operator):
     bl_idname = "cmlist.copy_settings_to_others"
     bl_label = "Copy Settings to Other Brick Models"
     bl_description = "Copies the settings from the current model to all other Brick Models"
+    bl_options = {"UNDO"}
 
     @classmethod
     def poll(self, context):
@@ -237,6 +240,7 @@ class CMLIST_OT_paste_settings(bpy.types.Operator):
     bl_idname = "cmlist.paste_settings"
     bl_label = "Paste Settings to Current Brick Model"
     bl_description = "Pastes the settings from stored model ID to the current index"
+    bl_options = {"UNDO"}
 
     @classmethod
     def poll(self, context):

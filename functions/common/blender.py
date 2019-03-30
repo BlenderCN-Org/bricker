@@ -471,6 +471,21 @@ def set_active_scene(scene:Scene):
 def set_active_scene(scene:Scene):
     bpy.context.window.scene = scene
 
+@blender_version_wrapper('<=','2.79')
+def get_cursor_location():
+    return bpy.context.scene.cursor_location
+@blender_version_wrapper('>=','2.80')
+def get_cursor_location():
+    return bpy.context.scene.cursor.location
+
+
+@blender_version_wrapper('<=','2.79')
+def set_cursor_location(loc:tuple):
+    bpy.context.scene.cursor_location = loc
+@blender_version_wrapper('>=','2.80')
+def set_cursor_location(loc:tuple):
+    bpy.context.scene.cursor.location = loc
+
 
 @blender_version_wrapper('<=','2.79')
 def make_annotations(cls):

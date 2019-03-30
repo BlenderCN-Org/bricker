@@ -783,7 +783,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             return False
         if cm.materialType == "SOURCE" and cm.colorSnap == "ABS":
             # ensure ABS Plastic materials are installed
-            if not hasattr(scn, "isBrickMaterialsInstalled") or not scn.isBrickMaterialsInstalled:
+            if not brick_materials_installed():
                 self.report({"WARNING"}, "ABS Plastic Materials must be installed from Blender Market")
                 return False
             # ensure ABS Plastic materials UI list is populated
