@@ -223,7 +223,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
     def cancel(self, context):
         wm = context.window_manager
         wm.event_timer_remove(self._timer)
-        scn, cm, n = getActiveContextInfo()
+        scn, cm, n = getActiveContextInfo(self.cm)
         if self.JobManager.num_running_jobs() + self.JobManager.num_pending_jobs() > 0:
             self.JobManager.kill_all()
             print("Background processes for '%(n)s' model killed" % locals())
@@ -269,7 +269,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
 
     def runBrickify(self, context):
         # set up variables
-        scn, cm, n = getActiveContextInfo()
+        scn, cm, n = getActiveContextInfo(self.cm)
         self.undo_stack.iterateStates(cm)
 
         # ensure that Bricker can run successfully
@@ -691,7 +691,6 @@ class BRICKER_OT_brickify(bpy.types.Operator):
 
         # link animation frames to animation collection
         anim_coll = BRICKER_OT_brickify.getAnimColl(n)
-        print(anim_coll)
         for cn in getCollections(cm, typ="ANIM"):
             if b280():
                 if cn.name not in anim_coll.children:

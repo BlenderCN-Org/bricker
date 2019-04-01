@@ -30,6 +30,7 @@ from ...functions import *
 from ...ui.cmlist_actions import *
 
 
+# BLENDER 2.80 USES A TIMER INSTEAD
 class BRICKER_OT_initialize(Operator):
     """ initializes undo stack for changes to the BFM cache """
     bl_category = "Bricker"
@@ -71,15 +72,12 @@ class BRICKER_OT_initialize(Operator):
         # add new scn.cmlist item
         if self.action == "ADD":
             CMLIST_OT_list_action.addItem()
-        # register timers
-        if b280() and not bpy.app.timers.is_registered(handle_selections_timer):
-            bpy.app.timers.register(handle_selections_timer)
         # run modal
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}
 
     def cancel(self, context):
-        pass
+        bpy.props.bricker_initialized = False
 
     ################################################
     # initialization method
@@ -111,36 +109,3 @@ class BRICKER_OT_initialize(Operator):
         self.stop = True
 
     ################################################
-    # event handling functions
-
-    # def in_context_region(self, context, event):
-    #     e_x = event.mouse_region_x  # left/right
-    #     e_y = event.mouse_region_y  # up/down
-    #     r_w = context.region.width  # left/right
-    #     r_h = context.region.height # up/down
-    #     return e_x > 0 and e_x < r_w and e_y > 0 and e_y < r_h
-    #
-    # def pressed(self, action, event):
-    #     # initialize kms
-    #     wm = bpy.context.window_manager
-    #     screen_kms = wm.keyconfigs['Blender'].keymaps['Screen']
-    #
-    #     # get km based on action
-    #     if action.upper() == "UNDO":
-    #         km = screen_kms.keymap_items['ed.undo']
-    #     elif action.upper() == "REDO":
-    #         km = screen_kms.keymap_items['ed.redo']
-    #     else:
-    #         km = None
-    #
-    #     # check if event equivalent to action km
-    #     if (km and
-    #         km.alt == event.alt and
-    #         km.ctrl == event.ctrl and
-    #         km.oskey == event.oskey and
-    #         km.shift == event.shift and
-    #         km.value == event.value and
-    #         km.type == event.type):
-    #         return True
-    #     else:
-    #         return False

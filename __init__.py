@@ -63,7 +63,7 @@ def register():
     bpy.props.bricker_module_name = __name__
     bpy.props.bricker_version = str(bl_info["version"])[1:-1].replace(", ", ".")
 
-    bpy.props.bricker_initialized = False
+    bpy.props.bricker_initialized = b280()  # automatically initialized (uses timer) in b280
     bpy.props.bricker_undoUpdating = False
     bpy.props.Bricker_developer_mode = developer_mode
     bpy.props.running_bricksculpt_tool = False
@@ -118,7 +118,8 @@ def register():
     # register app handlers
     bpy.app.handlers.frame_change_post.append(handle_animation)
     if b280():
-        bpy.app.timers.register(handle_selections_timer)
+        bpy.app.handlers.load_post.append(register_bricker_timers)
+        bpy.app.timers.register(handle_selections)
     else:
         bpy.app.handlers.scene_update_pre.append(handle_selections)
     bpy.app.handlers.load_pre.append(clear_bfm_cache)
@@ -148,8 +149,9 @@ def unregister():
     bpy.app.handlers.load_post.remove(handle_loading_to_light_cache)
     bpy.app.handlers.load_pre.remove(clear_bfm_cache)
     if b280():
-        if bpy.app.timers.is_registered(handle_selections_timer):
-            bpy.app.timers.unregister(handle_selections_timer)
+        if bpy.app.timers.is_registered(handle_selections):
+            bpy.app.timers.unregister(handle_selections)
+        bpy.app.handlers.load_post.remove(register_bricker_timers)
     else:
         bpy.app.handlers.scene_update_pre.remove(handle_selections)
     bpy.app.handlers.frame_change_post.remove(handle_animation)
