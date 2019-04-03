@@ -116,7 +116,7 @@ def register():
         addon_keymaps.append(km)
 
     # register app handlers
-    bpy.app.handlers.frame_change_post.append(handle_animation)
+    bpy.app.handlers.frame_change_pre.append(handle_animation)
     if b280():
         bpy.app.handlers.load_post.append(register_bricker_timers)
         bpy.app.timers.register(handle_selections)
@@ -154,7 +154,7 @@ def unregister():
         bpy.app.handlers.load_post.remove(register_bricker_timers)
     else:
         bpy.app.handlers.scene_update_pre.remove(handle_selections)
-    bpy.app.handlers.frame_change_post.remove(handle_animation)
+    bpy.app.handlers.frame_change_pre.remove(handle_animation)
 
     # handle the keymaps
     wm = bpy.context.window_manager
