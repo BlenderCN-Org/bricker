@@ -702,9 +702,6 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                         anim_coll.objects.link(obj)
         return anim_coll
 
-    def finishModel(self):
-        pass
-
     @staticmethod
     def createNewBricks(source, parent, source_details, dimensions, refLogo, logo_details, action, split=True, cm=None, curFrame=None, bricksDict=None, keys="ALL", clearExistingCollection=True, selectCreated=False, printStatus=True, tempBrick=False, redraw=False, origSource=None):
         """ gets/creates bricksDict, runs makeBricks, and caches the final bricksDict """
