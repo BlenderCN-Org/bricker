@@ -177,6 +177,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                     return {"FINISHED"}
             except:
                 bricker_handle_exception()
+                return {"CANCELLED"}
         return {"PASS_THROUGH"}
 
     def execute(self, context):

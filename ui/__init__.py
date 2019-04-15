@@ -1072,6 +1072,10 @@ class VIEW3D_PT_bricker_advanced(Panel):
         row.prop(cm, "useNormals")
         row = col.row(align=True)
         row.prop(cm, "verifyExposure")
+        row = col.row(align=True)
+        row.label(text="Meshes:")
+        row = col.row(align=True)
+        row.prop(cm, "instanceBricks")
         if not cm.useAnimation and not (cm.modelCreated or cm.animated):
             row = col.row(align=True)
             row.label(text="Model Orientation:")

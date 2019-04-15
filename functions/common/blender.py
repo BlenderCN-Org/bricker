@@ -33,6 +33,7 @@ except ImportError:
 # Module imports
 from .python_utils import confirmIter, confirmList
 from .wrappers import blender_version_wrapper
+from .reporting import b280
 
 
 #################### PREFERENCES ####################
@@ -307,9 +308,9 @@ def insertKeyframes(objs, keyframeType:str, frame:int, if_needed:bool=False):
         inserted = obj.keyframe_insert(data_path=keyframeType, frame=frame, options=options)
 
 
-def apply_modifiers(obj:Object, settings:str="PREVIEW"):
+def apply_modifiers(obj:Object, calc_undeformed:bool=False):
     """ apply modifiers to object """
-    m = obj.to_mesh(bpy.context.scene, True, "PREVIEW")
+    m = obj.to_mesh(bpy.context.depsgraph if b280() else bpy.context.scene, True, calc_undeformed=calc_undeformed)
     obj.modifiers.clear()
     obj.data = m
 

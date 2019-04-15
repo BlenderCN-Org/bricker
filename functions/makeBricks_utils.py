@@ -40,7 +40,7 @@ from .general import *
 from ..lib.caches import bricker_mesh_cache
 
 
-def drawBrick(cm_id, bricksDict, key, loc, i, parent, dimensions, zStep, brickSize, brickType, split, lastSplitModel, customObject1, customObject2, customObject3, matDirty, customData, brickScale, bricksCreated, allMeshes, logo, logo_details, mats, brick_mats, internalMat, brickHeight, logoResolution, logoDecimate, loopCut, buildIsDirty, materialType, customMat, randomMatSeed, studDetail, exposedUndersideDetail, hiddenUndersideDetail, randomRot, randomLoc, logoType, logoScale, logoInset, circleVerts, randS1, randS2, randS3):
+def drawBrick(cm_id, bricksDict, key, loc, i, parent, dimensions, zStep, brickSize, brickType, split, lastSplitModel, customObject1, customObject2, customObject3, matDirty, customData, brickScale, bricksCreated, allMeshes, logo, logo_details, mats, brick_mats, internalMat, brickHeight, logoResolution, logoDecimate, loopCut, buildIsDirty, materialType, customMat, randomMatSeed, studDetail, exposedUndersideDetail, hiddenUndersideDetail, randomRot, randomLoc, logoType, logoScale, logoInset, circleVerts, instanceBricks, randS1, randS2, randS3):
     brickD = bricksDict[key]
     # check exposure of current [merged] brick
     if brickD["top_exposed"] is None or brickD["bot_exposed"] is None or buildIsDirty:
@@ -64,6 +64,8 @@ def drawBrick(cm_id, bricksDict, key, loc, i, parent, dimensions, zStep, brickSi
     else:
         # get brick mesh
         m = getBrickData(brickD, randS3, dimensions, brickSize, brickType, brickHeight, logoResolution, logoDecimate, circleVerts, loopCut, undersideDetail, logoToUse, logoType, logo_details, logoScale, logoInset, useStud)
+    # duplicate data if cm.instanceBricks is disabled
+    m = m if instanceBricks else m.copy()
     # apply random rotation to edit mesh according to parameters
     randomRotMatrix = getRandomRotMatrix(randomRot, randS2, brickSize) if randomRot > 0 else None
     # get brick location
@@ -74,7 +76,7 @@ def drawBrick(cm_id, bricksDict, key, loc, i, parent, dimensions, zStep, brickSi
         brick = bpy.data.objects.get(brickD["name"])
         edgeSplit = useEdgeSplitMod(brickD, customObject1, customObject2, customObject3)
         if brick:
-            # NOTE: last brick mesh is left in memory (faster)
+            # NOTE: last brick object is left in memory (faster)
             # set brick.data to new mesh (resets materials)
             brick.data = m
             # add/remove edge split modifier if necessary
@@ -283,7 +285,7 @@ def getBrickData(brickD, rand, dimensions, brickSize, brickType, brickHeight, lo
     # create edit mesh for each bmesh
     meshes = []
     for i,bm in enumerate(bms):
-        # create new mesh and send bm to it
+        # check for existing edit mesh in blendfile data
         bmcs_hash = hash_str(bm_cache_string)
         meshName = "%(bmcs_hash)s_%(i)s" % locals()
         m = bpy.data.meshes.get(meshName)
@@ -310,7 +312,7 @@ def getBrickData(brickD, rand, dimensions, brickSize, brickType, brickHeight, lo
     #     # create edit mesh for each bmesh
     #     meshes = []
     #     for i,bm in enumerate(bms):
-    #         # create new mesh and send bm to it
+    #         # check for existing edit mesh in blendfile data
     #         bmcs_hash = hash_str(bm_cache_string)
     #         meshName = "%(bmcs_hash)s_%(i)s" % locals()
     #         m = bpy.data.meshes.get(meshName)

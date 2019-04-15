@@ -1208,11 +1208,11 @@ def select_link_function(self, tag):
 	"""
 
 	# -- Default, universal case (and is the only option for GitLab/Bitbucket)
-	link = tag["zipball_url"]
+	# link = tag["zipball_url"]
 
 	# -- Example: select the first (or only) asset instead source code --
-	#if "assets" in tag and "browser_download_url" in tag["assets"][0]:
-	#	link = tag["assets"][0]["browser_download_url"]
+	if "assets" in tag and "browser_download_url" in tag["assets"][0]:
+		link = tag["assets"][0]["browser_download_url"]
 
 	# -- Example: select asset based on OS, where multiple builds exist --
 	# # not tested/no error checking, modify to fit your own needs!
@@ -1358,7 +1358,7 @@ def register(bl_info):
 	# which enables pulling down release logs/notes, as well as specify installs from
 	# release-attached zips (instead of just the auto-packaged code generated with
 	# a release/tag). Setting has no impact on BitBucket or GitLab repos
-	updater.use_releases = False
+	updater.use_releases = True
 	# note: Releases always have a tag, but a tag may not always be a release
 	# Therefore, setting True above will filter out any non-annoted tags
 	# note 2: Using this option will also display the release name instead of
