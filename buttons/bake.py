@@ -68,6 +68,10 @@ class BRICKER_OT_bake_model(bpy.types.Operator):
             bpy.data.objects.remove(obj, do_unlink=True)
         # delete brick collection
         brickColl = cm.collection
+        linkedColls = [cn for cn in bpy.data.collections if brickColl.name in cn.children]
+        for col in linkedColls:
+            for brick in bricks:
+                col.objects.link(brick)
         if brickColl is not None:
             bpy_collections().remove(brickColl, do_unlink=True)
         # remove current cmlist index
