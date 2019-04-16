@@ -185,7 +185,6 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                     #     # TODO: convert rotateBy to local with respect to source's parent
                     source.rotation_euler.rotate(rotateBy)
                 # set source origin back to original point (tracked by last vert)
-                scn.update()
                 setObjOrigin(source, mathutils_mult(source.matrix_world, source.data.vertices[0].co))
                 source.data.vertices[0].co = last_co
                 source.rotation_mode = lastMode
