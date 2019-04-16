@@ -139,14 +139,13 @@ class BRICKER_OT_export_ldraw(Operator):
 
     def blendToLdrawUnits(self, cm, bricksDict, zStep, key, idx):
         """ convert location of brick from blender units to ldraw units """
-        brickD = bricksDict[key]
-        size = brickD["size"]
+        size = bricksDict[key]["size"]
         loc = getBrickCenter(bricksDict, key, zStep)
         dimensions = Bricks.get_dimensions(cm.brickHeight, zStep, cm.gap)
         h = 8 * zStep
         loc.x = loc.x * (20 / (dimensions["width"] + dimensions["gap"]))
         loc.y = loc.y * (20 / (dimensions["width"] + dimensions["gap"]))
-        if brickD["type"] == "SLOPE":
+        if bricksDict[key]["type"] == "SLOPE":
             if idx == 0:
                 loc.x -= ((size[0] - 1) * 20) / 2
             elif idx in (1, -3):
@@ -156,7 +155,7 @@ class BRICKER_OT_export_ldraw(Operator):
             elif idx in (3, -1):
                 loc.y -= ((size[1] - 1) * 20) / 2
         loc.z = loc.z * (h / (dimensions["height"] + dimensions["gap"]))
-        if brickD["type"] == "SLOPE" and size == [1, 1, 3]:
+        if bricksDict[key]["type"] == "SLOPE" and size == [1, 1, 3]:
             loc.z -= size[2] * 8
         if zStep == 1 and size[2] == 3:
             loc.z += 8

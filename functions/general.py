@@ -362,7 +362,7 @@ def getExportPath(fn, ext, basePath, frame=-1, subfolder=False):
         while len(splitPath) > 0 and splitPath[0] == "..":
             splitPath.pop(0)
             blendPathSplit.pop()
-        newPath = os.path.join(*splitPath)
+        newPath = os.path.join(*splitPath) if len(splitPath) > 0 else ""
         fullBlendPath = os.path.join(*blendPathSplit) if len(blendPathSplit) > 1 else root_path()
         path = os.path.join(fullBlendPath, newPath)
     # if path is blank at this point, use default render location
@@ -372,7 +372,7 @@ def getExportPath(fn, ext, basePath, frame=-1, subfolder=False):
     if not os.path.exists(path):
         return path, "Blender could not find the following path: '%(path)s'" % locals()
     # get full filename
-    fn0 = fn if lastSlash in (-1, len(basePath) - 1) else basePath[lastSlash + 1:]
+    fn0 = fn if path == basePath else os.path.split(basePath)[1]
     frame_num = "_%(frame)s" % locals() if frame >= 0 else ""
     full_fn = fn0 + frame_num + ext
     # create subfolder
