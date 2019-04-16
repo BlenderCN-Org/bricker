@@ -188,7 +188,8 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             if self.splitBeforeUpdate:
                 cm.splitModel = True
             if cm.brickifyingInBackground:
-                bpy.ops.bricker.delete_model()
+                if cm.animated or cm.modelCreated:
+                    bpy.ops.bricker.delete_model()
                 self.action = "CREATE" if self.action == "UPDATE_MODEL" else "ANIMATE"
             cm.version = bpy.props.bricker_version
             previously_animated = cm.animated
