@@ -7,6 +7,10 @@
     * Improve brick topology for 3D printing
     * Use shader-based bevel as opposed to geometry-based bevel
     * improve intelligence of 'getFirstImgTexNodes' function to choose prominent textures
+    * Custom UV unwrapper designed specifically for LEGO bricks
+    * (EASY) add 'show bevel in viewport' toggle
+    * (EASY) New animation types (loop, boomerang, etc)
+      * this would be implemented in the `handle_animation` function
 * Fixes
     * when brickified model's parent is rotated, bricks drawn by customizing model are often not rotated correctly
 

@@ -81,34 +81,40 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
 
     # initialize cmlist attributes (prevents 'update' function from running every time)
     cm_id = cm.id
+    alignBricks = cm.alignBricks
     buildIsDirty = cm.buildIsDirty
+    brickHeight = cm.brickHeight
     brickType = cm.brickType
     bricksAndPlates = brickType == "BRICKS AND PLATES"
-    maxWidth = cm.maxWidth
-    maxDepth = cm.maxDepth
-    legalBricksOnly = cm.legalBricksOnly
-    mergeInternals = cm.mergeInternals
-    mergeType = cm.mergeType
-    mergeSeed = cm.mergeSeed
-    materialType = cm.materialType
+    circleVerts = min(16, cm.circleVerts) if tempBrick else cm.circleVerts
+    customObject1 = cm.customObject1
+    customObject2 = cm.customObject2
+    customObject3 = cm.customObject3
+    matDirty = cm.materialIsDirty or cm.matrixIsDirty or cm.buildIsDirty
     customMat = cm.customMat
-    randomMatSeed = cm.randomMatSeed
-    studDetail = "ALL" if tempBrick else cm.studDetail
     exposedUndersideDetail = "FLAT" if tempBrick else cm.exposedUndersideDetail
     hiddenUndersideDetail = "FLAT" if tempBrick else cm.hiddenUndersideDetail
-    randomRot = 0 if tempBrick else cm.randomRot
-    randomLoc = 0 if tempBrick else cm.randomLoc
+    instanceBricks = cm.instanceBricks
     lastSplitModel = cm.lastSplitModel
+    legalBricksOnly = cm.legalBricksOnly
     logoType = "NONE" if tempBrick else cm.logoType
     logoScale = cm.logoScale
     logoInset = cm.logoInset
     logoResolution = cm.logoResolution
     logoDecimate = cm.logoDecimate
     loopCut = False if tempBrick else cm.loopCut
-    circleVerts = min(16, cm.circleVerts) if tempBrick else cm.circleVerts
-    brickHeight = cm.brickHeight
-    alignBricks = cm.alignBricks
+    maxWidth = cm.maxWidth
+    maxDepth = cm.maxDepth
+    mergeInternals = cm.mergeInternals
+    mergeType = cm.mergeType
+    mergeSeed = cm.mergeSeed
+    materialType = cm.materialType
     offsetBrickLayers = cm.offsetBrickLayers
+    randomMatSeed = cm.randomMatSeed
+    randomRot = 0 if tempBrick else cm.randomRot
+    randomLoc = 0 if tempBrick else cm.randomLoc
+    studDetail = "ALL" if tempBrick else cm.studDetail
+    zStep = cm.zStep
     # initialize random states
     randS1 = None if tempBrick else np.random.RandomState(cm.mergeSeed)  # for brickSize calc
     randS2 = None if tempBrick else np.random.RandomState(cm.mergeSeed+1)
@@ -139,7 +145,7 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
         for key in keys:
             bricksDict[key]["parent"] = "self"
             bricksDict[key]["size"] = size.copy()
-            setAllBrickExposures(bricksDict, cm.zStep, key)
+            setAllBrickExposures(bricksDict, zStep, key)
             setFlippedAndRotated(bricksDict, key, [key])
             if bricksDict[key]["type"] == "SLOPE" and brickType == "SLOPES":
                 setBrickTypeForSlope(bricksDict, key, [key])
@@ -192,7 +198,7 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
                         loc = getDictLoc(bricksDict, key)
 
                         # merge current brick with available adjacent bricks
-                        brickSize = mergeWithAdjacentBricks(brickD, bricksDicts[j], key, availableKeys, [1, 1, cm.zStep], cm.zStep, randS1, buildIsDirty, brickType, maxWidth, maxDepth, legalBricksOnly, mergeInternals, materialType, mergeVertical=mergeVertical)
+                        brickSize = mergeWithAdjacentBricks(brickD, bricksDicts[j], key, availableKeys, [1, 1, zStep], zStep, randS1, buildIsDirty, brickType, maxWidth, maxDepth, legalBricksOnly, mergeInternals, materialType, mergeVertical=mergeVertical)
                         brickD["size"] = brickSize
                         # iterate number aligned edges and bricks if generating multiple variations
                         if connectThresh > 1:
@@ -204,7 +210,7 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
                         old_percent = updateProgressBars(printStatus, cursorStatus, cur_percent, old_percent, "Merging")
 
                         # remove keys in new brick from availableKeys (for attemptMerge)
-                        updateKeysLists(bricksDict, brickSize, cm.zStep, key, loc, availableKeys)
+                        updateKeysLists(bricksDict, brickSize, zStep, key, loc, availableKeys)
 
                     if connectThresh > 1:
                         # if no aligned edges / bricks found, skip to next z level
@@ -245,7 +251,7 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
             loc = getDictLoc(bricksDict, k2)
             i = dictKeys.index(k2)
             # create brick based on the current brick info
-            drawBrick(cm_id, bricksDict, k2, loc, i, parent, dimensions, cm.zStep, bricksDict[k2]["size"], brickType, split, lastSplitModel, cm.customObject1, cm.customObject2, cm.customObject3, cm.materialIsDirty or cm.matrixIsDirty or cm.buildIsDirty, customData, brickScale, bricksCreated, allMeshes, logo, logo_details, mats, brick_mats, internalMat, brickHeight, logoResolution, logoDecimate, loopCut, buildIsDirty, materialType, customMat, randomMatSeed, studDetail, exposedUndersideDetail, hiddenUndersideDetail, randomRot, randomLoc, logoType, logoScale, logoInset, circleVerts, randS1, randS2, randS3)
+            drawBrick(cm_id, bricksDict, k2, loc, i, parent, dimensions, zStep, bricksDict[k2]["size"], brickType, split, lastSplitModel, customObject1, customObject2, customObject3, matDirty, customData, brickScale, bricksCreated, allMeshes, logo, logo_details, mats, brick_mats, internalMat, brickHeight, logoResolution, logoDecimate, loopCut, buildIsDirty, materialType, customMat, randomMatSeed, studDetail, exposedUndersideDetail, hiddenUndersideDetail, randomRot, randomLoc, logoType, logoScale, logoInset, circleVerts, instanceBricks, randS1, randS2, randS3)
             # print status to terminal and cursor
             old_percent = updateProgressBars(printStatus, cursorStatus, i/len(bricksDict.keys()), old_percent, "Building")
 

@@ -30,7 +30,6 @@ bl_info = {
 developer_mode = 0  # NOTE: Set to 0 for release, 1 for exposed dictionary, 2 for 'BRICKER_OT_test_brick_generators' button
 # NOTE: Disable "LEGO Logo" for releases
 # NOTE: Disable "Slopes" brick type for releases
-# NOTE: Copy contents from 'bricksculpt_tools_backup' to 'bricksculpt_tools'
 
 # System imports
 # NONE!
@@ -63,7 +62,7 @@ def register():
     bpy.props.bricker_module_name = __name__
     bpy.props.bricker_version = str(bl_info["version"])[1:-1].replace(", ", ".")
 
-    bpy.props.bricker_initialized = False
+    bpy.props.bricker_initialized = b280()  # automatically initialized (uses timer) in b280
     bpy.props.bricker_undoUpdating = False
     bpy.props.Bricker_developer_mode = developer_mode
     bpy.props.running_bricksculpt_tool = False
@@ -116,9 +115,10 @@ def register():
         addon_keymaps.append(km)
 
     # register app handlers
-    bpy.app.handlers.frame_change_post.append(handle_animation)
+    bpy.app.handlers.frame_change_pre.append(handle_animation)
     if b280():
-        bpy.app.timers.register(handle_selections_timer)
+        bpy.app.handlers.load_post.append(register_bricker_timers)
+        bpy.app.timers.register(handle_selections)
     else:
         bpy.app.handlers.scene_update_pre.append(handle_selections)
     bpy.app.handlers.load_pre.append(clear_bfm_cache)
@@ -148,11 +148,12 @@ def unregister():
     bpy.app.handlers.load_post.remove(handle_loading_to_light_cache)
     bpy.app.handlers.load_pre.remove(clear_bfm_cache)
     if b280():
-        if bpy.app.timers.is_registered(handle_selections_timer):
-            bpy.app.timers.unregister(handle_selections_timer)
+        if bpy.app.timers.is_registered(handle_selections):
+            bpy.app.timers.unregister(handle_selections)
+        bpy.app.handlers.load_post.remove(register_bricker_timers)
     else:
         bpy.app.handlers.scene_update_pre.remove(handle_selections)
-    bpy.app.handlers.frame_change_post.remove(handle_animation)
+    bpy.app.handlers.frame_change_pre.remove(handle_animation)
 
     # handle the keymaps
     wm = bpy.context.window_manager

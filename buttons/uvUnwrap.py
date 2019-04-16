@@ -41,7 +41,7 @@ class BRICKER_OT_uv_unwrap(bpy.types.Operator):
 
     def execute(self, context):
         bricks = getBricks()
-        select(bricks, only=True, active=True)
+        select(bricks[0], active=True, only=True)
         bpy.ops.uv.smart_project()
         return{"FINISHED"}
 

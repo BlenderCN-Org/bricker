@@ -607,6 +607,11 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
         name="Use Local Orient",
         description="Generate bricks based on local orientation of source object",
         default=False)
+    instanceBricks = BoolProperty(
+        name="Instance Brick Data",
+        description="Use Instanced brick mesh data for split models to save on memory and render times",
+        update=dirtyBuild,
+        default=True)
     # EXPORT SETTINGS
     exportPath = StringProperty(
         name="Export Path",

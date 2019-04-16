@@ -177,6 +177,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                     return {"FINISHED"}
             except:
                 bricker_handle_exception()
+                return {"CANCELLED"}
         return {"PASS_THROUGH"}
 
     def execute(self, context):
@@ -187,7 +188,8 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             if self.splitBeforeUpdate:
                 cm.splitModel = True
             if cm.brickifyingInBackground:
-                bpy.ops.bricker.delete_model()
+                if cm.animated or cm.modelCreated:
+                    bpy.ops.bricker.delete_model()
                 self.action = "CREATE" if self.action == "UPDATE_MODEL" else "ANIMATE"
             cm.version = bpy.props.bricker_version
             previously_animated = cm.animated
@@ -223,7 +225,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
     def cancel(self, context):
         wm = context.window_manager
         wm.event_timer_remove(self._timer)
-        scn, cm, n = getActiveContextInfo()
+        scn, cm, n = getActiveContextInfo(self.cm)
         if self.JobManager.num_running_jobs() + self.JobManager.num_pending_jobs() > 0:
             self.JobManager.kill_all()
             print("Background processes for '%(n)s' model killed" % locals())
@@ -269,7 +271,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
 
     def runBrickify(self, context):
         # set up variables
-        scn, cm, n = getActiveContextInfo()
+        scn, cm, n = getActiveContextInfo(self.cm)
         self.undo_stack.iterateStates(cm)
 
         # ensure that Bricker can run successfully
@@ -702,9 +704,6 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                         anim_coll.objects.link(obj)
         return anim_coll
 
-    def finishModel(self):
-        pass
-
     @staticmethod
     def createNewBricks(source, parent, source_details, dimensions, refLogo, logo_details, action, split=True, cm=None, curFrame=None, bricksDict=None, keys="ALL", clearExistingCollection=True, selectCreated=False, printStatus=True, tempBrick=False, redraw=False, origSource=None):
         """ gets/creates bricksDict, runs makeBricks, and caches the final bricksDict """
@@ -782,7 +781,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             return False
         if cm.materialType == "SOURCE" and cm.colorSnap == "ABS":
             # ensure ABS Plastic materials are installed
-            if not hasattr(scn, "isBrickMaterialsInstalled") or not scn.isBrickMaterialsInstalled:
+            if not brick_materials_installed():
                 self.report({"WARNING"}, "ABS Plastic Materials must be installed from Blender Market")
                 return False
             # ensure ABS Plastic materials UI list is populated

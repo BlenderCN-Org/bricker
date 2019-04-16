@@ -28,6 +28,7 @@ from bpy.app.handlers import persistent
 
 # Addon imports
 from .app_handlers import brickerRunningBlockingOp
+from ..buttons.customize.undo_stack import *
 from ..functions import *
 from ..buttons.customize.tools import *
 
@@ -45,12 +46,32 @@ from ..buttons.customize.tools import *
 #     return objVisible, obj
 
 
-def handle_selections_timer():
+@persistent
+def handle_selections(junk=None):
     if brickerRunningBlockingOp():
         return 0.5
     scn = bpy.context.scene
-    obj = bpy.context.view_layer.objects.active
-    # TODO: Check if active object (with active cmlist index) is no longer visible
+    obj = bpy.context.view_layer.objects.active if b280() else scn.objects.active
+    # TODO: in b280, Check if active object (with active cmlist index) is no longer visible
+    # curLayers = str(list(scn.layers))
+    # # if scn.layers changes and active object is no longer visible, set scn.cmlist_index to -1
+    # if scn.Bricker_last_layers != curLayers:
+    #     scn.Bricker_last_layers = curLayers
+    #     curObjVisible = False
+    #     if scn.cmlist_index != -1:
+    #         cm0, n0 = getActiveContextInfo()[1:]
+    #         curObjVisible, _ = isObjVisible(scn, cm0, n0)
+    #     if not curObjVisible or scn.cmlist_index == -1:
+    #         setIndex = False
+    #         for i, cm in enumerate(scn.cmlist):
+    #             if i != scn.cmlist_index:
+    #                 nextObjVisible, obj = isObjVisible(scn, cm, getSourceName(cm))
+    #                 if nextObjVisible and hasattr(bpy.context, "active_object") and bpy.context.active_object == obj:
+    #                     scn.cmlist_index = i
+    #                     setIndex = True
+    #                     break
+    #         if not setIndex:
+    #             scn.cmlist_index = -1
     # if scn.cmlist_index changes, select and make source or Brick Model active
     if scn.Bricker_last_cmlist_index != scn.cmlist_index and scn.cmlist_index != -1:
         scn.Bricker_last_cmlist_index = scn.cmlist_index
@@ -68,15 +89,26 @@ def handle_selections_timer():
                     cf = cm.lastStopFrame
                 elif cf < cm.lastStartFrame:
                     cf = cm.lastStartFrame
-                cn = "Bricker_%(n)s_bricks_f_%(cf)s" % locals()
-                if len(bpy.data.collections[cn].objects) > 0:
-                    select(list(bpy.data.collections[cn].objects), active=True, only=True)
-                    scn.Bricker_last_active_object_name = obj.name if obj is not None else ""
+                if b280():
+                    cn = "Bricker_%(n)s_bricks_f_%(cf)s" % locals()
+                    if len(bpy.data.collections[cn].objects) > 0:
+                        select(list(bpy.data.collections[cn].objects), active=True, only=True)
+                        scn.Bricker_last_active_object_name = obj.name if obj is not None else ""
+                else:
+                    g = bpy_collections().get("Bricker_%(n)s_bricks_f_%(cf)s" % locals())
+                    if g is not None and len(g.objects) > 0:
+                        select(list(g.objects), active=True, only=True)
+                        scn.Bricker_last_active_object_name = bpy.context.active_object.name
+                    else:
+                        scn.objects.active = None
+                        deselectAll()
+                        scn.Bricker_last_active_object_name = ""
             else:
                 select(source, active=True, only=True)
+                scn.Bricker_last_active_object_name = source.name
         else:
-            for i,cm in enumerate(scn.cmlist):
-                if getSourceName(cm) == scn.Bricker_active_object_name:
+            for i,cm0 in enumerate(scn.cmlist):
+                if getSourceName(cm0) == scn.Bricker_active_object_name:
                     deselectAll()
                     break
     # if active object changes, open Brick Model settings for active object
@@ -104,9 +136,38 @@ def handle_selections_timer():
                 # adjust scn.active_brick_detail based on active brick
                 x0, y0, z0 = strToList(getDictKey(obj.name))
                 cm.activeKey = (x0, y0, z0)
-            tag_redraw_viewport_in_all_screens()
+            tag_redraw_areas("VIEW_3D")
             return 0.05
         # if no matching cmlist item found, set cmlist_index to -1
         scn.cmlist_index = -1
-        tag_redraw_viewport_in_all_screens()
+        tag_redraw_areas("VIEW_3D")
     return 0.05
+
+
+@blender_version_wrapper('>=','2.80')
+def handle_undo_stack():
+    scn = bpy.context.scene
+    undo_stack = UndoStack.get_instance()
+    if not undo_stack.isUpdating() and not brickerRunningBlockingOp() and scn.cmlist_index != -1:
+        global python_undo_state
+        cm = scn.cmlist[scn.cmlist_index]
+        if cm.id not in python_undo_state:
+            python_undo_state[cm.id] = 0
+        # handle undo
+        elif python_undo_state[cm.id] > cm.blender_undo_state:
+            undo_stack.undo_pop()
+            tag_redraw_areas("VIEW_3D")
+        # handle redo
+        elif python_undo_state[cm.id] < cm.blender_undo_state:
+            undo_stack.redo_pop()
+            tag_redraw_areas("VIEW_3D")
+    return 0.01
+
+
+@persistent
+@blender_version_wrapper('>=','2.80')
+def register_bricker_timers(scn):
+    timer_fns = (handle_selections, handle_undo_stack)
+    for timer_fn in timer_fns:
+        if not bpy.app.timers.is_registered(timer_fn):
+            bpy.app.timers.register(timer_fn)

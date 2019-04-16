@@ -202,7 +202,7 @@ class OBJECT_OT_delete_override(Operator):
                 print(obj.name + ' is protected')
                 protected.append(obj.name)
 
-        tag_redraw_viewport_in_all_screens()
+        tag_redraw_areas("VIEW_3D")
 
         return protected
 

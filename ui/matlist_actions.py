@@ -72,6 +72,6 @@ class BRICKER_OT_matlist_actions(bpy.types.Operator):
     def removeItem(self, cm, matObj, idx):
         if idx >= len(matObj.data.materials) or idx < 0 or len(matObj.data.materials) == 0:
             return
-        mat = matObj.data.materials.pop(idx)
+        mat = matObj.data.materials.pop(index=idx)
         if not cm.lastSplitModel:
             cm.materialIsDirty = True
