@@ -284,6 +284,7 @@ def getDictLoc(bricksDict, key):
 
 
 def getBrickCenter(bricksDict, key, zStep, loc=None):
+    loc = loc or getDictLoc(bricksDict, key)
     brickKeys = getKeysInBrick(bricksDict, bricksDict[key]["size"], zStep, loc=loc)
     coords = [bricksDict[k0]["co"] for k0 in brickKeys]
     coord_ave = Vector((mean([co[0] for co in coords]), mean([co[1] for co in coords]), mean([co[2] for co in coords])))
@@ -372,7 +373,7 @@ def getExportPath(fn, ext, basePath, frame=-1, subfolder=False):
     if not os.path.exists(path):
         return path, "Blender could not find the following path: '%(path)s'" % locals()
     # get full filename
-    fn0 = fn if path == basePath else os.path.split(basePath)[1]
+    fn0 = os.path.split(basePath)[1] or fn
     frame_num = "_%(frame)s" % locals() if frame >= 0 else ""
     full_fn = fn0 + frame_num + ext
     # create subfolder
