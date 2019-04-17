@@ -128,7 +128,6 @@ def bounds(obj:Object, local:bool=False, use_adaptive_domain:bool=True):
 
 def setObjOrigin(obj:Object, loc:Vector):
     """ set object origin """
-    bpy.context.scene.update()  # updates stale 'matrix_world' property of obj... do not delete this line
     l, r, s = obj.matrix_world.decompose()
     r_mat = r.to_matrix().to_4x4()
     s_mat_x = Matrix.Scale(s.x, 4, Vector((1, 0, 0)))

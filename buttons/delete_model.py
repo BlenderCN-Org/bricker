@@ -21,6 +21,7 @@ import sys
 
 # Blender imports
 import bpy
+import bmesh
 from mathutils import Vector, Euler
 props = bpy.props
 
@@ -168,6 +169,7 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                 else:
                     source.location = Vector(l)
                 source.scale = (source.scale[0] * s[0], source.scale[1] * s[1], source.scale[2] * s[2])
+                # set rotation mode
                 lastMode = source.rotation_mode
                 source.rotation_mode = "XYZ"
                 # create vert to track original source origin
@@ -175,16 +177,18 @@ class BRICKER_OT_delete_model(bpy.types.Operator):
                 last_co = source.data.vertices[0].co.to_tuple()
                 source.data.vertices[0].co = (0, 0, 0)
                 # set source origin to rotation point for transformed brick object
+                scn.update()
                 setObjOrigin(source, pivot_point)
                 # rotate source
                 if cm.useLocalOrient and not cm.useAnimation:
-                    source.rotation_euler = brickRot or Euler(r)
+                    source.rotation_euler = brickRot or Euler(tuple(r))
                 else:
                     rotateBy = Euler(tuple(r))
                     # if source.parent is not None:
                     #     # TODO: convert rotateBy to local with respect to source's parent
                     source.rotation_euler.rotate(rotateBy)
                 # set source origin back to original point (tracked by last vert)
+                scn.update()
                 setObjOrigin(source, mathutils_mult(source.matrix_world, source.data.vertices[0].co))
                 source.data.vertices[0].co = last_co
                 source.rotation_mode = lastMode
