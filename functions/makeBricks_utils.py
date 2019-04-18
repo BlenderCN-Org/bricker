@@ -343,6 +343,7 @@ def getMaterial(bricksDict, key, size, zStep, materialType, customMat, randomMat
         mat = customMat
     elif materialType == "SOURCE":
         # get most frequent material in brick size
+        matName = ""
         keysInBrick = getKeysInBrick(bricksDict, size, zStep, key=key)
         for key0 in keysInBrick:
             curBrickD = bricksDict[key0]
