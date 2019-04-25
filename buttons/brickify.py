@@ -60,6 +60,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         if event.type == "TIMER":
             try:
                 scn, cm, n = getActiveContextInfo(cm=self.cm)
+                remaining_jobs = self.JobManager.num_pending_jobs() + self.JobManager.num_running_jobs()
                 for job in self.jobs.copy():
                     # cancel if model was deleted before process completed
                     if scn in self.source.users_scene:
@@ -127,7 +128,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                         self.jobs.remove(job)
                 # cancel and save finished frames if stopped
                 if cm.stopBackgroundProcess:
-                    if "ANIM" in self.action:
+                    if "ANIM" in self.action and self.JobManager.num_completed_jobs() > 0:
                         updatedStopFrame = False
                         # set end frame to last consecutive completed frame and toss non-consecutive frames
                         for frame in range(cm.lastStartFrame, cm.lastStopFrame + 1):
@@ -166,15 +167,16 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                     self.cancel(context)
                     return {"CANCELLED"}
                 # finish if all jobs completed
-                elif self.JobManager.jobs_complete():
+                elif self.JobManager.jobs_complete() or (remaining_jobs == 0 and self.JobManager.num_completed_jobs() > 0):
                     if "ANIM" in self.action:
                         self.finishAnimation(self.cm)
-                    cm.brickifyingInBackground = False
                     self.report({"INFO"}, "Brickify background process complete for model '%(n)s'" % locals())
                     stopwatch("Total Time Elapsed", self.start_time, precision=2)
-                    wm = context.window_manager
-                    wm.event_timer_remove(self._timer)
+                    self.finish(context, cm)
                     return {"FINISHED"}
+                elif remaining_jobs == 0:
+                    self.report({"WARNING"}, "Background process failed for model '%(n)s'. Try disabling background processing in the Bricker addon preferences." % locals())
+                    cm.stopBackgroundProcess = True
             except:
                 bricker_handle_exception()
                 return {"CANCELLED"}
@@ -222,14 +224,17 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             stopwatch("Total Time Elapsed", self.start_time, precision=2)
             return {"FINISHED"}
 
-    def cancel(self, context):
+    def finish(self, context, cm):
         wm = context.window_manager
         wm.event_timer_remove(self._timer)
+        cm.brickifyingInBackground = False
+
+    def cancel(self, context):
         scn, cm, n = getActiveContextInfo(self.cm)
+        self.finish(context, cm)
         if self.JobManager.num_running_jobs() + self.JobManager.num_pending_jobs() > 0:
             self.JobManager.kill_all()
             print("Background processes for '%(n)s' model killed" % locals())
-        cm.brickifyingInBackground = False
 
     ################################################
     # initialization method

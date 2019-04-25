@@ -75,7 +75,7 @@ def getColors():
         colors["ABS Plastic Yellow"] = [0.973, 0.584, 0.000, 1.0]
         # # gamma correct RGB values
         # for key in colors:
-        #     colors[key] = gammaCorrect(colors[key], 2)
+        #     colors[key] = gammaCorrect(colors[key], 2.0167)
         getColors.colors = colors
     return getColors.colors
 

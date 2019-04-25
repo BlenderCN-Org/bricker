@@ -145,7 +145,7 @@ def getPixel(pixels, uv_coord):
     b = uv_pixels[pixelNumber*4 + 2]
     a = uv_pixels[pixelNumber*4 + 3]
     # gamma correct RGB value
-    r, g, b, a = gammaCorrect([r, g, b, a], 2)
+    r, g, b, a = gammaCorrect([r, g, b, a], 2.0167)
     return (r, g, b, a)
 
 
