@@ -148,7 +148,7 @@ def handle_selections(junk=None):
 def handle_undo_stack():
     scn = bpy.context.scene
     undo_stack = UndoStack.get_instance()
-    if not undo_stack.isUpdating() and not brickerRunningBlockingOp() and scn.cmlist_index != -1:
+    if hasattr(bpy.props, "bricker_undoUpdating") and not undo_stack.isUpdating() and not brickerRunningBlockingOp() and scn.cmlist_index != -1:
         global python_undo_state
         cm = scn.cmlist[scn.cmlist_index]
         if cm.id not in python_undo_state:
@@ -161,7 +161,7 @@ def handle_undo_stack():
         elif python_undo_state[cm.id] < cm.blender_undo_state:
             undo_stack.redo_pop()
             tag_redraw_areas("VIEW_3D")
-    return 0.01
+    return 0.02
 
 
 @persistent
