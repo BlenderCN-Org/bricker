@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -26,8 +26,8 @@ from bpy.props import *
 # Addon imports
 from ..functions.common import *
 
-class move_to_layer_override(Operator):
-    """Move to Layer Override"""
+class OBJECT_OT_move_to_layer_override(Operator):
+    """Move to Layer functionality"""
     bl_idname = "bricker.move_to_layer_override"
     bl_label = "Move to Layer Override"
     bl_options = {'REGISTER', 'INTERNAL', 'UNDO'}
@@ -93,7 +93,7 @@ class move_to_layer_override(Operator):
     def runMove(self, context):
         scn = bpy.context.scene
         for name in self.object_names:
-            obj = context.scene.objects.get(name)
+            obj = scn.objects.get(name)
             obj.layers = self.layers
             if not obj.isBrickifiedObject or obj.cmlist_id == -1:
                 continue
@@ -106,7 +106,7 @@ class move_to_layer_override(Operator):
                 if bricksCurF is not None and bricksCurF.name != obj.name:
                     bricksCurF.layers = self.layers
 
-class OBJECT_OT_move_to_layer_override(bpy.types.Operator):
+class OBJECT_OT_move_to_layer(bpy.types.Operator):
     """Move to Layer"""
     bl_idname = "object.move_to_layer"
     bl_label = "Move to Layer"

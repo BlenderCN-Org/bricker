@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -62,15 +62,18 @@ class BRICKER_OT_bake_model(bpy.types.Operator):
             bricks[0].name = "%(n)s_bricks" % locals()
         # delete parent/source/dup
         objsToDelete = [bpy.data.objects.get("Bricker_%(n)s_parent" % locals()),
-                        bpy.data.objects.get(n),
-                        bpy.data.objects.get("%(n)s_duplicate" % locals())]
+                        cm.source_obj,
+                        bpy.data.objects.get("%(n)s__dup__" % locals())]
         for obj in objsToDelete:
             bpy.data.objects.remove(obj, do_unlink=True)
-        # delete brick group
-        Bricker_bricks_gn = "Bricker_%(n)s_bricks" % locals()
-        brickGroup = bpy.data.groups.get(Bricker_bricks_gn)
-        if brickGroup is not None:
-            bpy.data.groups.remove(brickGroup, do_unlink=True)
+        # delete brick collection
+        brickColl = cm.collection
+        linkedColls = [cn for cn in bpy.data.collections if brickColl.name in cn.children]
+        for col in linkedColls:
+            for brick in bricks:
+                col.objects.link(brick)
+        if brickColl is not None:
+            bpy_collections().remove(brickColl, do_unlink=True)
         # remove current cmlist index
         cm.modelCreated = False
         CMLIST_OT_list_action.removeItem(self, scn.cmlist_index)

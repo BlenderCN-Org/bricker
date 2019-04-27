@@ -29,14 +29,14 @@ from bpy.props import *
 from .customize.undo_stack import *
 from .bevel import BRICKER_OT_bevel
 from .cache import *
-from .brickify import *
+from .brickify import BRICKER_OT_brickify
 from ..lib.bricksDict import *
 from ..functions import *
 
 
-class BRICKER_OT_brickify_anim_in_background(bpy.types.Operator):
+class BRICKER_OT_brickify_in_background(bpy.types.Operator):
     """ Create brick sculpture from source object mesh """
-    bl_idname = "bricker.brickify_anim_in_background"
+    bl_idname = "bricker.brickify_in_background"
     bl_label = "Create/Update Brick Model from Source Object"
     bl_options = {"REGISTER"}
 
@@ -47,7 +47,12 @@ class BRICKER_OT_brickify_anim_in_background(bpy.types.Operator):
         # get active context info
         scn, cm, n = getActiveContextInfo()
         # run brickify for current frame
-        BrickerBrickify.brickifyCurrentFrame(self.frame, scn.frame_current, "UPDATE_ANIM" if cm.animated else "ANIMATE", cm.source_obj, inBackground=True)
+        if "ANIM" in self.action:
+            BRICKER_OT_brickify.brickifyCurrentFrame(self.frame, self.action, inBackground=True)
+        else:
+            BRICKER_OT_brickify.brickifyActiveFrame(self.action)
+        # save last cache to cm.BFMCache
+        cm.BFMCache = json.dumps(bricker_bfm_cache[cm.id])
         return {"FINISHED"}
 
     ################################################
@@ -60,5 +65,23 @@ class BRICKER_OT_brickify_anim_in_background(bpy.types.Operator):
     # class variables
 
     frame = IntProperty(default=-1)
+    action = StringProperty(default="CREATE")
+
+    #############################################
+
+
+class BRICKER_OT_stop_brickifying_in_background(bpy.types.Operator):
+    """ Stop the background brickification process """
+    bl_idname = "bricker.stop_brickifying_in_background"
+    bl_label = "Stop the background brickification process"
+    bl_options = {"REGISTER"}
+
+    ################################################
+    # Blender Operator methods
+
+    def execute(self, context):
+        cm = getActiveContextInfo()[1]
+        cm.stopBackgroundProcess = True
+        return {"FINISHED"}
 
     #############################################

@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -31,12 +31,11 @@ def addMaterialToList(self, context):
     matObj = getMatObject(cm.id, typ=typ)
     numMats = len(matObj.data.materials)
     mat = bpy.data.materials.get(cm.targetMaterial)
-    brick_mats_installed = brick_materials_installed()
     if mat is None:
         return
     elif mat.name in matObj.data.materials.keys():
         cm.targetMaterial = "Already in list!"
-    elif typ == "ABS" and brick_mats_installed and mat.name not in getAbsPlasticMaterialNames():
+    elif typ == "ABS" and brick_materials_installed() and mat.name not in getAbsPlasticMaterialNames():
         cm.targetMaterial = "Not ABS Plastic material"
     elif matObj is not None:
         matObj.data.materials.append(mat)

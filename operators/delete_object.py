@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -35,7 +35,7 @@ from ..lib.bricksDict.functions import getDictKey
 
 class OBJECT_OT_delete_override(Operator):
     """OK?"""
-    bl_idname = "object.delete1"
+    bl_idname = "object.delete"
     bl_label = "Delete"
     bl_options = {'REGISTER'}
 
@@ -56,15 +56,8 @@ class OBJECT_OT_delete_override(Operator):
 
     def invoke(self, context, event):
         # Run confirmation popup for delete action
-        confirmation_returned = context.window_manager.invoke_confirm(self, event)
-        if confirmation_returned != {'FINISHED'}:
-            return confirmation_returned
-        else:
-            try:
-                self.runDelete(context)
-            except:
-                bricker_handle_exception()
-            return {'FINISHED'}
+        # TODO: support 'self.confirm'
+        return context.window_manager.invoke_confirm(self, event)
 
     ################################################
     # initialization method
@@ -82,6 +75,7 @@ class OBJECT_OT_delete_override(Operator):
     use_global = BoolProperty(default=False)
     update_model = BoolProperty(default=True)
     undo = BoolProperty(default=True)
+    confirm = BoolProperty(default=True)
 
     ################################################
     # class methods
@@ -112,6 +106,7 @@ class OBJECT_OT_delete_override(Operator):
         # push delete action to undo stack
         if self.undo:
             bpy.ops.ed.undo_push(message="Delete")
+        tag_redraw_areas("VIEW_3D")
 
     def deleteUnprotected(self, context, use_global=False, update_model=True):
         scn = context.scene
@@ -128,10 +123,10 @@ class OBJECT_OT_delete_override(Operator):
                 continue
             lastBlenderState = cm.blender_undo_state
             # get bricksDict from cache
-            bricksDict, loadedFromCache = getBricksDict(dType="MODEL", cm=cm)
+            bricksDict = getBricksDict(cm)
             if not update_model:
                 continue
-            if not loadedFromCache:
+            if bricksDict is None:
                 self.report({"WARNING"}, "Adjacent bricks in model '" + cm.name + "' could not be updated (matrix not cached)")
                 continue
             keysToUpdate = []
@@ -151,7 +146,7 @@ class OBJECT_OT_delete_override(Operator):
                             curKey = listToStr((x, y, z))
                             # make adjustments to adjacent bricks
                             if cm.autoUpdateOnDelete and cm.lastSplitModel:
-                                self.updateAdjBricksDicts(bricksDict, cm.zStep, curKey, Vector((x, y, z)), keysToUpdate)
+                                self.updateAdjBricksDicts(bricksDict, cm.zStep, curKey, [x, y, z], keysToUpdate)
                             # reset bricksDict values
                             bricksDict[curKey]["draw"] = False
                             bricksDict[curKey]["val"] = 0
@@ -207,6 +202,8 @@ class OBJECT_OT_delete_override(Operator):
                 print(obj.name + ' is protected')
                 protected.append(obj.name)
 
+        tag_redraw_areas("VIEW_3D")
+
         return protected
 
     @staticmethod
@@ -222,7 +219,6 @@ class OBJECT_OT_delete_override(Operator):
                     bricksDict[k0]["draw"] = True
                     bricksDict[k0]["size"] = [1, 1, zStep]
                     bricksDict[k0]["parent"] = "self"
-                    bricksDict[k0]["mat_name"] = bricksDict[curKey]["mat_name"]
                     bricksDict[k0]["type"] = bricksDict[curKey]["type"]
                     bricksDict[k0]["flipped"] = bricksDict[curKey]["flipped"]
                     bricksDict[k0]["rotated"] = bricksDict[curKey]["rotated"]
@@ -262,13 +258,13 @@ class OBJECT_OT_delete_override(Operator):
                 cm = cmCur
                 break
             elif obj.isBrick:
-                bGroup = bpy.data.groups.get("Bricker_%(n)s_bricks" % locals())
-                if bGroup and len(bGroup.objects) < 2:
+                curBricks = cmCur.collection
+                if curBricks is not None and len(curBricks.objects) < 2:
                     cm = cmCur
                     break
         if cm and update_model:
             BRICKER_OT_delete_model.runFullDelete(cm=cm)
-            bpy.context.active_object.select = False
+            deselect(bpy.context.active_object)
         else:
             obj_users_scene = len(obj.users_scene)
             if use_global or obj_users_scene == 1:

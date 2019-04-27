@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -69,18 +69,34 @@ def getBricks(cm=None, typ=None):
     """ get bricks in 'cm' model """
     scn, cm, n = getActiveContextInfo(cm=cm)
     typ = typ or ("MODEL" if cm.modelCreated else "ANIM")
+    bricks = list()
     if typ == "MODEL":
-        gn = "Bricker_%(n)s_bricks" % locals()
-        bGroup = bpy.data.groups[gn]
-        bricks = list(bGroup.objects)
+        bColl = bpy_collections().get("Bricker_%(n)s_bricks" % locals())
+        if bColl:
+            bricks = list(bColl.objects)
     elif typ == "ANIM":
-        bricks = []
         for cf in range(cm.lastStartFrame, cm.lastStopFrame+1):
-            gn = "Bricker_%(n)s_bricks_f_%(cf)s" % locals()
-            bGroup = bpy.data.groups.get(gn)
-            if bGroup:
-                bricks += list(bGroup.objects)
+            bColl = bpy_collections().get("Bricker_%(n)s_bricks_f_%(cf)s" % locals())
+            if bColl:
+                bricks += list(bColl.objects)
     return bricks
+
+
+def getCollections(cm=None, typ=None):
+    """ get bricks collections in 'cm' model """
+    scn, cm, n = getActiveContextInfo(cm=cm)
+    typ = typ or ("MODEL" if cm.modelCreated else "ANIM")
+    if typ == "MODEL":
+        cn = "Bricker_%(n)s_bricks" % locals()
+        bColls = [bpy_collections()[cn]]
+    if typ == "ANIM":
+        bColls = list()
+        for cf in range(cm.lastStartFrame, cm.lastStopFrame+1):
+            cn = "Bricker_%(n)s_bricks_f_%(cf)s" % locals()
+            bColl = bpy_collections().get(cn)
+            if bColl:
+                bColls.append(bColl)
+    return bColls
 
 
 def getMatObject(cm_id, typ="RANDOM"):
@@ -111,8 +127,7 @@ def getShortType(brickD, targetType=None):
 
 
 def brick_materials_installed():
-    scn = bpy.context.scene
-    return hasattr(scn, "isBrickMaterialsInstalled") and scn.isBrickMaterialsInstalled
+    return hasattr(bpy.ops, "abs") and hasattr(bpy.ops.abs, "append_materials")
 
 
 def getABSPlasticMats():
@@ -133,9 +148,7 @@ def getMatNames(all=False):
 def brick_materials_loaded():
     scn = bpy.context.scene
     # make sure abs_plastic_materials addon is installed
-
-    brick_mats_installed = brick_materials_installed()
-    if not brick_mats_installed:
+    if not brick_materials_installed():
         return False
     # check if any of the colors haven't been loaded
     mats = bpy.data.materials.keys()
@@ -241,7 +254,8 @@ def getLocsInBrick(bricksDict, size, zStep, key, loc=None):
     return [[x0 + x, y0 + y, z0 + z] for z in range(0, size[2], zStep) for y in range(size[1]) for x in range(size[0])]
 
 
-def getKeysInBrick(bricksDict, size, zStep, key, loc=None):
+def getKeysInBrick(bricksDict, size, zStep:int, loc:list=None, key:str=None):
+    assert key is not None or loc is not None
     x0, y0, z0 = loc or getDictLoc(bricksDict, key)
     return [listToStr((x0 + x, y0 + y, z0 + z)) for z in range(0, size[2], zStep) for y in range(size[1]) for x in range(size[0])]
 
@@ -249,7 +263,8 @@ def getKeysInBrick(bricksDict, size, zStep, key, loc=None):
 def isOnShell(bricksDict, key, loc=None, zStep=None, shellDepth=1):
     """ check if any locations in brick are on the shell """
     size = bricksDict[key]["size"]
-    brickKeys = getKeysInBrick(bricksDict, size, zStep, key, loc)
+    loc = loc or getDictLoc(bricksDict, key)
+    brickKeys = getKeysInBrick(bricksDict, size, zStep, loc=loc)
     for k in brickKeys:
         if bricksDict[k]["val"] >= 1 - (shellDepth - 1) / 100:
             return True
@@ -270,7 +285,8 @@ def getDictLoc(bricksDict, key):
 
 
 def getBrickCenter(bricksDict, key, zStep, loc=None):
-    brickKeys = getKeysInBrick(bricksDict, bricksDict[key]["size"], zStep, key, loc=loc)
+    loc = loc or getDictLoc(bricksDict, key)
+    brickKeys = getKeysInBrick(bricksDict, bricksDict[key]["size"], zStep, loc=loc)
     coords = [bricksDict[k0]["co"] for k0 in brickKeys]
     coord_ave = Vector((mean([co[0] for co in coords]), mean([co[1] for co in coords]), mean([co[2] for co in coords])))
     return coord_ave
@@ -348,7 +364,7 @@ def getExportPath(fn, ext, basePath, frame=-1, subfolder=False):
         while len(splitPath) > 0 and splitPath[0] == "..":
             splitPath.pop(0)
             blendPathSplit.pop()
-        newPath = os.path.join(*splitPath)
+        newPath = os.path.join(*splitPath) if len(splitPath) > 0 else ""
         fullBlendPath = os.path.join(*blendPathSplit) if len(blendPathSplit) > 1 else root_path()
         path = os.path.join(fullBlendPath, newPath)
     # if path is blank at this point, use default render location
@@ -358,7 +374,7 @@ def getExportPath(fn, ext, basePath, frame=-1, subfolder=False):
     if not os.path.exists(path):
         return path, "Blender could not find the following path: '%(path)s'" % locals()
     # get full filename
-    fn0 = fn if lastSlash in (-1, len(basePath) - 1) else basePath[lastSlash + 1:]
+    fn0 = os.path.split(basePath)[1] or fn
     frame_num = "_%(frame)s" % locals() if frame >= 0 else ""
     full_fn = fn0 + frame_num + ext
     # create subfolder
@@ -447,18 +463,18 @@ def loadBlockModel():
 def createMatObjs(idx):
     """ create new matObjs for current cmlist id """
     matObjNames = ["Bricker_{}_RANDOM_mats".format(idx), "Bricker_{}_ABS_mats".format(idx)]
-    for n in matObjNames:
-        matObj = bpy.data.objects.get(n)
+    for obj_n in matObjNames:
+        matObj = bpy.data.objects.get(obj_n)
         if matObj is None:
-            matObj = bpy.data.objects.new(n, bpy.data.meshes.new(n + "_mesh"))
+            matObj = bpy.data.objects.new(obj_n, bpy.data.meshes.new(obj_n + "_mesh"))
             matObj.use_fake_user = True
 
 
 def removeMatObjs(idx):
     """ remove matObjs for current cmlist id """
     matObjNames = ["Bricker_{}_RANDOM_mats".format(idx), "Bricker_{}_ABS_mats".format(idx)]
-    for n in matObjNames:
-        matObj = bpy.data.objects.get(n)
+    for obj_n in matObjNames:
+        matObj = bpy.data.objects.get(obj_n)
         if matObj is not None:
             bpy.data.objects.remove(matObj, do_unlink=True)
 
@@ -489,5 +505,4 @@ def updateCanRun(type):
         if type == "ANIMATION":
             return commonNeedsUpdate or (cm.materialType != "CUSTOM" and cm.materialIsDirty)
         elif type == "MODEL":
-            Bricker_bricks_gn = "Bricker_%(n)s_bricks" % locals()
-            return commonNeedsUpdate or (groupExists(Bricker_bricks_gn) and len(bpy.data.groups[Bricker_bricks_gn].objects) == 0) or (cm.materialType != "CUSTOM" and (cm.materialType != "RANDOM" or cm.splitModel or cm.lastMaterialType != cm.materialType or cm.materialIsDirty) and cm.materialIsDirty) or cm.hasCustomObj1 or cm.hasCustomObj2 or cm.hasCustomObj3
+            return commonNeedsUpdate or (cm.collection is not None and len(cm.collection.objects) == 0) or (cm.materialType != "CUSTOM" and (cm.materialType != "RANDOM" or cm.splitModel or cm.lastMaterialType != cm.materialType or cm.materialIsDirty) and cm.materialIsDirty) or cm.hasCustomObj1 or cm.hasCustomObj2 or cm.hasCustomObj3

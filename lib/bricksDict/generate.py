@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -35,6 +35,7 @@ from ...functions.wrappers import *
 from ...functions.smoke_sim import *
 from ..Brick import Bricks
 
+
 def VectorRound(vec, dec, roundType="ROUND"):
     """ round all vals in Vector 'vec' to 'dec' precision """
     if roundType == "ROUND":
@@ -45,9 +46,9 @@ def VectorRound(vec, dec, roundType="ROUND"):
         lst = [(math.ceil(vec[i] * 10**dec)) / 10**dec for i in range(len(vec))]
     return Vector(lst)
 
-def castRays(obj:Object, point:Vector, direction:Vector, miniDist:float, roundType:str="CEILING", edgeLen:int=0):
+def castRays(obj_eval:Object, point:Vector, direction:Vector, miniDist:float, roundType:str="CEILING", edgeLen:int=0):
     """
-    obj       -- source object to test intersections for
+    obj_eval  -- source object to test intersections for
     point     -- origin point for ray casting
     direction -- cast ray in this direction
     miniDist  -- Vector with miniscule amount to add after intersection
@@ -65,7 +66,7 @@ def castRays(obj:Object, point:Vector, direction:Vector, miniDist:float, roundTy
     intersections = 0
     # cast rays until no more rays to cast
     while True:
-        _,location,normal,index = obj.ray_cast(orig,direction)#distance=edgeLen*1.00000000001)
+        _,location,normal,index = obj_eval.ray_cast(orig, direction)#distance=edgeLen*1.00000000001)
         if index == -1: break
         if intersections == 0:
             firstDirection = direction.dot(normal)
@@ -109,17 +110,26 @@ def rayObjIntersections(scn, point, direction, miniDist:Vector, edgeLen, obj, us
     intersections = 0
     noMoreChecks = False
     outsideL = []
+    if b280():
+        depsgraph = bpy.context.depsgraph
+        # try:
+        #     depsgraph = obj.users_scene[0].view_layers[0].depsgraph
+        # except Exception as e:
+        #     depsgraph = bpy.context.depsgraph
+        obj_eval = depsgraph.objects.get(obj.name, None)
+    else:
+        obj_eval = obj
     # set axis of direction
     axes = "XYZ" if direction[0] > 0 else ("YZX" if direction[1] > 0 else "ZXY")
     # run initial intersection check
-    intersections, firstDirection, firstIntersection, nextIntersection, lastIntersection, edgeIntersects = castRays(obj, point, direction, miniDist, edgeLen=edgeLen)
+    intersections, firstDirection, firstIntersection, nextIntersection, lastIntersection, edgeIntersects = castRays(obj_eval, point, direction, miniDist, edgeLen=edgeLen)
     if insidenessRayCastDir == "HIGH EFFICIENCY" or axes[0] in insidenessRayCastDir:
         outsideL.append(0)
         if intersections%2 == 0 and not (useNormals and firstDirection > 0):
             outsideL[0] = 1
         elif castDoubleCheckRays:
             # double check vert is inside mesh
-            count, firstDirection = castRays(obj, point, -direction, -miniDist, roundType="FLOOR")
+            count, firstDirection = castRays(obj_eval, point, -direction, -miniDist, roundType="FLOOR")
             if count%2 == 0 and not (useNormals and firstDirection > 0):
                 outsideL[0] = 1
 
@@ -135,12 +145,12 @@ def rayObjIntersections(scn, point, direction, miniDist:Vector, edgeLen, obj, us
                 outsideL.append(0)
                 direction = dirs[i][0]
                 miniDist = dirs[i][1]
-                count, firstDirection = castRays(obj, point, direction, miniDist)
+                count, firstDirection = castRays(obj_eval, point, direction, miniDist)
                 if count%2 == 0 and not (useNormals and firstDirection > 0):
                     outsideL[len(outsideL) - 1] = 1
                 elif castDoubleCheckRays:
                     # double check vert is inside mesh
-                    count, firstDirection = castRays(obj, point, -direction, -miniDist, roundType="FLOOR")
+                    count, firstDirection = castRays(obj_eval, point, -direction, -miniDist, roundType="FLOOR")
                     if count%2 == 0 and not (useNormals and firstDirection > 0):
                         outsideL[len(outsideL) - 1] = 1
 
@@ -345,8 +355,9 @@ def getBrickMatrix(source, faceIdxMatrix, coordMatrix, brickShell, axes="xyz", p
     return brickFreqMatrix
 
 
-def getBrickMatrixSmoke(source, faceIdxMatrix, brickShell, source_details, printStatus=True, cursorStatus=False):
+def getBrickMatrixSmoke(faceIdxMatrix, brickShell, source_details, printStatus=True, cursorStatus=False):
     cm = getActiveContextInfo()[1]
+    source = cm.source_obj
     density_grid, flame_grid, color_grid, domain_res, max_res, adapt = getSmokeInfo(source)
     brickFreqMatrix = deepcopy(faceIdxMatrix)
     colorMatrix = deepcopy(faceIdxMatrix)
@@ -434,7 +445,7 @@ def getBrickMatrixSmoke(source, faceIdxMatrix, brickShell, source_details, print
                 # add brightness
                 c_ave += brightness
                 # add saturation
-                c_ave = c_ave * sat_mat
+                c_ave = mathutils_mult(c_ave, sat_mat)
                 brickFreqMatrix[x][y][z] = 0 if alpha < (1 - smokeDensity) else 1
                 colorMatrix[x][y][z] = list(c_ave) + [alpha]
 
@@ -516,6 +527,7 @@ def adjustBFM(brickFreqMatrix, matShellDepth, faceIdxMatrix=None, axes=""):
     j = 1
     setNF = True
     for i in range(50):
+        continue
         j = round(j-0.01, 2)
         gotOne = False
         newShellVals = []
@@ -529,6 +541,10 @@ def adjustBFM(brickFreqMatrix, matShellDepth, faceIdxMatrix=None, axes=""):
                            (x, y, z+1),
                            (x, y, z-1))
             for idx in idxsToCheck:
+                # print("*"*25)
+                # print(str(idx))
+                # print(str(len(brickFreqMatrix)), str(len(brickFreqMatrix[0])), str(len(brickFreqMatrix[0][0])))
+                # print("*"*25)
                 curVal = brickFreqMatrix[idx[0]][idx[1]][idx[2]]
                 if curVal == -1:
                     newShellVals.append(idx)
@@ -597,7 +613,7 @@ def createBricksDictEntry(name:str, loc:list, val:float=0, draw:bool=False, co:t
            }
 
 @timed_call('Time Elapsed')
-def makeBricksDict(source, source_details, brickScale, origSource, cursorStatus=False):
+def makeBricksDict(source, source_details, brickScale, uv_images, cursorStatus=False):
     """ make dictionary with brick information at each coordinate of lattice surrounding source
     source         -- source object to construct lattice around
     source_details -- object details with subattributes for distance and midpoint of x, y, z axes
@@ -620,7 +636,7 @@ def makeBricksDict(source, source_details, brickScale, origSource, cursorStatus=
     # set up faceIdxMatrix and brickFreqMatrix
     faceIdxMatrix = np.zeros((len(coordMatrix), len(coordMatrix[0]), len(coordMatrix[0][0])), dtype=int).tolist()
     if cm.isSmoke:
-        brickFreqMatrix, smokeColors = getBrickMatrixSmoke(origSource, faceIdxMatrix, cm.brickShell, source_details, cursorStatus=cursorStatus)
+        brickFreqMatrix, smokeColors = getBrickMatrixSmoke(faceIdxMatrix, cm.brickShell, source_details, cursorStatus=cursorStatus)
     else:
         brickFreqMatrix = getBrickMatrix(source, faceIdxMatrix, coordMatrix, cm.brickShell, axes=calculationAxes, cursorStatus=cursorStatus)
         smokeColors = None
@@ -631,10 +647,9 @@ def makeBricksDict(source, source_details, brickScale, origSource, cursorStatus=
     bricksDict = {}
     threshold = getThreshold(cm)
     brickType = cm.brickType  # prevents cm.brickType update function from running over and over in for loop
-    uvImageName = cm.uvImageName
+    uvImage = cm.uvImage
+    sourceMats = cm.materialType == "SOURCE"
     noOffset = vec_round(offset, precision=5) == Vector((0, 0, 0))
-    # get uv_texture image and pixels for material calculation
-    uv_images = getUVImages(source)
     for x in range(len(coordMatrix)):
         for y in range(len(coordMatrix[0])):
             for z in range(len(coordMatrix[0][0])):
@@ -654,11 +669,14 @@ def makeBricksDict(source, source_details, brickScale, origSource, cursorStatus=
                 norm_dir = getNormalDirection(nn, slopes=True)
                 bType = getBrickType(brickType)
                 flipped, rotated = getFlipRot("" if norm_dir is None else norm_dir[1:])
-                rgba = smokeColors[x][y][z] if smokeColors else getUVPixelColor(scn, source, nf, ni if ni is None else Vector(ni), uv_images, uvImageName)
+                if sourceMats:
+                    rgba = smokeColors[x][y][z] if smokeColors else getUVPixelColor(scn, source, nf, ni if ni is None else Vector(ni), uv_images, uvImage)
+                else:
+                    rgba = (0, 0, 0, 1)
                 draw = brickFreqMatrix[x][y][z] >= threshold
                 # create bricksDict entry for current brick
                 bricksDict[bKey] = createBricksDictEntry(
-                    name= 'Bricker_%(n)s_brick__%(bKey)s' % locals(),
+                    name= 'Bricker_%(n)s__%(bKey)s' % locals(),
                     loc= [x, y, z],
                     val= brickFreqMatrix[x][y][z],
                     draw= draw,

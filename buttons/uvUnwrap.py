@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -44,9 +44,7 @@ class BRICKER_OT_uv_unwrap(bpy.types.Operator):
         selection = context.selected_objects
         scn, cm, n = getActiveContextInfo()
         bricks = getBricks()
-        if cm.modelCreated and cm.lastSplitModel:
-            bricks = bricks[0]
-        select(bricks, only=True, active=True)
+        select(bricks[0], active=True, only=True)
         bpy.ops.uv.smart_project()
         select(selection, only=True)
         scn.objects.active = act

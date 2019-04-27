@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -21,6 +21,7 @@ import copy
 # Blender imports
 import bpy
 from bpy.types import Operator
+from bpy.props import *
 
 # Addon imports
 from .mergeBricks import *
@@ -73,10 +74,11 @@ class BRICKER_OT_draw_adjacent(Operator):
             scn.update()
             self.undo_stack.iterateStates(cm)
             # get fresh copy of self.bricksDict
-            self.bricksDict, _ = getBricksDict(cm=cm)
+            self.bricksDict = getBricksDict(cm)
             # initialize vars
             obj = bpy.context.active_object
             initial_active_obj_name = obj.name
+            cm.customized = True
             keysToMerge = []
             updateHasCustomObjs(cm, targetType)
 
@@ -146,10 +148,9 @@ class BRICKER_OT_draw_adjacent(Operator):
             scn, cm, _ = getActiveContextInfo()
             obj = bpy.context.active_object
             dictKey = getDictKey(obj.name)
-            cm.customized = True
 
             # initialize self.bricksDict
-            self.bricksDict, _ = getBricksDict(cm=cm)
+            self.bricksDict = getBricksDict(cm)
             # initialize direction bools
             self.zPos, self.zNeg, self.yPos, self.yNeg, self.xPos, self.xNeg = [False] * 6
             # initialize self.dimensions
@@ -181,17 +182,17 @@ class BRICKER_OT_draw_adjacent(Operator):
         return items
 
     # define props for popup
-    brickType = bpy.props.EnumProperty(
+    brickType = EnumProperty(
         name="Brick Type",
         description="Type of brick to draw adjacent to current brick",
         items=get_items,
         default=None)
-    zPos = bpy.props.BoolProperty(name="+Z (Top)", default=False)
-    zNeg = bpy.props.BoolProperty(name="-Z (Bottom)", default=False)
-    xPos = bpy.props.BoolProperty(name="+X (Front)", default=False)
-    xNeg = bpy.props.BoolProperty(name="-X (Back)", default=False)
-    yPos = bpy.props.BoolProperty(name="+Y (Right)", default=False)
-    yNeg = bpy.props.BoolProperty(name="-Y (Left)", default=False)
+    zPos = BoolProperty(name="+Z (Top)", default=False)
+    zNeg = BoolProperty(name="-Z (Bottom)", default=False)
+    xPos = BoolProperty(name="+X (Front)", default=False)
+    xNeg = BoolProperty(name="-X (Back)", default=False)
+    yPos = BoolProperty(name="+Y (Right)", default=False)
+    yNeg = BoolProperty(name="-Y (Left)", default=False)
 
     #############################################
     # class methods
@@ -254,7 +255,7 @@ class BRICKER_OT_draw_adjacent(Operator):
         if not adjBrickD:
             co = BRICKER_OT_draw_adjacent.getNewCoord(cm, bricksDict, dictKey, dictLoc, adjacent_key, adjacent_loc, dimensions)
             bricksDict[adjacent_key] = createBricksDictEntry(
-                name=              'Bricker_%(n)s_brick__%(adjacent_key)s' % locals(),
+                name=              'Bricker_%(n)s__%(adjacent_key)s' % locals(),
                 loc=               adjacent_loc,
                 co=                co,
                 near_face=         bricksDict[dictKey]["near_face"],

@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -40,12 +40,15 @@ def drawUpdatedBricks(cm, bricksDict, keysToUpdate, action="redrawing", selectCr
     source = cm.source_obj
     source_details, dimensions = getDetailsAndBounds(source, cm)
     n = source.name
-    Bricker_parent_on = "Bricker_%(n)s_parent" % locals()
-    parent = bpy.data.objects.get(Bricker_parent_on)
-    logo_details, refLogo = [None, None] if tempBrick else BrickerBrickify.getLogo(bpy.context.scene, cm, dimensions)
+    parent = cm.parent_obj
+    logo_details, refLogo = [None, None] if tempBrick else BRICKER_OT_brickify.getLogo(bpy.context.scene, cm, dimensions)
     action = "UPDATE_MODEL"
     # actually draw the bricks
-    BrickerBrickify.createNewBricks(source, parent, source_details, dimensions, refLogo, logo_details, action, cm=cm, bricksDict=bricksDict, keys=keysToUpdate, clearExistingGroup=False, selectCreated=selectCreated, printStatus=False, tempBrick=tempBrick, redraw=True)
+    _, bricksCreated = BRICKER_OT_brickify.createNewBricks(source, parent, source_details, dimensions, refLogo, logo_details, action, cm=cm, bricksDict=bricksDict, keys=keysToUpdate, clearExistingCollection=False, selectCreated=selectCreated, printStatus=False, tempBrick=tempBrick, redraw=True)
+    # link new bricks to scene
+    if not b280():
+        for brick in bricksCreated:
+            safeLink(brick)
     # add bevel if it was previously added
     if cm.bevelAdded and not tempBrick:
         bricks = getBricks(cm)
@@ -108,6 +111,8 @@ def getUsedSizes():
     scn = bpy.context.scene
     items = [("NONE", "None", "")]
     for cm in scn.cmlist:
+        if not cm.brickSizesUsed:
+            continue
         sortBy = lambda k: (strToList(k)[2], strToList(k)[0], strToList(k)[1])
         items += [(s, s, "") for s in sorted(cm.brickSizesUsed.split("|"), reverse=True, key=sortBy) if (s, s, "") not in items]
     return items
@@ -209,7 +214,7 @@ def updateBrickSizeAndDict(dimensions, source_name, bricksDict, brickSize, key, 
 
 def createAddlBricksDictEntry(source_name, bricksDict, source_key, key, full_d, x, y, z):
     brickD = bricksDict[source_key]
-    newName = "Bricker_%(source_name)s_brick__%(key)s" % locals()
+    newName = "Bricker_%(source_name)s__%(key)s" % locals()
     newCO = (Vector(brickD["co"]) + vec_mult(Vector((x, y, z)), full_d)).to_tuple()
     bricksDict[key] = createBricksDictEntry(
         name=              newName,
@@ -249,7 +254,7 @@ def createObjNamesAndBricksDictsDs(objs):
         cm = getItemByID(scn.cmlist, cm_id)
         if cm is None: continue
         # get bricksDict from cache
-        bricksDict, _ = getBricksDict(cm=cm)
+        bricksDict = getBricksDict(cm)
         # add to bricksDicts
         bricksDicts[cm_id] = bricksDict
     return objNamesD, bricksDicts
@@ -281,9 +286,9 @@ def selectBricks(objNamesD, bricksDicts, brickSize="NULL", brickType="NULL", all
             sizeStr = listToStr(sorted(siz[:2]) + [siz[2]])
             if (sizeStr == brickSize or typ == brickType) and (include == "BOTH" or (include == "INT" and not onShell) or (include == "EXT" and onShell)):
                 selectedSomething = True
-                curObj.select = True
+                select(curObj)
             elif only:
-                curObj.select = False
+                deselect(curObj)
 
         # if no brickSize bricks exist, remove from cm.brickSizesUsed or cm.brickTypesUsed
         removeUnusedFromList(cm, brickType=brickType, brickSize=brickSize, selectedSomething=selectedSomething)

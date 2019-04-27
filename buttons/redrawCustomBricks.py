@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -61,7 +61,7 @@ class BRICKER_OT_redraw_custom_bricks(bpy.types.Operator):
 
     def redrawCustomBricks(self):
         cm = getActiveContextInfo()[1]
-        bricksDict, _ = getBricksDict(cm=cm)
+        bricksDict = getBricksDict(cm)
         if bricksDict is None:
             return
         keysToUpdate = [k for k in bricksDict if bricksDict[k]["type"] == "CUSTOM " + self.target_prop[-1]]

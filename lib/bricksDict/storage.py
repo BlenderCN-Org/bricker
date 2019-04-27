@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -25,34 +25,23 @@ import bpy
 from .generate import *
 from .modify import *
 from .functions import *
-from ..caches import bricker_bfm_cache
+from ..caches import bricker_bfm_cache, cacheExists
 from ...functions import *
 
-def getBricksDict(dType="MODEL", source=None, source_details=None, dimensions=None, brickScale=None, updateCursor=True, curFrame=None, cm=None, origSource=None, restrictContext=True):
+def getBricksDict(cm, dType="MODEL", curFrame=None):
     """ retrieve bricksDict from cache if possible, else create a new one """
     scn = bpy.context.scene
-    cm = cm or scn.cmlist[scn.cmlist_index]
-    loadedFromCache = False
     # if bricksDict can be pulled from cache
-    if not matrixReallyIsDirty(cm) and not (cm.BFMCache in (None, "") and bricker_bfm_cache.get(cm.id) is None) and not (cm.animIsDirty and "ANIM" in dType):
+    if not matrixReallyIsDirty(cm) and cacheExists(cm) and not (cm.animIsDirty and "ANIM" in dType):
         # try getting bricksDict from light cache, then deep cache
         bricksDict = bricker_bfm_cache.get(cm.id) or json.loads(cm.BFMCache)
-        loadedFromCache = True
         # if animated, index into that dict
         if "ANIM" in dType:
             adjusted_frame_current = getAnimAdjustedFrame(curFrame, cm.lastStartFrame, cm.lastStopFrame)
             bricksDict = bricksDict[str(adjusted_frame_current)]
-    # if context restricted, return nothing
-    elif restrictContext:
-        return None, False
-    # else, new bricksDict must be created
-    else:
-        # get arguments for makeBricksDict function call
-        if source is None or source_details is None or dimensions is None or brickScale is None:
-            source, source_details, dimensions, brickScale, _ = getArgumentsForBricksDict(cm)
-        # create new bricksDict
-        bricksDict = makeBricksDict(source, source_details, brickScale, origSource=origSource, cursorStatus=updateCursor)
-    return bricksDict, loadedFromCache
+        return bricksDict
+    # else, return nothing
+    return None
 
 def lightToDeepCache(bricker_bfm_cache):
     """ send bricksDict from blender cache to python cache for quick access """
@@ -77,9 +66,13 @@ def deepToLightCache(bricker_bfm_cache):
         # make sure there is something to store to light cache
         if cm.BFMCache == "":
             continue
-        bricksDict = json.loads(cm.BFMCache)
-        bricker_bfm_cache[cm.id] = bricksDict
-        numPulledIDs += 1
+        try:
+            bricksDict = json.loads(cm.BFMCache)
+            bricker_bfm_cache[cm.id] = bricksDict
+            numPulledIDs += 1
+        except Exception as e:
+            print("ERROR in deepToLightCache:", e)
+            cm.BFMCache = ""
     if numPulledIDs > 0:
         print("[Bricker] pulled {numKeys} {pluralized_dicts} from deep cache to light cache".format(numKeys=numPulledIDs, pluralized_dicts="dict" if numPulledIDs == 1 else "dicts"))
 

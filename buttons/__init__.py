@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -15,4 +15,4 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ["addAbsToMatObj", "bake", "customize", "bevel", "brickify", "brickifyAnimInBackground", "cache", "delete_model", "exportLdraw", "materials", "redrawCustomBricks", "exportModelData", "uvUnwrap"]
+__all__ = ["addAbsToMatObj", "bake", "customize", "bevel", "brickify", "brickifyInBackground", "cache", "delete_model", "exportLdraw", "exportModelData", "materials", "redrawCustomBricks", "revertSettings"]

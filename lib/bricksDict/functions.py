@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -73,34 +73,35 @@ def getUVCoord(mesh, face, point, image):
     return Vector(uv_coord)
 
 
-def getUVTextureData(obj):
+def getUVLayerData(obj):
     """ returns data of active uv texture for object """
-    if len(obj.data.uv_textures) == 0:
+    obj_uv_layers = obj.data.uv_layers if b280() else obj.data.uv_textures
+    if len(obj_uv_layers) == 0:
         return None
-    active_uv = obj.data.uv_textures.active
+    active_uv = obj_uv_layers.active
     if active_uv is None:
-        obj.data.uv_textures.active = obj.data.uv_textures[0]
-        active_uv = obj.data.uv_textures.active
+        obj_uv_layers.active = obj_uv_layers[0]
+        active_uv = obj_uv_layers.active
     return active_uv.data
 
 
-def getFirstImgTexNode(obj):
+def getFirstImgTexNodes(obj):
     """ return first image texture found in object's material slots """
-    img = None
+    imgs = list()
     for mat_slot in obj.material_slots:
         mat = mat_slot.material
         if mat is None or not mat.use_nodes:
             continue
         active_node = mat.node_tree.nodes.active
         nodes_to_check = [active_node] + list(mat.node_tree.nodes)
+        img = None
         for node in nodes_to_check:
             if node and node.type == "TEX_IMAGE":
                 img = verifyImg(node.image)
                 if img is not None:
+                    imgs.append(img)
                     break
-        if img is not None:
-            break
-    return img
+    return imgs
 
 
 # reference: https://svn.blender.org/svnroot/bf-extensions/trunk/py/scripts/addons/uv_bake_texture_to_vcols.py
@@ -108,10 +109,14 @@ def getUVImages(obj):
     """ returns dictionary with duplicate pixel arrays for all UV textures in object """
     scn, cm, _ = getActiveContextInfo()
     # get list of images to store
-    uv_tex_data = getUVTextureData(obj)
-    images = [uv_tex.image for uv_tex in uv_tex_data] if uv_tex_data else []
-    images.append(bpy.data.images.get(cm.uvImageName))
-    images.append(getFirstImgTexNode(obj))
+    if b280():
+        # TODO: Reinstate this 2.79 functionality
+        images = []
+    else:
+        uv_tex_data = getUVLayerData(obj)
+        images = [uv_tex.image for uv_tex in uv_tex_data if uv_tex.image is not None] if uv_tex_data else []
+    images.append(cm.uvImage)
+    images += getFirstImgTexNodes(obj)
     images = uniquify1(images)
     # store images
     uv_images = {}
@@ -140,7 +145,7 @@ def getPixel(pixels, uv_coord):
     b = uv_pixels[pixelNumber*4 + 2]
     a = uv_pixels[pixelNumber*4 + 3]
     # gamma correct RGB value
-    r, g, b, a = gammaCorrect([r, g, b, a], 2)
+    r, g, b, a = gammaCorrect([r, g, b, a], 2.0167)
     return (r, g, b, a)
 
 
@@ -154,12 +159,14 @@ def getFirstNode(mat, types:list=None):
     scn = bpy.context.scene
     if types is None:
         # get material type(s) based on render engine
-        if scn.render.engine == "CYCLES":
-            types = ["BSDF_DIFFUSE", "BSDF_PRINCIPLED"]
+        if scn.render.engine in ("CYCLES", "BLENDER_EEVEE"):
+            types = ("BSDF_DIFFUSE", "BSDF_PRINCIPLED")
         elif scn.render.engine == "octane":
-            types = ["OCT_DIFFUSE_MAT"]
+            types = ("OCT_DIFFUSE_MAT")
         # elif scn.render.engine == "LUXCORE":
-        #     types = ["CUSTOM"]
+        #     types = ("CUSTOM")
+        else:
+            types = ()
     # get first node of target type
     mat_nodes = mat.node_tree.nodes
     for node in mat_nodes:
@@ -190,33 +197,41 @@ def createNewMaterial(model_name, rgba, rgba_vals, sss, sat_mat, specular, rough
     mat = mat or bpy.data.materials.new(name=mat_name)
     # set diffuse and transparency of material
     if mat_is_new:
+        mat.diffuse_color = rgba if b280() else rgba[:3]
         if scn.render.engine == "BLENDER_RENDER":
-            mat.diffuse_color = rgba[:3]
             mat.diffuse_intensity = 1.0
             if a0 < 1.0:
                 mat.use_transparency = True
                 mat.alpha = rgba[3]
-        elif scn.render.engine in ["CYCLES", "octane"]:
+        elif scn.render.engine in ("CYCLES", "BLENDER_EEVEE", "octane"):
             mat.use_nodes = True
             mat_nodes = mat.node_tree.nodes
             mat_links = mat.node_tree.links
-            if scn.render.engine == "CYCLES":
-                # a new material node tree already has a diffuse and material output node
-                output = mat_nodes['Material Output']
-                # remove default Diffuse BSDF
-                diffuse = mat_nodes['Diffuse BSDF']
-                mat_nodes.remove(diffuse)
-                # add Principled BSDF
-                principled = mat_nodes.new('ShaderNodeBsdfPrincipled')
+            if scn.render.engine in ("CYCLES", "BLENDER_EEVEE"):
+                if b280():
+                    # get principled material node
+                    principled = mat_nodes.get('Principled BSDF')
+                else:
+                    # a new material node tree already has a diffuse and material output node
+                    output = mat_nodes['Material Output']
+                    # remove default Diffuse BSDF
+                    diffuse = mat_nodes['Diffuse BSDF']
+                    mat_nodes.remove(diffuse)
+                    # add Principled BSDF
+                    principled = mat_nodes.new('ShaderNodeBsdfPrincipled')
+                    # link Principled BSDF to output node
+                    mat_links.new(principled.outputs['BSDF'], output.inputs['Surface'])
                 # set values for Principled BSDF
                 principled.inputs[0].default_value = rgba
                 principled.inputs[1].default_value = sss
-                principled.inputs[3].default_value[:3] = (Vector(rgba[:3]) * sat_mat).to_tuple()
+                principled.inputs[3].default_value[:3] = mathutils_mult(Vector(rgba[:3]), sat_mat).to_tuple()
                 principled.inputs[5].default_value = specular
                 principled.inputs[7].default_value = roughness
                 principled.inputs[14].default_value = ior
                 principled.inputs[15].default_value = transmission
                 if includeTransparency:
+                    # a new material node tree already has a diffuse and material output node
+                    output = mat_nodes['Material Output']
                     # create transparent and mix nodes
                     transparent = mat_nodes.new("ShaderNodeBsdfTransparent")
                     mix = mat_nodes.new("ShaderNodeMixShader")
@@ -226,8 +241,6 @@ def createNewMaterial(model_name, rgba, rgba_vals, sss, sat_mat, specular, rough
                     mat_links.new(mix.outputs['Shader'], output.inputs["Surface"])
                     # set mix factor to 1 - alpha
                     mix.inputs[0].default_value = 1 - rgba[3]
-                else:
-                    mat_links.new(principled.outputs['BSDF'], output.inputs['Surface'])
             elif scn.render.engine == "octane":
                 # a new material node tree already has a diffuse and material output node
                 output = mat_nodes['Material Output']
@@ -255,13 +268,16 @@ def createNewMaterial(model_name, rgba, rgba_vals, sss, sat_mat, specular, rough
             # make sure 'use_nodes' is disabled
             mat.use_nodes = False
             # update material color
-            r1, g1, b1 = mat.diffuse_color
-            a1 = mat.alpha
+            if b280():
+                r1, g1, b1, a1 = mat.diffuse_color
+            else:
+                r1, g1, b1 = mat.diffuse_color
+                a1 = mat.alpha
             r2, g2, b2, a2 = getAverage(Vector(rgba), Vector((r1, g1, b1, a1)), mat.num_averaged)
             mat.diffuse_color = [r2, g2, b2]
             mat.alpha = a2
-        # elif scn.render.engine in ["CYCLES", "octane", "LUXCORE"]:
-        elif scn.render.engine in ["CYCLES", "octane"]:
+        # if scn.render.engine in ("CYCLES", "BLENDER_EEVEE", "octane", "LUXCORE"):
+        if scn.render.engine in ("CYCLES", "BLENDER_EEVEE", "octane"):
             # make sure 'use_nodes' is enabled
             mat.use_nodes = True
             # get first node
@@ -271,7 +287,7 @@ def createNewMaterial(model_name, rgba, rgba_vals, sss, sat_mat, specular, rough
                 rgba1 = first_node.inputs[0].default_value
                 newRGBA = getAverage(Vector(rgba), Vector(rgba1), mat.num_averaged)
                 first_node.inputs[0].default_value = newRGBA
-                first_node.inputs[3].default_value[:3] = (Vector(newRGBA[:3]) * sat_mat).to_tuple()
+                first_node.inputs[3].default_value[:3] = mathutils_mult(Vector(newRGBA[:3]), sat_mat).to_tuple()
     mat.num_averaged += 1
     return mat_name
 
@@ -281,24 +297,30 @@ def verifyImg(im):
     return im if im is not None and im.pixels is not None and len(im.pixels) > 0 else None
 
 
-def getUVImage(scn, obj, face_idx, uvImageName):
+def getUVImage(scn, obj, face_idx, uvImage):
     """ returns UV image (priority to user settings, then face index, then first one found in object """
-    image = verifyImg(bpy.data.images.get(uvImageName))
-    if image is None and obj.data.uv_textures.active:
+    image = verifyImg(uvImage)
+    # TODO: Reinstate this functionality for b280()
+    if not b280() and image is None and obj.data.uv_textures.active:
         image = verifyImg(obj.data.uv_textures.active.data[face_idx].image)
     if image is None:
-        image = verifyImg(getFirstImgTexNode(obj))
+        try:
+            mat_idx = obj.data.polygons[face_idx].material_index
+            image = verifyImg(getFirstImgTexNodes(obj)[mat_idx])
+        except IndexError:
+            imgs = getFirstImgTexNodes(obj)
+            image = verifyImg(imgs[0]) if len(imgs) > 0 else None
     return image
 
 
-def getUVPixelColor(scn, obj, face_idx, point, uv_images, uvImageName):
+def getUVPixelColor(scn, obj, face_idx, point, uv_images, uvImage):
     """ get RGBA value for point in UV image at specified face index """
     if face_idx is None:
         return None
     # get closest material using UV map
     face = obj.data.polygons[face_idx]
-    # get uv_texture image for face
-    image = getUVImage(scn, obj, face_idx, uvImageName)
+    # get uv_layer image for face
+    image = getUVImage(scn, obj, face_idx, uvImage)
     if image is None:
         return None
     # get uv coordinate based on nearest face intersection
@@ -319,23 +341,26 @@ def getMaterialColor(matName):
             return None
         r, g, b, a = node.inputs[0].default_value
     else:
-        r, g, b = mat.diffuse_color
-        intensity = mat.diffuse_intensity
-        r = r * intensity
-        g = g * intensity
-        b = b * intensity
-        a = mat.alpha if mat.use_transparency else 1.0
+        if b280():
+            r, g, b, a = mat.diffuse_color
+        else:
+            r, g, b = mat.diffuse_color
+            intensity = mat.diffuse_intensity
+            r = r * intensity
+            g = g * intensity
+            b = b * intensity
+            a = mat.alpha if mat.use_transparency else 1.0
     return [r, g, b, a]
 
 
-def getBrickRGBA(scn, obj, face_idx, point, uv_images, uvImageName=None):
+def getBrickRGBA(scn, obj, face_idx, point, uv_images, uvImage=None):
     """ returns RGBA value for brick """
     if face_idx is None:
         return None, None
     # get material based on rgba value of UV image at face index
     if uv_images:
         origMatName = ""
-        rgba = getUVPixelColor(scn, obj, face_idx, point, uv_images, uvImageName)
+        rgba = getUVPixelColor(scn, obj, face_idx, point, uv_images, uvImage)
     else:
         # get closest material using material slot of face
         origMatName = getMatAtFaceIdx(obj, face_idx)
@@ -343,28 +368,26 @@ def getBrickRGBA(scn, obj, face_idx, point, uv_images, uvImageName=None):
     return rgba, origMatName
 
 
-def getDetailsAndBounds(source, cm=None):
-    """ returns dimensions and bounds of source object """
+def getDetailsAndBounds(obj, cm=None):
+    """ returns dimensions and bounds of object """
     cm = cm or getActiveContextInfo()[1]
-    source_details = bounds(source)
+    obj_details = bounds(obj)
     dimensions = Bricks.get_dimensions(cm.brickHeight, cm.zStep, cm.gap)
-    return source_details, dimensions
+    return obj_details, dimensions
 
 
-def getArgumentsForBricksDict(cm, source=None, source_details=None, dimensions=None, brickSize=[1, 1, 3]):
+def getArgumentsForBricksDict(cm, source=None, dimensions=None, brickSize=[1, 1, 3]):
     """ returns arguments for makeBricksDict function """
     source = source or cm.source_obj
     customData = [None] * 3
-    if source_details is None or dimensions is None:
-        source_details, dimensions = getDetailsAndBounds(source, cm)
+    if dimensions is None:
+        dimensions = Bricks.get_dimensions(cm.brickHeight, cm.zStep, cm.gap)
     for i, customInfo in enumerate([[cm.hasCustomObj1, cm.customObject1], [cm.hasCustomObj2, cm.customObject2], [cm.hasCustomObj3, cm.customObject3]]):
         hasCustomObj, customObj = customInfo
         if (i == 0 and cm.brickType == "CUSTOM") or hasCustomObj:
             scn = bpy.context.scene
-            # get custom object
-            oldLayers = list(scn.layers) # store scene layers for later reset
             # duplicate custom object
-            customObjName = customObj.name + "_duplicate"
+            customObjName = customObj.name + "__dup__"
             customObj1 = bpy.data.objects.get(customObjName)
             customObj0 = duplicate(customObj)
             # TODO: remove this object on delete action
@@ -389,7 +412,7 @@ def getArgumentsForBricksDict(cm, source=None, source_details=None, dimensions=N
             s_mat_z = Matrix.Scale((brickScale.z - dimensions["gap"]) / curCustomObj_details.dist.z, 4, Vector((0, 0, 1)))
             # apply transformation to custom object dup mesh
             customObj0.data.transform(t_mat)
-            customObj0.data.transform(s_mat_x * s_mat_y * s_mat_z)
+            customObj0.data.transform(mathutils_mult(s_mat_x, s_mat_y, s_mat_z))
             # center mesh origin
             centerMeshOrigin(customObj0.data, dimensions, brickSize)
             # store fresh data to customData variable
@@ -402,7 +425,7 @@ def getArgumentsForBricksDict(cm, source=None, source_details=None, dimensions=N
         brickScale = Vector((dimensions["width"] + dimensions["gap"],
                     dimensions["width"] + dimensions["gap"],
                     dimensions["height"]+ dimensions["gap"]))
-    return source, source_details, dimensions, brickScale, customData
+    return brickScale, customData
 
 
 def isBrickExposed(bricksDict, zStep, key=None, loc=None):
@@ -410,7 +433,8 @@ def isBrickExposed(bricksDict, zStep, key=None, loc=None):
     assert key is not None or loc is not None
     # initialize vars
     key = key or listToStr(loc)
-    keysInBrick = getKeysInBrick(bricksDict, bricksDict[key]["size"], zStep, key)
+    loc = loc or getDictLoc(bricksDict, key)
+    keysInBrick = getKeysInBrick(bricksDict, bricksDict[key]["size"], zStep, loc=loc)
     topExposed, botExposed = False, False
     # top or bottom exposed if even one location is exposed
     for k in keysInBrick:
@@ -424,7 +448,8 @@ def setAllBrickExposures(bricksDict, zStep, key=None, loc=None):
     assert key is not None or loc is not None
     # initialize vars
     key = key or listToStr(loc)
-    keysInBrick = getKeysInBrick(bricksDict, bricksDict[key]["size"], zStep, key)
+    loc = loc or getDictLoc(bricksDict, key)
+    keysInBrick = getKeysInBrick(bricksDict, bricksDict[key]["size"], zStep, loc=loc)
     topExposed, botExposed = False, False
     # set brick exposures
     for k in keysInBrick:

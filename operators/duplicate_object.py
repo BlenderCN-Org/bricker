@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -66,8 +66,8 @@ class OBJECT_OT_duplicate_override(bpy.types.Operator):
         # set isBrick/isBrickifiedObject to False
         for obj in self.objects:
             obj0 = duplicate(obj, link_to_scene=True)
-            obj.select = False
-            obj0.select = True
+            deselect(obj)
+            select(obj0)
             if not (obj0.isBrick or obj0.isBrickifiedObject):
                 continue
             if obj0.isBrick:

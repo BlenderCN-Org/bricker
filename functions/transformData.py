@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -75,6 +75,4 @@ def applyTransformData(cm, objs):
         obj.rotation_mode = lastMode
         # SCALE
         osx, osy, osz = obj.scale
-        obj.scale = (osx * s[0],
-                     osy * s[1],
-                     osz * s[2])
+        obj.scale = vec_mult(obj.scale, s)

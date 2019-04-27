@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -27,4 +27,4 @@ bricker_bfm_cache = {}
 # cache functions
 def cacheExists(cm):
     """check if light or deep matrix cache exists for cmlist item"""
-    return bricker_bfm_cache.get(cm.id) is not None or cm.BFMCache != ""
+    return bricker_bfm_cache.get(cm.id) is not None or cm.BFMCache not in ("", "null")

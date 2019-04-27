@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -56,9 +56,11 @@ class CMLIST_OT_list_action(bpy.types.Operator):
                 pass
 
             if self.action == 'REMOVE' and len(scn.cmlist) > 0 and scn.cmlist_index >= 0:
+                bpy.ops.ed.undo_push(message="Bricker: Remove Item")
                 self.removeItem(idx)
 
             elif self.action == 'ADD':
+                bpy.ops.ed.undo_push(message="Bricker: Remove Item")
                 self.addItem()
 
             elif self.action == 'DOWN' and idx < len(scn.cmlist) - 1:
@@ -90,13 +92,17 @@ class CMLIST_OT_list_action(bpy.types.Operator):
         scn = bpy.context.scene
         active_object = bpy.context.active_object
         # if active object isn't on visible layer, don't set it as default source for new model
-        if active_object:
-            objVisible = False
-            for i in range(20):
-                if active_object.layers[i] and scn.layers[i]:
-                    objVisible = True
-            if not objVisible:
+        if b280():
+            if active_object and not isObjVisibleInViewport(active_object):
                 active_object = None
+        else:
+            if active_object:
+                objVisible = False
+                for i in range(20):
+                    if active_object.layers[i] and scn.layers[i]:
+                        objVisible = True
+                if not objVisible:
+                    active_object = None
         # if active object already has a model or isn't on visible layer, don't set it as default source for new model
         # NOTE: active object may have been removed, so we need to re-check if none
         if active_object:
@@ -112,7 +118,7 @@ class CMLIST_OT_list_action(bpy.types.Operator):
             item.name = active_object.name
             item.version = bpy.props.bricker_version
             # get Bricker preferences
-            prefs = bpy.props.bricker_preferences
+            prefs = get_addon_preferences()
             if prefs.brickHeightDefault == "ABSOLUTE":
                 # set absolute brick height
                 item.brickHeight = prefs.absoluteBrickHeight
@@ -194,6 +200,7 @@ class CMLIST_OT_copy_settings_to_others(bpy.types.Operator):
     bl_idname = "cmlist.copy_settings_to_others"
     bl_label = "Copy Settings to Other Brick Models"
     bl_description = "Copies the settings from the current model to all other Brick Models"
+    bl_options = {"UNDO"}
 
     @classmethod
     def poll(self, context):
@@ -244,6 +251,7 @@ class CMLIST_OT_paste_settings(bpy.types.Operator):
     bl_idname = "cmlist.paste_settings"
     bl_label = "Paste Settings to Current Brick Model"
     bl_description = "Pastes the settings from stored model ID to the current index"
+    bl_options = {"UNDO"}
 
     @classmethod
     def poll(self, context):
@@ -284,10 +292,16 @@ class CMLIST_OT_select_bricks(bpy.types.Operator):
 
     def execute(self, context):
         try:
-            select(getBricks(), deselect=self.deselect)
+            if self.deselect:
+                deselect(self.bricks)
+            else:
+                select(self.bricks)
         except:
             bricker_handle_exception()
         return{'FINISHED'}
+
+    def __init__(self):
+        self.bricks = getBricks()
 
 
 # -------------------------------------------------------------------
@@ -300,7 +314,7 @@ class CMLIST_UL_items(UIList):
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-        split = layout.split(0.9)
+        split = layout_split(layout, align=False, factor=0.9)
         split.prop(item, "name", text="", emboss=False, translate=False, icon='MOD_REMESH')
 
     def invoke(self, context, event):

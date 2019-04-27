@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -23,7 +23,6 @@ import numpy as np
 
 # Blender imports
 from mathutils import Vector
-from bpy.types import CollectionProperty
 
 # Addon imports
 from .geometric_shapes import *

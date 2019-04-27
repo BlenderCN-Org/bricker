@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -27,6 +27,7 @@ props = bpy.props
 # Addon imports
 from ..functions import *
 from ..buttons.bevel import *
+from ..lib.background_processing.classes.JobManager import JobManager
 
 
 def uniquifyName(self, context):
@@ -120,6 +121,13 @@ def updateCircleVerts(self, context):
     cm.bricksAreDirty = True
 
 
+def updateJobManagerProperties(self, context):
+    scn, cm, _ = getActiveContextInfo()
+    curJobManager = JobManager.get_instance(cm.id)
+    curJobManager.timeout = cm.backProcTimeout
+    curJobManager.max_workers = cm.maxWorkers
+
+
 def dirtyAnim(self, context):
     scn, cm, _ = getActiveContextInfo()
     cm.animIsDirty = True
@@ -161,6 +169,30 @@ def updateBrickType(self, context):
     scn, cm, _ = getActiveContextInfo()
     cm.zStep = getZStep(cm)
     dirtyMatrix(self, context)
+
+
+def updateBevelRender(self, context):
+    scn, cm, _ = getActiveContextInfo()
+    show_render = cm.bevelShowRender
+    for brick in getBricks():
+        bevel = brick.modifiers.get(brick.name + '_bvl')
+        if bevel: bevel.show_render = show_render
+
+
+def updateBevelViewport(self, context):
+    scn, cm, _ = getActiveContextInfo()
+    show_viewport = cm.bevelShowViewport
+    for brick in getBricks():
+        bevel = brick.modifiers.get(brick.name + '_bvl')
+        if bevel: bevel.show_viewport = show_viewport
+
+
+def updateBevelEditMode(self, context):
+    scn, cm, _ = getActiveContextInfo()
+    show_in_editmode = cm.bevelShowEditmode
+    for brick in getBricks():
+        bevel = brick.modifiers.get(brick.name + '_bvl')
+        if bevel: bevel.show_in_editmode = show_in_editmode
 
 
 def getCMProps():
@@ -210,12 +242,12 @@ def getCMProps():
             "flameColor",
             "flameIntensity",
             "materialType",
-            "materialName",
-            "internalMatName",
+            "customMat",
+            "internalMat",
             "matShellDepth",
             "randomMatSeed",
             "useUVMap",
-            "uvImageName",
+            "uvImage",
             "useNormals",
             "verifyExposure",
             "insidenessRayCastDir",
@@ -249,7 +281,7 @@ def matchProperties(cmTo, cmFrom, overrideIdx=-1):
         matObjTo = bpy.data.objects.get(matObjNamesTo[i])
         if matObjFrom is None or matObjTo is None:
             continue
-        matObjTo.data.materials.clear(1)
+        matObjTo.data.materials.clear(update_data=True)
         for mat in matObjFrom.data.materials:
             matObjTo.data.materials.append(mat)
     # match properties from 'cmFrom' to 'cmTo'

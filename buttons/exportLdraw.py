@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -23,7 +23,6 @@ import json
 # Blender imports
 import bpy
 from bpy.types import Operator
-from bpy.props import StringProperty, CollectionProperty
 
 # Addon imports
 from ..functions import *
@@ -72,7 +71,7 @@ class BRICKER_OT_export_ldraw(Operator):
             f.write("0 Name:\n" % locals())
             f.write("0 Unofficial model\n" % locals())
             # f.write("0 Author: Unknown\n" % locals())
-            bricksDict, _ = getBricksDict(dType="ANIM" if cm.animated else "MODEL", curFrame=frame, cm=cm)
+            bricksDict = getBricksDict(cm, dType="ANIM" if cm.animated else "MODEL", curFrame=frame)
             # get small offset for model to get close to Ldraw units
             offset = vec_conv(bricksDict[list(bricksDict.keys())[0]]["co"], int)
             offset.x = offset.x % 10
@@ -81,7 +80,7 @@ class BRICKER_OT_export_ldraw(Operator):
             # get dictionary of keys based on z value
             keysDict = getKeysDict(bricksDict)
             # iterate through z locations in bricksDict (bottom to top)
-            i = 0
+            dictKeys = sorted(list(bricksDict.keys()))
             for z in sorted(keysDict.keys()):
                 for key in keysDict[z]:
                     # skip bricks that aren't displayed
@@ -107,7 +106,8 @@ class BRICKER_OT_export_ldraw(Operator):
                     # get coordinate for brick in Ldraw units
                     co = self.blendToLdrawUnits(cm, bricksDict, cm.zStep, key, idx)
                     # get color code of brick
-                    mat = getMaterial(bricksDict, key, size, cm.zStep, cm.materialType, cm.materialName, cm.randomMatSeed, cm.materialIsDirty or cm.matrixIsDirty or cm.buildIsDirty, brick_mats=getBrickMats(cm.materialType, cm.id), seedInc=i)
+                    i = dictKeys.index(key)
+                    mat = getMaterial(bricksDict, key, size, cm.zStep, cm.materialType, cm.customMat.name if cm.customMat is not None else "z", cm.randomMatSeed, cm.materialIsDirty or cm.matrixIsDirty or cm.buildIsDirty, brick_mats=getBrickMats(cm.materialType, cm.id), seedInc=i)
                     mat_name = "" if mat is None else mat.name
                     rgba = bricksDict[key]["rgba"]
                     color = 0
@@ -139,14 +139,13 @@ class BRICKER_OT_export_ldraw(Operator):
 
     def blendToLdrawUnits(self, cm, bricksDict, zStep, key, idx):
         """ convert location of brick from blender units to ldraw units """
-        brickD = bricksDict[key]
-        size = brickD["size"]
+        size = bricksDict[key]["size"]
         loc = getBrickCenter(bricksDict, key, zStep)
         dimensions = Bricks.get_dimensions(cm.brickHeight, zStep, cm.gap)
         h = 8 * zStep
         loc.x = loc.x * (20 / (dimensions["width"] + dimensions["gap"]))
         loc.y = loc.y * (20 / (dimensions["width"] + dimensions["gap"]))
-        if brickD["type"] == "SLOPE":
+        if bricksDict[key]["type"] == "SLOPE":
             if idx == 0:
                 loc.x -= ((size[0] - 1) * 20) / 2
             elif idx in (1, -3):
@@ -156,7 +155,7 @@ class BRICKER_OT_export_ldraw(Operator):
             elif idx in (3, -1):
                 loc.y -= ((size[1] - 1) * 20) / 2
         loc.z = loc.z * (h / (dimensions["height"] + dimensions["gap"]))
-        if brickD["type"] == "SLOPE" and size == [1, 1, 3]:
+        if bricksDict[key]["type"] == "SLOPE" and size == [1, 1, 3]:
             loc.z -= size[2] * 8
         if zStep == 1 and size[2] == 3:
             loc.z += 8

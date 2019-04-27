@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -29,7 +29,7 @@ from ...functions.general import *
 from ...functions.makeBricks_utils import *
 
 
-class testBrickGenerators(bpy.types.Operator):
+class BRICKER_OT_test_brick_generators(bpy.types.Operator):
     """Draws some test bricks for testing of brick generators"""
     bl_idname = "bricker.test_brick_generators"
     bl_label = "Test Brick Generators"
@@ -58,7 +58,7 @@ def newObjFromBmesh(layer, bme, meshName, objName=None, loc=(0,0,0), edgeSplit=T
     # move object to target location
     ob.location = loc
     # link and select object
-    scn.objects.link(ob)
+    link_object(ob)
     scn.update()
 
     # send bmesh data to object data
@@ -69,9 +69,10 @@ def newObjFromBmesh(layer, bme, meshName, objName=None, loc=(0,0,0), edgeSplit=T
     if edgeSplit:
         addEdgeSplitMod(ob)
 
-    # move to appropriate layer
-    layerList = [i == layer - 1 for i in range(20)]
-    ob.layers = layerList
+    if not b280():
+        # move to appropriate layer
+        layerList = [i == layer - 1 for i in range(20)]
+        ob.layers = layerList
 
     return ob
 
@@ -133,6 +134,7 @@ def test_brick_generators():
         # newObjFromBmesh(7, makeTile(dimensions, brickSize=[2,4,1], circleVerts=16, type="TILE", detail=detail), "2x4 Tile "  + detail, loc=(offset*1.5, -0.2, 0))
         # newObjFromBmesh(7, makeTile(dimensions, brickSize=[1,8,1], circleVerts=16, type="TILE", detail=detail), "1x8 Tile "  + detail, loc=(offset, -4.4, 0))
 
-    openLayer(17)
+    if not b280():
+        openLayer(17)
 
     cm.brickType = lastBrickType

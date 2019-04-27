@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -25,10 +25,12 @@ from bpy.types import Operator
 # Addon imports
 from .undo_stack import *
 from ...ui.app_handlers import brickerRunningBlockingOp
+from ...ui.timers import *
 from ...functions import *
 from ...ui.cmlist_actions import *
 
 
+# BLENDER 2.80 USES A TIMER INSTEAD
 class BRICKER_OT_initialize(Operator):
     """ initializes undo stack for changes to the BFM cache """
     bl_category = "Bricker"
@@ -77,7 +79,7 @@ class BRICKER_OT_initialize(Operator):
         return {"RUNNING_MODAL"}
 
     def cancel(self, context):
-        pass
+        bpy.props.bricker_initialized = False
 
     ################################################
     # initialization method
@@ -109,36 +111,3 @@ class BRICKER_OT_initialize(Operator):
         self.stop = True
 
     ################################################
-    # event handling functions
-
-    # def in_context_region(self, context, event):
-    #     e_x = event.mouse_region_x  # left/right
-    #     e_y = event.mouse_region_y  # up/down
-    #     r_w = context.region.width  # left/right
-    #     r_h = context.region.height # up/down
-    #     return e_x > 0 and e_x < r_w and e_y > 0 and e_y < r_h
-    #
-    # def pressed(self, action, event):
-    #     # initialize kms
-    #     wm = bpy.context.window_manager
-    #     screen_kms = wm.keyconfigs['Blender'].keymaps['Screen']
-    #
-    #     # get km based on action
-    #     if action.upper() == "UNDO":
-    #         km = screen_kms.keymap_items['ed.undo']
-    #     elif action.upper() == "REDO":
-    #         km = screen_kms.keymap_items['ed.redo']
-    #     else:
-    #         km = None
-    #
-    #     # check if event equivalent to action km
-    #     if (km and
-    #         km.alt == event.alt and
-    #         km.ctrl == event.ctrl and
-    #         km.oskey == event.oskey and
-    #         km.shift == event.shift and
-    #         km.value == event.value and
-    #         km.type == event.type):
-    #         return True
-    #     else:
-    #         return False

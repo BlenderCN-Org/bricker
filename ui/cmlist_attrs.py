@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -29,7 +29,7 @@ from .matlist_utils import *
 
 
 # Create custom property group
-class CMLIST_UL_properties(bpy.types.PropertyGroup):
+class CreatedModelProperties(bpy.types.PropertyGroup):
     # CMLIST ITEM SETTINGS
     name = StringProperty(update=uniquifyName)
     id = IntProperty()
@@ -87,11 +87,13 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         name="Max Worker Instances",
         description="Maximum number of Blender instances allowed to run in background for Bricker calculations (larger numbers are faster at a higher CPU load; 0 for local calculation)",
         min=0, max=24,
+        update=updateJobManagerProperties,
         default=5)
     backProcTimeout = FloatProperty(
         name="Timeout",
         description="Max seconds allowed for each frame's model to calculate (0 for infinite; cancels process if time exceeded)",
         precision=0, min=0,
+        update=updateJobManagerProperties,
         default=0)
 
     # BASIC MODEL SETTINGS
@@ -213,7 +215,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         description="Type of brick used to build the model",
         items=[("STUD_HOLLOWS", "Hollow Studs", description),
                ("STUDS", "Studs", description),
-               ("SLOPES", "Slopes (fast)", description),
+               # ("SLOPES", "Slopes (fast)", description),
                ("PLATES", "Plates", description),
                ("CYLINDERS", "Cylinders", description),
                ("CUSTOM", "Custom", "Use custom object to build the model"),
@@ -305,15 +307,15 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
                ("SOURCE", "Use Source Materials", "Apply material based on closest intersecting face")],
         update=dirtyMaterial,
         default="NONE")
-    materialName = StringProperty(
-        name="Material Name",
-        description="Name of the material to apply to all bricks",
-        default="")
-    internalMatName = StringProperty(
-        name="Material Name",
-        description="Name of the material to apply to bricks inside material shell",
-        update=dirtyMaterial,
-        default="")
+    customMat = PointerProperty(
+        type=bpy.types.Material,
+        name="Custom Material",
+        description="Material to apply to all bricks")
+    internalMat = PointerProperty(
+        type=bpy.types.Material,
+        name="Internal Material",
+        description="Material to apply to bricks inside material shell",
+        update=dirtyMaterial)
     matShellDepth = IntProperty(
         name="Shell Material Depth",
         description="Depth to which the outer materials should be applied (1 = Only exposed bricks)",
@@ -340,10 +342,10 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         description="Transfer colors from source UV map (source must be unwrapped)",
         default=True,
         update=dirtyMaterial)
-    uvImageName = StringProperty(
+    uvImage = PointerProperty(
+        type=bpy.types.Image,
         name="UV Image",
         description="UV Image to use for UV Map color transfer (defaults to active UV if left blank)",
-        default="",
         update=dirtyBuild)
     colorSnap = EnumProperty(
         name="Color Snaping",
@@ -433,7 +435,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         name="Logo Type",
         description="Choose logo type to draw on brick studs",
         items=[("CUSTOM", "Custom Logo", "Choose a mesh object to use as the brick stud logo"),
-               ("LEGO", "LEGO Logo", "Include a LEGO logo on each stud"),
+               # ("LEGO", "LEGO Logo", "Include a LEGO logo on each stud"),
                ("NONE", "None", "Don't include Brick Logo on bricks")],
         update=dirtyBricks,
         default="NONE")
@@ -521,6 +523,21 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         name="Bevel Bricks",
         description="Bevel brick edges and corners for added realism",
         default=False)
+    bevelShowRender = BoolProperty(
+        name="Render",
+        description="Use modifier during render.",
+        default=True,
+        update=updateBevelRender)
+    bevelShowViewport = BoolProperty(
+        name="Realtime",
+        description="Display modifier in viewport.",
+        default=True,
+        update=updateBevelViewport)
+    bevelShowEditmode = BoolProperty(
+        name="Edit Mode",
+        description="Display modifier in Edit mode.",
+        default=True,
+        update=updateBevelEditMode)
     bevelWidth = FloatProperty(
         name="Bevel Width",
         description="Bevel amount (relative to Brick Height)",
@@ -615,10 +632,11 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         name="Use Local Orient",
         description="Generate bricks based on local orientation of source object",
         default=False)
-    brickifyInBackground = BoolProperty(
-        name="Brickify in Background",
-        description="Run brickify calculations in background (if disabled, user interface will freeze during calculation)",
-        default=False)
+    instanceBricks = BoolProperty(
+        name="Instance Brick Data",
+        description="Use Instanced brick mesh data for split models to save on memory and render times",
+        update=dirtyBuild,
+        default=True)
     # EXPORT SETTINGS
     exportPath = StringProperty(
         name="Export Path",
@@ -627,7 +645,6 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
         default="//")
 
     # Source Object Properties
-    modelScalePreview = FloatVectorProperty(default=(-1, -1, -1))
     objVerts = IntProperty(default=0)
     objPolys = IntProperty(default=0)
     objEdges = IntProperty(default=0)
@@ -647,10 +664,14 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
     modelCreated = BoolProperty(default=False)
     brickifyingInBackground = BoolProperty(default=False)
     numAnimatedFrames = IntProperty(default=0)
+    framesToAnimate = IntProperty(default=0)
+    stopBackgroundProcess = BoolProperty(default=False)
     animated = BoolProperty(default=False)
     materialApplied = BoolProperty(default=False)
     armature = BoolProperty(default=False)
     zStep = IntProperty(default=3)
+    parent_obj = PointerProperty(type=bpy.types.Object)
+    collection = PointerProperty(type=bpy.types.Collection if b280() else bpy.types.Group)
     customized = BoolProperty(default=True)
     brickSizesUsed = StringProperty(default="")  # list of brickSizes used separated by | (e.g. '5,4,3|7,4,5|8,6,5')
     brickTypesUsed = StringProperty(default="")  # list of brickTypes used separated by | (e.g. 'PLATE|BRICK|STUD')
@@ -689,6 +710,7 @@ class CMLIST_UL_properties(bpy.types.PropertyGroup):
     version = StringProperty(default="1.0.4")
     # Left over attrs from earlier versions
     source_name = StringProperty(default="")
+    parent_name = StringProperty(default="")
     maxBrickScale1 = IntProperty(default=-1)
     maxBrickScale2 = IntProperty(default=-1)
     distOffsetX = FloatProperty(default=-1)

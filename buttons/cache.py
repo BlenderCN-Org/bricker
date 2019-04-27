@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -46,6 +46,9 @@ class BRICKER_OT_clear_cache(bpy.types.Operator):
 
     def execute(self, context):
         try:
+            scn, cm, _ = getActiveContextInfo()
+            self.undo_stack.iterateStates(cm)
+            cm.matrixIsDirty = True
             self.clearCaches()
         except:
             bricker_handle_exception()
@@ -56,11 +59,8 @@ class BRICKER_OT_clear_cache(bpy.types.Operator):
     # initialization method
 
     def __init__(self):
-        scn, cm, _ = getActiveContextInfo()
         self.undo_stack = UndoStack.get_instance()
         self.undo_stack.undo_push('clear_cache')
-        self.undo_stack.iterateStates(cm)
-        cm.matrixIsDirty = True
 
     #############################################
     # class methods

@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -20,10 +20,12 @@ import bpy
 from bpy.types import AddonPreferences
 from bpy.props import *
 
-# # updater import
-# from .. import addon_updater_ops
+# Addon imports
+from .. import addon_updater_ops
+from ..functions.common import *
 
-class BRICKER_PT_preferences(AddonPreferences):
+
+class BRICKER_AP_preferences(AddonPreferences):
     bl_idname = __package__[:__package__.index(".lib")]
 
     # Bricker preferences
@@ -44,6 +46,13 @@ class BRICKER_PT_preferences(AddonPreferences):
         min=0.00001,
         precision=3,
         default=0.096)
+    brickifyInBackground = EnumProperty(
+        name="Brickify in Background",
+        description="Run brickify calculations in background (if disabled, user interface will freeze during calculation)",
+        items=[("AUTO", "Auto", "Automatically determine whether to brickify in background or active Blender window based on model complexity"),
+               ("ON", "On", "Run brickify calculations in background"),
+               ("OFF", "Off", "Run brickify calculations in active Blender window (user interface will freeze during calculation)")],
+        default="OFF")
 
 	# # addon updater preferences
     # auto_check_update = bpy.props.BoolProperty(
@@ -71,16 +80,16 @@ class BRICKER_PT_preferences(AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
-        col = layout.column(align=True)
+        col1 = layout.column(align=True)
 
         # draw addon prefs
-        prefs = bpy.props.bricker_preferences
-        row = col.row(align=True)
-        split = row.split(align=True, percentage=0.275)
+        prefs = get_addon_preferences()
+        row = col1.row(align=False)
+        split = layout_split(row, factor=0.275)
         col = split.column(align=True)
         col.label(text="Default Brick Height:")
         col = split.column(align=True)
-        split = col.split(align=True, percentage=0.5)
+        split = layout_split(col, factor=0.5)
         col = split.column(align=True)
         col.prop(prefs, "brickHeightDefault", text="")
         col = split.column(align=True)
@@ -88,6 +97,15 @@ class BRICKER_PT_preferences(AddonPreferences):
             col.prop(prefs, "relativeBrickHeight")
         else:
             col.prop(prefs, "absoluteBrickHeight")
+        col1.separator()
+        col1.separator()
+        row = col1.row(align=False)
+        split = layout_split(row, factor=0.275)
+        col = split.column(align=True)
+        col.label(text="Brickify in Background:")
+        col = split.column(align=True)
+        col.prop(prefs, "brickifyInBackground", text="")
+        col1.separator()
 
         # # updater draw function
         # addon_updater_ops.update_settings_ui(self,context)

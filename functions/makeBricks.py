@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -42,7 +42,7 @@ from .mat_utils import *
 
 
 @timed_call('Time Elapsed')
-def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, action, cm=None, split=False, brickScale=None, customData=None, group_name=None, clearExistingGroup=True, frameNum=None, cursorStatus=False, keys="ALL", printStatus=True, tempBrick=False, redraw=False):
+def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, action, cm=None, split=False, brickScale=None, customData=None, coll_name=None, clearExistingCollection=True, frameNum=None, cursorStatus=False, keys="ALL", printStatus=True, tempBrick=False, redraw=False):
     # set up variables
     scn, cm, n = getActiveContextInfo(cm=cm)
 
@@ -55,11 +55,22 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
 
     mergeVertical = keys != "ALL" or cm.brickType == "BRICKS AND PLATES"
 
+    # get brick collection
+    coll_name = coll_name or 'Bricker_%(n)s_bricks' % locals()
+    bColl = bpy_collections().get(coll_name)
+    # create new collection if no existing collection found
+    if bColl is None:
+        bColl = bpy_collections().new(coll_name)
+    # else, replace existing collection
+    elif clearExistingCollection:
+        for obj0 in bColl.objects:
+            bColl.objects.unlink(obj0)
+
     # get bricksDict keys in sorted order
     if keys == "ALL":
         keys = list(bricksDict.keys())
     if len(keys) == 0:
-        return None, None
+        return False, None
     # get dictionary of keys based on z value
     keysDict = getKeysDict(bricksDict, keys)
     denom = sum([len(keysDict[z0]) for z0 in keysDict.keys()])
@@ -68,47 +79,42 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
         loc = getDictLoc(bricksDict, keys[0])
         cm.activeKey = loc
 
-    # get brick group
-    group_name = group_name or 'Bricker_%(n)s_bricks' % locals()
-    bGroup = bpy.data.groups.get(group_name)
-    # create new group if no existing group found
-    if bGroup is None:
-        bGroup = bpy.data.groups.new(group_name)
-    # else, replace existing group
-    elif clearExistingGroup:
-        for obj0 in bGroup.objects:
-            bGroup.objects.unlink(obj0)
-
     # initialize cmlist attributes (prevents 'update' function from running every time)
     cm_id = cm.id
+    alignBricks = cm.alignBricks
     buildIsDirty = cm.buildIsDirty
+    brickHeight = cm.brickHeight
     brickType = cm.brickType
     bricksAndPlates = brickType == "BRICKS AND PLATES"
-    maxWidth = cm.maxWidth
-    maxDepth = cm.maxDepth
-    legalBricksOnly = cm.legalBricksOnly
-    mergeInternals = cm.mergeInternals
-    mergeType = cm.mergeType
-    mergeSeed = cm.mergeSeed
-    materialType = cm.materialType
-    materialName = cm.materialName
-    randomMatSeed = cm.randomMatSeed
-    studDetail = "ALL" if tempBrick else cm.studDetail
+    circleVerts = min(16, cm.circleVerts) if tempBrick else cm.circleVerts
+    customObject1 = cm.customObject1
+    customObject2 = cm.customObject2
+    customObject3 = cm.customObject3
+    matDirty = cm.materialIsDirty or cm.matrixIsDirty or cm.buildIsDirty
+    customMat = cm.customMat
     exposedUndersideDetail = "FLAT" if tempBrick else cm.exposedUndersideDetail
     hiddenUndersideDetail = "FLAT" if tempBrick else cm.hiddenUndersideDetail
-    randomRot = 0 if tempBrick else cm.randomRot
-    randomLoc = 0 if tempBrick else cm.randomLoc
+    instanceBricks = cm.instanceBricks
     lastSplitModel = cm.lastSplitModel
+    legalBricksOnly = cm.legalBricksOnly
     logoType = "NONE" if tempBrick else cm.logoType
     logoScale = cm.logoScale
     logoInset = cm.logoInset
     logoResolution = cm.logoResolution
     logoDecimate = cm.logoDecimate
     loopCut = False if tempBrick else cm.loopCut
-    circleVerts = min(16, cm.circleVerts) if tempBrick else cm.circleVerts
-    brickHeight = cm.brickHeight
-    alignBricks = cm.alignBricks
+    maxWidth = cm.maxWidth
+    maxDepth = cm.maxDepth
+    mergeInternals = cm.mergeInternals
+    mergeType = cm.mergeType
+    mergeSeed = cm.mergeSeed
+    materialType = cm.materialType
     offsetBrickLayers = cm.offsetBrickLayers
+    randomMatSeed = cm.randomMatSeed
+    randomRot = 0 if tempBrick else cm.randomRot
+    randomLoc = 0 if tempBrick else cm.randomLoc
+    studDetail = "ALL" if tempBrick else cm.studDetail
+    zStep = cm.zStep
     # initialize random states
     randS1 = None if tempBrick else np.random.RandomState(cm.mergeSeed)  # for brickSize calc
     randS2 = None if tempBrick else np.random.RandomState(cm.mergeSeed+1)
@@ -124,7 +130,7 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
     maxBrickHeight = 1 if cm.zStep == 3 else max(legalBricks.keys())
     connectThresh = cm.connectThresh if mergableBrickType(brickType) and mergeType == "RANDOM" else 1
     # set up internal material for this object
-    internalMat = None if len(source.data.materials) == 0 else bpy.data.materials.get(cm.internalMatName) or bpy.data.materials.get("Bricker_%(n)s_internal" % locals()) or bpy.data.materials.new("Bricker_%(n)s_internal" % locals())
+    internalMat = None if len(source.data.materials) == 0 else cm.internalMat or bpy.data.materials.get("Bricker_%(n)s_internal" % locals()) or bpy.data.materials.new("Bricker_%(n)s_internal" % locals())
     if internalMat is not None and cm.materialType == "SOURCE" and cm.matShellDepth < cm.shellThickness:
         mats.append(internalMat)
     # set number of times to run through all keys
@@ -139,7 +145,7 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
         for key in keys:
             bricksDict[key]["parent"] = "self"
             bricksDict[key]["size"] = size.copy()
-            setAllBrickExposures(bricksDict, cm.zStep, key)
+            setAllBrickExposures(bricksDict, zStep, key)
             setFlippedAndRotated(bricksDict, key, [key])
             if bricksDict[key]["type"] == "SLOPE" and brickType == "SLOPES":
                 setBrickTypeForSlope(bricksDict, key, [key])
@@ -192,7 +198,7 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
                         loc = getDictLoc(bricksDict, key)
 
                         # merge current brick with available adjacent bricks
-                        brickSize = mergeWithAdjacentBricks(brickD, bricksDicts[j], key, availableKeys, [1, 1, cm.zStep], cm.zStep, randS1, buildIsDirty, brickType, maxWidth, maxDepth, legalBricksOnly, mergeInternals, materialType, mergeVertical=mergeVertical)
+                        brickSize = mergeWithAdjacentBricks(brickD, bricksDicts[j], key, availableKeys, [1, 1, zStep], zStep, randS1, buildIsDirty, brickType, maxWidth, maxDepth, legalBricksOnly, mergeInternals, materialType, mergeVertical=mergeVertical)
                         brickD["size"] = brickSize
                         # iterate number aligned edges and bricks if generating multiple variations
                         if connectThresh > 1:
@@ -204,7 +210,7 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
                         old_percent = updateProgressBars(printStatus, cursorStatus, cur_percent, old_percent, "Merging")
 
                         # remove keys in new brick from availableKeys (for attemptMerge)
-                        updateKeysLists(bricksDict, brickSize, cm.zStep, key, loc, availableKeys)
+                        updateKeysLists(bricksDict, brickSize, zStep, key, loc, availableKeys)
 
                     if connectThresh > 1:
                         # if no aligned edges / bricks found, skip to next z level
@@ -237,17 +243,17 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
     old_percent = updateProgressBars(printStatus, cursorStatus, 0, -1, "Building")
 
     # draw merged bricks
-    i = 0
+    dictKeys = sorted(list(bricksDict.keys()))
     for z in sorted(keysDict.keys()):
         for k2 in keysDict[z]:
             if bricksDict[k2]["parent"] != "self" or not bricksDict[k2]["draw"]:
                 continue
             loc = getDictLoc(bricksDict, k2)
+            i = dictKeys.index(k2)
             # create brick based on the current brick info
-            drawBrick(cm_id, bricksDict, k2, loc, i, parent, dimensions, cm.zStep, bricksDict[k2]["size"], brickType, split, lastSplitModel, cm.customObject1, cm.customObject2, cm.customObject3, cm.materialIsDirty or cm.matrixIsDirty or cm.buildIsDirty, customData, brickScale, bricksCreated, allMeshes, logo, logo_details, mats, brick_mats, internalMat, brickHeight, logoResolution, logoDecimate, loopCut, buildIsDirty, materialType, materialName, randomMatSeed, studDetail, exposedUndersideDetail, hiddenUndersideDetail, randomRot, randomLoc, logoType, logoScale, logoInset, circleVerts, randS1, randS2, randS3)
+            drawBrick(cm_id, bricksDict, k2, loc, i, parent, dimensions, zStep, bricksDict[k2]["size"], brickType, split, lastSplitModel, customObject1, customObject2, customObject3, matDirty, customData, brickScale, bricksCreated, allMeshes, logo, logo_details, mats, brick_mats, internalMat, brickHeight, logoResolution, logoDecimate, loopCut, buildIsDirty, materialType, customMat, randomMatSeed, studDetail, exposedUndersideDetail, hiddenUndersideDetail, randomRot, randomLoc, logoType, logoScale, logoInset, circleVerts, instanceBricks, randS1, randS2, randS3)
             # print status to terminal and cursor
             old_percent = updateProgressBars(printStatus, cursorStatus, i/len(bricksDict.keys()), old_percent, "Building")
-            i += 1
 
     # end progress bars
     updateProgressBars(printStatus, cursorStatus, 1, 0, "Building", end=True)
@@ -272,15 +278,14 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
             vg = brick.vertex_groups.get("%(name)s_bvl" % locals())
             if vg:
                 brick.vertex_groups.remove(vg)
-            vg = brick.vertex_groups.new("%(name)s_bvl" % locals())
+            vg = brick.vertex_groups.new(name="%(name)s_bvl" % locals())
             vertList = [v.index for v in brick.data.vertices if not v.select]
             vg.add(vertList, 1, "ADD")
             # set up remaining brick info if brick object just created
-            if clearExistingGroup or brick.name not in bGroup.objects.keys():
-                bGroup.objects.link(brick)
+            if clearExistingCollection or brick.name not in bColl.objects.keys():
+                bColl.objects.link(brick)
             brick.parent = parent
             if not brick.isBrick:
-                scn.objects.link(brick)
                 brick.isBrick = True
         # end progress bars
         updateProgressBars(printStatus, cursorStatus, 1, 0, "Linking to Scene", end=True)
@@ -308,20 +313,18 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
         vertList = [v.index for v in allBricksObj.data.vertices if not v.select]
         vg.add(vertList, 1, "ADD")
         if materialType in ("CUSTOM", "NONE"):
-            mat = bpy.data.materials.get(materialName)
-            setMaterial(allBricksObj, mat)
+            setMaterial(allBricksObj, customMat)
         elif materialType == "SOURCE" or (materialType == "RANDOM" and len(brick_mats) > 0):
             for mat in mats:
                 setMaterial(allBricksObj, mat, overwrite=False)
         # set parent
         allBricksObj.parent = parent
         # add bricks obj to scene and bricksCreated
-        bGroup.objects.link(allBricksObj)
-        if not allBricksObj.isBrickifiedObject:
-            scn.objects.link(allBricksObj)
-            # protect allBricksObj from being deleted
-            allBricksObj.isBrickifiedObject = True
+        if allBricksObj.name not in bColl.objects.keys():
+            bColl.objects.link(allBricksObj)
         bricksCreated.append(allBricksObj)
+        # protect allBricksObj from being deleted
+        allBricksObj.isBrickifiedObject = True
 
     # reset 'attempted_merge' for all items in bricksDict
     for key0 in bricksDict:

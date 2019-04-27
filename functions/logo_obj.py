@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Christopher Gearhart
+# Copyright (C) 2019 Christopher Gearhart
 # chris@bblanimation.com
 # http://bblanimation.com/
 #
@@ -47,16 +47,21 @@ def getLegoLogo(scn, typ, res, decimate, dimensions):
             refLogo.data = logo_txt_ref.data.copy()
             refLogo.name = refLogoName
             # convert text to mesh
-            safeLink(refLogo)
+            link_object(refLogo, scn)
+            unhide(refLogo)
             select(refLogo, active=True, only=True)
-            bpy.ops.object.convert(target='MESH')
+            bpy.ops.object.convert(target="MESH")
             # remove duplicate verts
             removeDoubles(refLogo)
             # decimate mesh
             if decimate != 0:
-                dMod = refLogo.modifiers.new('Decimate', type='DECIMATE')
+                dMod = refLogo.modifiers.new("Decimate", type="DECIMATE")
                 dMod.ratio = 1 - (decimate / 10)
-                m = refLogo.to_mesh(scn, True, 'PREVIEW')
+                if b280():
+                    # TODO: use view layer with smoke, not just the first view layer
+                    m = refLogo.to_mesh(bpy.context.depsgraph, True)
+                else:
+                    m = refLogo.to_mesh(scn, True, "PREVIEW")
                 refLogo.modifiers.remove(dMod)
                 refLogo.data = m
             safeUnlink(refLogo)
