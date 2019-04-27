@@ -971,14 +971,22 @@ class VIEW3D_PT_bricker_detailing(Panel):
         row.active = not (cm.studDetail == "NONE" and cm.exposedUndersideDetail == "FLAT" and cm.hiddenUndersideDetail == "FLAT")
 
         row = col.row(align=True)
-        row.label(text="Bevel:")
-        row = col.row(align=True)
+        split = layout_split(row, factor=0.5)
+        col1 = split.column(align=True)
+        col1.label(text="Bevel:")
         if not (cm.modelCreated or cm.animated):
+            row = col.row(align=True)
             row.prop(cm, "bevelAdded", text="Bevel Bricks")
             return
         try:
             testBrick = getBricks()[0]
-            testBrick.modifiers[testBrick.name + '_bvl']
+            bevel = testBrick.modifiers[testBrick.name + '_bvl']
+            col2 = split.column(align=True)
+            row = col2.row(align=True)
+            row.prop(cm, "bevelShowRender", icon="RESTRICT_RENDER_OFF", toggle=True)
+            row.prop(cm, "bevelShowViewport", icon="RESTRICT_VIEW_OFF", toggle=True)
+            row.prop(cm, "bevelShowEditmode", icon="EDITMODE_HLT", toggle=True)
+            row = col.row(align=True)
             row.prop(cm, "bevelWidth", text="Width")
             row = col.row(align=True)
             row.prop(cm, "bevelSegments", text="Segments")
@@ -987,6 +995,7 @@ class VIEW3D_PT_bricker_detailing(Panel):
             row = col.row(align=True)
             row.operator("bricker.bevel", text="Remove Bevel", icon="CANCEL")
         except (IndexError, KeyError):
+            row = col.row(align=True)
             row.operator("bricker.bevel", text="Bevel bricks", icon="MOD_BEVEL")
 
 

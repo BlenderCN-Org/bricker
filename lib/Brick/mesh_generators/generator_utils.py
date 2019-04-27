@@ -427,8 +427,8 @@ def addTickMarks(dimensions, brickSize, circleVerts, detail, d, thick, bme, nno=
                 bottomVerts["X-"] += [v5, v6, v7, v8]
             elif xNum == brickSize[0]-1:
                 # initialize x, y
-                x1 = xNum * d.x * 2 + d.x - thick.x
-                x2 = xNum * d.x * 2 + d.x - thick.x + tick_depth
+                x1 = xNum * d.x * 2 + d.x - thick.x - tick_depth
+                x2 = xNum * d.x * 2 + d.x - thick.x
                 y1 = yNum * d.y * 2 - tick_width / 2
                 y2 = yNum * d.y * 2 + tick_width / 2
                 # CREATING SUPPORT BEAM

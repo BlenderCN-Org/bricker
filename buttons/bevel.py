@@ -23,6 +23,7 @@ import math
 
 # Blender imports
 import bpy
+from bpy.types import Object
 from mathutils import Matrix, Vector
 props = bpy.props
 
@@ -96,15 +97,18 @@ class BRICKER_OT_bevel(bpy.types.Operator):
         """ runs 'createBevelMod' on objects in 'objs' """
         # get objs to bevel
         objs = confirmIter(objs)
+        # initialize vars
+        segments = cm.bevelSegments
+        profile = cm.bevelProfile
+        show_render = cm.bevelShowRender
+        show_viewport = cm.bevelShowViewport
+        show_in_editmode = cm.bevelShowEditmode
         # create bevel modifiers for each object
         for obj in objs:
-            segments = cm.bevelSegments
-            profile = cm.bevelProfile
-            vGroupName = obj.name + "_bvl"
-            self.createBevelMod(obj=obj, width=cm.bevelWidth * cm.brickHeight, segments=segments, profile=profile, limitMethod="VGROUP", vertexGroup=vGroupName, offsetType='WIDTH', angleLimit=1.55334)
+            self.createBevelMod(obj=obj, width=cm.bevelWidth * cm.brickHeight, segments=segments, profile=profile, limitMethod="VGROUP", vertexGroup=obj.name + "_bvl", offsetType='WIDTH', angleLimit=1.55334, show_render=show_render, show_viewport=show_viewport, show_in_editmode=show_in_editmode)
 
     @classmethod
-    def createBevelMod(self, obj, width=1, segments=1, profile=0.5, onlyVerts=False, limitMethod='NONE', angleLimit=0.523599, vertexGroup=None, offsetType='OFFSET'):
+    def createBevelMod(self, obj:Object, width:float=1, segments:int=1, profile:float=0.5, onlyVerts:bool=False, limitMethod:str='NONE', angleLimit:float=0.523599, vertexGroup:str=None, offsetType:str='OFFSET', show_render:bool=True, show_viewport:bool=True, show_in_editmode:bool=True):
         """ create bevel modifier for 'obj' with given parameters """
         dMod = obj.modifiers.get(obj.name + '_bvl')
         if not dMod:
@@ -134,5 +138,13 @@ class BRICKER_OT_bevel(bpy.types.Operator):
             dMod.angle_limit = angleLimit
         if dMod.offset_type != offsetType:
             dMod.offset_type = offsetType
+        # update visibility of bevel modifier
+        if dMod.show_render != show_render:
+            dMod.show_render = show_render
+        if dMod.show_viewport != show_viewport:
+            dMod.show_viewport = show_viewport
+        if dMod.show_in_editmode != show_in_editmode:
+            dMod.show_in_editmode = show_in_editmode
+
 
     #############################################
