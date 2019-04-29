@@ -527,7 +527,6 @@ def adjustBFM(brickFreqMatrix, matShellDepth, faceIdxMatrix=None, axes=""):
     j = 1
     setNF = True
     for i in range(50):
-        continue
         j = round(j-0.01, 2)
         gotOne = False
         newShellVals = []
