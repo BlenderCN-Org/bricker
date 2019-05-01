@@ -377,10 +377,7 @@ def getBrickRGBA(scn, obj, face_idx, point, uv_images, uvImage=None):
     else:
         # get closest material using material slot of face
         origMatName = getMatAtFaceIdx(obj, face_idx)
-        print(origMatName)
         rgba = getMaterialColor(origMatName) if origMatName is not None else None
-        print(rgba)
-        print()
     return rgba, origMatName
 
 

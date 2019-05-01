@@ -21,4 +21,12 @@ data_blocks = [target_coll, parent_obj]
 
 ### PYTHON DATA TO BE SEND BACK TO THE BLENDER HOST ###
 
-python_data = {"bricksDict":cm.BFMCache, "brickSizesUsed":cm.brickSizesUsed, "brickTypesUsed":cm.brickTypesUsed}
+# decompression function
+import binascii
+import zlib
+def decompress_str(string:str):
+    decompressed_str = binascii.unhexlify(string)
+    decompressed_str = zlib.decompress(decompressed_str)
+    return decompressed_str.decode()
+
+python_data = {"bricksDict":decompress_str(cm.BFMCache), "brickSizesUsed":cm.brickSizesUsed, "brickTypesUsed":cm.brickTypesUsed}
