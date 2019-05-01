@@ -99,8 +99,8 @@ def getFirstImgTexNodes(obj):
             if node and node.type == "TEX_IMAGE":
                 img = verifyImg(node.image)
                 if img is not None:
-                    imgs.append(img)
                     break
+        imgs.append(img)
     return imgs
 
 
@@ -358,9 +358,10 @@ def getBrickRGBA(scn, obj, face_idx, point, uv_images, uvImage=None):
     if face_idx is None:
         return None, None
     # get material based on rgba value of UV image at face index
-    if uv_images:
+    image = getUVImage(scn, obj, face_idx, uvImage)
+    if image is not None:
         origMatName = ""
-        rgba = getUVPixelColor(scn, obj, face_idx, point, uv_images, uvImage)
+        rgba = getUVPixelColor(scn, obj, face_idx, point, uv_images, image)
     else:
         # get closest material using material slot of face
         origMatName = getMatAtFaceIdx(obj, face_idx)

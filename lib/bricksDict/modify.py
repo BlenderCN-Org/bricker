@@ -69,17 +69,24 @@ def updateMaterials(bricksDict, source, uv_images, keys, curFrame=None):
             matName = ""
         else:
             ni = Vector(bricksDict[key]["near_intersection"])
+            print(strToList(key)[0])
             rgba, matName = getBrickRGBA(scn, source, nf, ni, uv_images, uvImage)
 
         if materialType == "SOURCE":
+            if strToList(key)[0] < 3:
+                print(rgba)
             # get material with snapped RGBA value
-            matObj = getMatObject(cm_id, typ="ABS")
             if rgba is None and useUVMap:
                 matName = ""
-            elif rgba is None and matName in getColors().keys():
-                pass
-            elif colorSnap == "ABS" and len(matObj.data.materials) > 0:
-                matName = findNearestBrickColorName(rgba, transWeight, matObj=matObj)
+            elif colorSnap == "ABS":
+                # if original material was ABS plastic, keep it
+                if rgba is None and matName in getColors().keys():
+                    pass
+                # otherwise, find nearest ABS plastic material to rgba value
+                else:
+                    matObj = getMatObject(cm_id, typ="ABS")
+                    assert len(matObj.data.materials) > 0
+                    matName = findNearestBrickColorName(rgba, transWeight, matObj=matObj)
             elif colorSnap == "RGB" or isSmoke or useUVMap:
                 matName = createNewMaterial(n, rgba, rgba_vals, sss, sat_mat, specular, roughness, ior, transmission, colorSnap, colorSnapAmount, includeTransparency, curFrame)
             if rgba is not None:
