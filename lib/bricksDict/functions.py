@@ -160,7 +160,7 @@ def getFirstNode(mat, types:list=None):
     if types is None:
         # get material type(s) based on render engine
         if scn.render.engine in ("CYCLES", "BLENDER_EEVEE"):
-            types = ("BSDF_DIFFUSE", "BSDF_PRINCIPLED")
+            types = ("BSDF_PRINCIPLED", "BSDF_DIFFUSE")
         elif scn.render.engine == "octane":
             types = ("OCT_DIFFUSE_MAT")
         # elif scn.render.engine == "LUXCORE":
@@ -172,6 +172,12 @@ def getFirstNode(mat, types:list=None):
     for node in mat_nodes:
         if node.type in types:
             return node
+    # get first node of any BSDF type
+    for node in mat_nodes:
+        if len(node.inputs) > 0 and node.inputs[0].type == "RGBA":
+            return node
+    # no valid node was found
+    return None
 
 
 def createNewMaterial(model_name, rgba, rgba_vals, sss, sat_mat, specular, roughness, ior, transmission, colorSnap, colorSnapAmount, includeTransparency, curFrame=None):
@@ -339,7 +345,13 @@ def getMaterialColor(matName):
         node = getFirstNode(mat)
         if not node:
             return None
-        r, g, b, a = node.inputs[0].default_value
+        r, g, b = node.inputs[0].default_value[:3]
+        if node.type in ("BSDF_GLASS", "BSDF_TRANSPARENT", "BSDF_REFRACTION"):
+            a = 0.25
+        elif node.type in ("VOLUME_SCATTER", "VOLUME_ABSORPTION", "PRINCIPLED_VOLUME"):
+            a = node.inputs["Density"].default_value
+        else:
+            a = node.inputs[0].default_value[3]
     else:
         if b280():
             r, g, b, a = mat.diffuse_color
@@ -365,7 +377,10 @@ def getBrickRGBA(scn, obj, face_idx, point, uv_images, uvImage=None):
     else:
         # get closest material using material slot of face
         origMatName = getMatAtFaceIdx(obj, face_idx)
+        print(origMatName)
         rgba = getMaterialColor(origMatName) if origMatName is not None else None
+        print(rgba)
+        print()
     return rgba, origMatName
 
 

@@ -69,12 +69,9 @@ def updateMaterials(bricksDict, source, uv_images, keys, curFrame=None):
             matName = ""
         else:
             ni = Vector(bricksDict[key]["near_intersection"])
-            print(strToList(key)[0])
             rgba, matName = getBrickRGBA(scn, source, nf, ni, uv_images, uvImage)
 
         if materialType == "SOURCE":
-            if strToList(key)[0] < 3:
-                print(rgba)
             # get material with snapped RGBA value
             if rgba is None and useUVMap:
                 matName = ""
