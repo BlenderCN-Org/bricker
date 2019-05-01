@@ -73,7 +73,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                         if animAction: self.report({"INFO"}, "Completed frame %(frame)s of model '%(n)s'" % locals())
                         # cache bricksDict
                         retrieved_data = self.JobManager.get_retrieved_python_data(job)
-                        bricksDict = None if retrieved_data["bricksDict"] in ("", "null") else json.loads(retrieved_data["bricksDict"])
+                        bricksDict = None if retrieved_data["bricksDict"] in ("", "null") else json.loads(decompress_str(retrieved_data["bricksDict"]))
                         cm.brickSizesUsed = retrieved_data["brickSizesUsed"]
                         cm.brickTypesUsed = retrieved_data["brickTypesUsed"]
                         if bricksDict is not None: cacheBricksDict(self.action, cm, bricksDict[str(frame)] if animAction else bricksDict, curFrame=frame)
