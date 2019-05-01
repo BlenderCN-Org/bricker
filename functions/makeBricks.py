@@ -36,7 +36,6 @@ from .common import *
 from .wrappers import *
 from .general import bounds
 from ..lib.caches import bricker_mesh_cache
-from ..lib.abs_plastic_materials import getAbsPlasticMaterialNames
 from .makeBricks_utils import *
 from .mat_utils import *
 

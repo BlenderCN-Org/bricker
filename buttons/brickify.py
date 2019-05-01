@@ -68,7 +68,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                     animAction = "ANIM" in self.action
                     frame = int(job.split("__")[-1]) if animAction else None
                     objFrameStr = "_f_%(frame)s" % locals() if animAction else ""
-                    self.JobManager.process_job(job, debug_level=0, overwrite_data=True)
+                    self.JobManager.process_job(job, debug_level=0 if "ANIM" in self.action else 1, overwrite_data=True)
                     if self.JobManager.job_complete(job):
                         if animAction: self.report({"INFO"}, "Completed frame %(frame)s of model '%(n)s'" % locals())
                         # cache bricksDict
@@ -788,6 +788,10 @@ class BRICKER_OT_brickify(bpy.types.Operator):
             # ensure ABS Plastic materials are installed
             if not brick_materials_installed():
                 self.report({"WARNING"}, "ABS Plastic Materials must be installed from Blender Market")
+                return False
+            # ensure ABS Plastic materials is updated to latest version
+            if not hasattr(bpy.props, "abs_mat_properties"):
+                self.report({"WARNING"}, "Requires ABS Plastic Materials v2.1.2 or later – please update via the addon preferences")
                 return False
             # ensure ABS Plastic materials UI list is populated
             matObj = getMatObject(cm.id, typ="ABS")

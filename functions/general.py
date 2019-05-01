@@ -129,14 +129,15 @@ def brick_materials_installed():
     return hasattr(bpy.ops, "abs") and hasattr(bpy.ops.abs, "append_materials")
 
 
-def getABSPlasticMats():
-    """ returns list of abs plastic materials (under different names for different versions) """
-    return bpy.props.abs_mats_common if hasattr(bpy.props, "abs_mats_common") else bpy.props.abs_plastic_materials
-
-
-def getMatNames(all=False):
+def getABSMatNames(all:bool=False):
+    """ returns list of ABS Plastic Material names """
+    if not brick_materials_installed():
+        return []
     scn = bpy.context.scene
-    materials = getABSPlasticMats().copy()
+    materials = list()
+    # get common names (different properties for different versions)
+    materials += bpy.props.abs_mats_common if hasattr(bpy.props, "abs_mats_common") else bpy.props.abs_plastic_materials
+    # get transparent/uncommon names
     if scn.include_transparent or all:
         materials += bpy.props.abs_mats_transparent
     if scn.include_uncommon or all:
@@ -151,8 +152,8 @@ def brick_materials_loaded():
         return False
     # check if any of the colors haven't been loaded
     mats = bpy.data.materials.keys()
-    for color in getMatNames():
-        if color not in mats:
+    for mat_name in getABSMatNames():
+        if mat_name not in mats:
             return False
     return True
 

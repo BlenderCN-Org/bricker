@@ -27,7 +27,6 @@ from bpy.types import Operator
 # Addon imports
 from ..functions import *
 from ..lib.Brick import *
-from ..lib.abs_plastic_materials import *
 
 
 class BRICKER_OT_export_ldraw(Operator):
@@ -59,7 +58,7 @@ class BRICKER_OT_export_ldraw(Operator):
         scn, cm, n = getActiveContextInfo()
         # initialize vars
         legalBricks = getLegalBricks()
-        absMatCodes = getAbsPlasticMatCodes()
+        absMatProperties = bpy.props.abs_mat_properties if hasattr(bpy.props, "abs_mat_properties") else None
         for frame in range(cm.startFrame, cm.stopFrame + 1) if cm.animated else [-1]:
             path, errorMsg = getExportPath(n, ".ldr", cm.exportPath, frame=frame, subfolder=cm.animated)
             if errorMsg is not None:
@@ -111,8 +110,8 @@ class BRICKER_OT_export_ldraw(Operator):
                     mat_name = "" if mat is None else mat.name
                     rgba = bricksDict[key]["rgba"]
                     color = 0
-                    if mat_name in absMatCodes.keys():
-                        color = absMatCodes[mat_name]
+                    if mat_name in getABSMatNames(all=True) and absMatProperties is not None:
+                        color = absMatProperties[mat_name]["LDR Code"]
                     elif rgba not in (None, ""):
                         mat_name = findNearestBrickColorName(rgba, cm.transparentWeight)
                     elif bpy.data.materials.get(mat_name) is not None:
@@ -134,6 +133,8 @@ class BRICKER_OT_export_ldraw(Operator):
             f.close()
             if not cm.lastLegalBricksOnly:
                 self.report({"WARNING"}, "Model may contain non-standard brick sizes. Enable 'Brick Types > Legal Bricks Only' to make bricks LDraw-compatible.")
+            elif absMatProperties is None and brick_materials_installed:
+                self.report({"WARNING"}, "Materials may not have transferred successfully – please update to the latest version of 'ABS Plastic Materials'")
             else:
                 self.report({"INFO"}, "Ldraw file saved to '%(path)s'" % locals())
 
