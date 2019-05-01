@@ -6,7 +6,9 @@
     * Add more brick types
     * Improve brick topology for 3D printing
     * Use shader-based bevel as opposed to geometry-based bevel
-    * improve intelligence of 'getFirstImgTexNodes' function to choose prominent textures
+    * improve intelligence of 'getFirstImgTexNodes' function
+        * choose prominent textures
+        * ignore normal/bump textures
     * Custom UV unwrapper designed specifically for LEGO bricks
     * (EASY) add 'show bevel in viewport' toggle
     * (EASY) New animation types (loop, boomerang, etc)

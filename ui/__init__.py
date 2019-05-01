@@ -789,7 +789,7 @@ class VIEW3D_PT_bricker_materials(Panel):
             col = layout.column(align=True)
             col.active = len(obj.data.uv_layers) > 0
             row = col.row(align=True)
-            row.prop(cm, "useUVMap", text="UV Map")
+            row.prop(cm, "useUVMap", text="Use UV Map")
             if cm.useUVMap:
                 split = layout_split(row, factor=0.75)
                 split.prop(cm, "uvImage", text="")

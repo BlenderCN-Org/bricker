@@ -30,9 +30,6 @@ def getColors():
         mat_properties = bpy.props.abs_mat_properties
         for key in mat_properties.keys():
             colors[key] = mat_properties[key]["Color" if "Trans-" in key else "Diffuse Color"]
-        # gamma correct RGB values
-        for key in colors:
-            colors[key] = gammaCorrect(colors[key], 2.0167)
         getColors.colors = colors
     return getColors.colors
 
