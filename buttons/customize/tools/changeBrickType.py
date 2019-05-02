@@ -176,10 +176,10 @@ class BRICKER_OT_change_brick_type(Operator):
                 typ = bricksDict[dictKey]["type"]
 
                 # skip bricks that are already of type self.brickType
-                if (typ == targetBrickType and
-                    (not typ.startswith("SLOPE") or
-                     bricksDict[dictKey]["flipped"] == self.flipBrick and
-                     bricksDict[dictKey]["rotated"] == self.rotateBrick)):
+                if (typ == targetBrickType
+                    and (not typ.startswith("SLOPE")
+                         or (bricksDict[dictKey]["flipped"] == self.flipBrick
+                             and bricksDict[dictKey]["rotated"] == self.rotateBrick))):
                     continue
                 # skip bricks that can't be turned into the chosen brick type
                 if size[:2] not in legalBrickSizes[3 if targetBrickType in getBrickTypes(height=3) else 1][targetBrickType]:

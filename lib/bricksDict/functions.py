@@ -85,23 +85,33 @@ def getUVLayerData(obj):
     return active_uv.data
 
 
-def getFirstImgTexNodes(obj):
-    """ return first image texture found in object's material slots """
-    imgs = list()
-    for mat_slot in obj.material_slots:
-        mat = mat_slot.material
-        if mat is None or not mat.use_nodes:
+def getFirstImgTexNodes(obj, mat_slot_idx):
+    """ return first image texture found in a material slot """
+    mat = obj.material_slots[mat_slot_idx].material
+    if mat is None or not mat.use_nodes:
+        return None
+    nodes_to_check = list(mat.node_tree.nodes)
+    active_node = mat.node_tree.nodes.active
+    if active_node is not None: nodes_to_check.insert(0, active_node)
+    img = None
+    for node in nodes_to_check:
+        if node.type != "TEX_IMAGE":
             continue
-        active_node = mat.node_tree.nodes.active
-        nodes_to_check = [active_node] + list(mat.node_tree.nodes)
-        img = None
-        for node in nodes_to_check:
-            if node and node.type == "TEX_IMAGE":
-                img = verifyImg(node.image)
-                if img is not None:
-                    break
-        imgs.append(img)
-    return imgs
+        img = verifyImg(node.image)
+        if img is not None:
+            break
+    return img
+
+
+def getAllFirstImgTexNodes(obj):
+    """ return set of first image textures found in all material slots """
+    images = set()
+    for idx in range(len(obj.material_slots)):
+        img = getFirstImgTexNodes(obj, idx)
+        if img is not None:
+            images.add(img)
+    return images
+
 
 
 # reference: https://svn.blender.org/svnroot/bf-extensions/trunk/py/scripts/addons/uv_bake_texture_to_vcols.py
@@ -111,13 +121,12 @@ def getUVImages(obj):
     # get list of images to store
     if b280():
         # TODO: Reinstate this 2.79 functionality
-        images = []
+        images = set()
     else:
         uv_tex_data = getUVLayerData(obj)
-        images = [uv_tex.image for uv_tex in uv_tex_data if uv_tex.image is not None] if uv_tex_data else []
-    images.append(cm.uvImage)
-    images += getFirstImgTexNodes(obj)
-    images = uniquify1(images)
+        images = set([uv_tex.image for uv_tex in uv_tex_data if uv_tex.image is not None]) if uv_tex_data else set()
+    images.add(cm.uvImage)
+    images |= getAllFirstImgTexNodes(obj)
     # store images
     uv_images = {}
     for img in images:
@@ -312,10 +321,12 @@ def getUVImage(scn, obj, face_idx, uvImage):
     if image is None:
         try:
             mat_idx = obj.data.polygons[face_idx].material_index
-            image = verifyImg(getFirstImgTexNodes(obj)[mat_idx])
+            image = verifyImg(getFirstImgTexNodes(obj, mat_idx))
         except IndexError:
-            imgs = getFirstImgTexNodes(obj)
-            image = verifyImg(imgs[0]) if len(imgs) > 0 else None
+            mat_idx = 0
+            while image is None and mat_idx < len(obj.material_slots):
+                image = verifyImg(getFirstImgTexNodes(obj, mat_idx))
+                mat_idx += 1
     return image
 
 
