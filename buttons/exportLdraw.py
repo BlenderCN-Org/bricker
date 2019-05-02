@@ -78,8 +78,9 @@ class BRICKER_OT_export_ldraw(Operator):
             offset.z = offset.y % 10
             # get dictionary of keys based on z value
             keysDict = getKeysDict(bricksDict)
+            # get sorted keys for random merging
+            seedKeys = sorted(list(bricksDict.keys())) if materialType == "RANDOM" else None
             # iterate through z locations in bricksDict (bottom to top)
-            dictKeys = sorted(list(bricksDict.keys()))
             for z in sorted(keysDict.keys()):
                 for key in keysDict[z]:
                     # skip bricks that aren't displayed
@@ -105,8 +106,7 @@ class BRICKER_OT_export_ldraw(Operator):
                     # get coordinate for brick in Ldraw units
                     co = self.blendToLdrawUnits(cm, bricksDict, cm.zStep, key, idx)
                     # get color code of brick
-                    i = dictKeys.index(key)
-                    mat = getMaterial(bricksDict, key, size, cm.zStep, cm.materialType, cm.customMat.name if cm.customMat is not None else "z", cm.randomMatSeed, cm.materialIsDirty or cm.matrixIsDirty or cm.buildIsDirty, brick_mats=getBrickMats(cm.materialType, cm.id), seedInc=i)
+                    mat = getMaterial(bricksDict, key, size, cm.zStep, cm.materialType, cm.customMat.name if cm.customMat is not None else "z", cm.randomMatSeed, cm.materialIsDirty or cm.matrixIsDirty or cm.buildIsDirty, seedKeys, brick_mats=getBrickMats(cm.materialType, cm.id))
                     mat_name = "" if mat is None else mat.name
                     rgba = bricksDict[key]["rgba"]
                     color = 0

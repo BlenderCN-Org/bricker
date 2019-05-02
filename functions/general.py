@@ -118,11 +118,13 @@ def mergableBrickType(typ, up=False):
 
 
 def getTallType(brickD, targetType=None):
-    return targetType if targetType in getBrickTypes(height=3) else (brickD["type"] if brickD["type"] in getBrickTypes(height=3) else "BRICK")
+    tallTypes = getBrickTypes(height=3)
+    return targetType if targetType in tallTypes else (brickD["type"] if brickD["type"] in tallTypes else "BRICK")
 
 
 def getShortType(brickD, targetType=None):
-    return targetType if targetType in getBrickTypes(height=1) else (brickD["type"] if brickD["type"] in getBrickTypes(height=1) else "PLATE")
+    shortTypes = getBrickTypes(height=1)
+    return targetType if targetType in shortTypes else (brickD["type"] if brickD["type"] in shortTypes else "PLATE")
 
 
 def brick_materials_installed():
@@ -249,13 +251,14 @@ def createdWithNewerVersion(cm):
     return (int(modelVersion[0]) > int(brickerVersion[0])) or (int(modelVersion[0]) == int(brickerVersion[0]) and int(modelVersion[1]) > int(brickerVersion[1]))
 
 
-def getLocsInBrick(bricksDict, size, zStep, key, loc=None):
+# loc is more efficient than key, but one or the other must be passed
+def getLocsInBrick(bricksDict, size, zStep, loc:list=None, key:str=None):
     x0, y0, z0 = loc or getDictLoc(bricksDict, key)
     return [[x0 + x, y0 + y, z0 + z] for z in range(0, size[2], zStep) for y in range(size[1]) for x in range(size[0])]
 
 
+# loc is more efficient than key, but one or the other must be passed
 def getKeysInBrick(bricksDict, size, zStep:int, loc:list=None, key:str=None):
-    assert key is not None or loc is not None
     x0, y0, z0 = loc or getDictLoc(bricksDict, key)
     return [listToStr((x0 + x, y0 + y, z0 + z)) for z in range(0, size[2], zStep) for y in range(size[1]) for x in range(size[0])]
 

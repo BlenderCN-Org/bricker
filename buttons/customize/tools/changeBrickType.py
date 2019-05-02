@@ -211,7 +211,7 @@ class BRICKER_OT_change_brick_type(Operator):
                 bAndPBrick = flatBrickType(brickType) and size[2] == 3
 
                 # verify exposure above and below
-                brickLocs = getLocsInBrick(bricksDict, size, cm.zStep, dictKey, dictLoc)
+                brickLocs = getLocsInBrick(bricksDict, size, cm.zStep, dictLoc)
                 for curLoc in brickLocs:
                     bricksDict = verifyBrickExposureAboveAndBelow(scn, cm.zStep, curLoc, bricksDict, decriment=3 if bAndPBrick else 1)
                     # add bricks to keysToUpdate
