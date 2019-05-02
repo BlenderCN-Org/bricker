@@ -68,7 +68,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                     animAction = "ANIM" in self.action
                     frame = int(job.split("__")[-1]) if animAction else None
                     objFrameStr = "_f_%(frame)s" % locals() if animAction else ""
-                    self.JobManager.process_job(job, debug_level=0 if "ANIM" in self.action else 1, overwrite_data=True)
+                    self.JobManager.process_job(job, debug_level=self.debug_level, overwrite_data=True)
                     if self.JobManager.job_complete(job):
                         if animAction: self.report({"INFO"}, "Completed frame %(frame)s of model '%(n)s'" % locals())
                         # cache bricksDict
@@ -255,6 +255,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         self.JobManager.timeout = cm.backProcTimeout
         self.JobManager.max_workers = cm.maxWorkers
         self.JobManager.max_attempts = 1
+        self.debug_level = 0 if "ANIM" in self.action or bpy.props.Bricker_developer_mode == 0 else 1
         self.completed_frames = []
         self.brickerAddonPath = dirname(dirname(abspath(__file__)))
         self.jobs = list()

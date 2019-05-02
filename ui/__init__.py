@@ -1108,7 +1108,7 @@ class VIEW3D_PT_bricker_matrix_details(Panel):
 
     @classmethod
     def poll(self, context):
-        if bpy.props.Bricker_developer_mode < 1:
+        if bpy.props.Bricker_developer_mode == 0:
             return False
         if not settingsCanBeDrawn():
             return False
