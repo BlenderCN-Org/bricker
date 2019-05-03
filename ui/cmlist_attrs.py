@@ -92,6 +92,7 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
     backProcTimeout = FloatProperty(
         name="Timeout",
         description="Max seconds allowed for each frame's model to calculate (0 for infinite; cancels process if time exceeded)",
+        subtype="TIME",
         precision=0, min=0,
         update=updateJobManagerProperties,
         default=0)
@@ -110,7 +111,6 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
         name="Gap Between Bricks",
         description="Distance between bricks",
         update=dirtyMatrix,
-        subtype="PERCENTAGE",
         step=1,
         precision=3,
         min=0, max=1,
@@ -360,6 +360,7 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
     colorSnapAmount = FloatProperty(
         name="Color Snap Amount",
         description="Threshold for combining colors together (higher numbers for fewer unique materials generated)",
+        subtype="FACTOR",
         precision=3,
         min=0.00001, max=1.0,
         default=0.001,
@@ -367,6 +368,7 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
     colorSnapSpecular = FloatProperty(
         name="Specular",
         description="Specular value for the created materials",
+        subtype="FACTOR",
         precision=3,
         min=0.0, max=1.0,
         default=0.5,
@@ -374,6 +376,7 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
     colorSnapRoughness = FloatProperty(
         name="Roughness",
         description="Roughness value for the created materials",
+        subtype="FACTOR",
         precision=3,
         min=0.0, max=1.0,
         default=0.5,
@@ -381,6 +384,7 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
     colorSnapSubsurface = FloatProperty(
         name="Subsurface Sattering",
         description="Subsurface scattering value for the created materials",
+        subtype="FACTOR",
         precision=3,
         min=0.0, max=1.0,
         default=0.0,
@@ -402,6 +406,7 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
     colorSnapTransmission = FloatProperty(
         name="Transmission",
         description="Transmission value for the created materials",
+        subtype="FACTOR",
         precision=3,
         min=0.0, max=1.0,
         default=0.0,
@@ -414,7 +419,7 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
     transparentWeight = FloatProperty(
         name="Transparency Weight",
         description="How much affect the original material's alpha value has on chosen ABS color",
-        precision=3,
+        precision=1,
         min=0, max=2,
         default=1,
         update=dirtyMaterial)
@@ -517,22 +522,23 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
         default=False)
     bevelShowRender = BoolProperty(
         name="Render",
-        description="Use modifier during render.",
+        description="Use modifier during render",
         default=True,
         update=updateBevelRender)
     bevelShowViewport = BoolProperty(
         name="Realtime",
-        description="Display modifier in viewport.",
+        description="Display modifier in viewport",
         default=True,
         update=updateBevelViewport)
     bevelShowEditmode = BoolProperty(
         name="Edit Mode",
-        description="Display modifier in Edit mode.",
+        description="Display modifier in Edit mode",
         default=True,
         update=updateBevelEditMode)
     bevelWidth = FloatProperty(
         name="Bevel Width",
         description="Bevel amount (relative to Brick Height)",
+        subtype="DISTANCE",
         step=1,
         min=0.000001, max=10,
         default=0.01,
@@ -547,6 +553,7 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
     bevelProfile = FloatProperty(
         name="Bevel Profile",
         description="The profile shape (0.5 = round)",
+        subtype="FACTOR",
         step=1,
         min=0, max=1,
         default=0.7,
@@ -626,7 +633,7 @@ class CreatedModelProperties(bpy.types.PropertyGroup):
         default=False)
     instanceBricks = BoolProperty(
         name="Instance Brick Data",
-        description="Use Instanced brick mesh data for split models to save on memory and render times",
+        description="Use instanced brick mesh data when Split Model is enabled to save on memory and render times",
         update=dirtyBuild,
         default=True)
     # EXPORT SETTINGS

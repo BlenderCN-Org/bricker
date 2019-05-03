@@ -59,6 +59,7 @@ class BRICKER_OT_export_ldraw(Operator):
         # initialize vars
         legalBricks = getLegalBricks()
         absMatProperties = bpy.props.abs_mat_properties if hasattr(bpy.props, "abs_mat_properties") else None
+        transWeight = cm.transparentWeight
         for frame in range(cm.startFrame, cm.stopFrame + 1) if cm.animated else [-1]:
             path, errorMsg = getExportPath(n, ".ldr", cm.exportPath, frame=frame, subfolder=cm.animated)
             if errorMsg is not None:
@@ -110,10 +111,10 @@ class BRICKER_OT_export_ldraw(Operator):
                     mat_name = "" if mat is None else mat.name
                     rgba = bricksDict[key]["rgba"]
                     color = 0
-                    if mat_name in getABSMatNames(all=True) and absMatProperties is not None:
+                    if mat_name in getABSMatNames() and absMatProperties is not None:
                         color = absMatProperties[mat_name]["LDR Code"]
                     elif rgba not in (None, ""):
-                        mat_name = findNearestBrickColorName(rgba, cm.transparentWeight)
+                        mat_name = findNearestBrickColorName(rgba, transWeight)
                     elif bpy.data.materials.get(mat_name) is not None:
                         rgba = getMaterialColor(mat_name)
                     # get part number and ldraw file name for brick

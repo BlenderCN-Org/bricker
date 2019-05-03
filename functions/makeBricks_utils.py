@@ -353,7 +353,7 @@ def getMaterial(bricksDict, key, size, zStep, materialType, customMat, randomMat
     elif materialType == "RANDOM" and brick_mats is not None and len(brick_mats) > 0:
         if len(brick_mats) > 1:
             randState = np.random.RandomState(0)
-            seedInc = seedKeys.index(key)
+            seedInc = seedKeys.index(key)  # keeps materials consistent accross all calculations regardless of where material is set
             randState.seed(randomMatSeed + seedInc)
             randIdx = randState.randint(0, len(brick_mats))
         else:

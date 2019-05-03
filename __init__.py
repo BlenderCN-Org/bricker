@@ -92,10 +92,14 @@ def register():
     # Add attribute for Bricker Instructions addon
     Scene.isBrickerInstalled = BoolProperty(default=True)
 
-    if not hasattr(Scene, "include_transparent"):
-        Scene.include_transparent = False
-    if not hasattr(Scene, "include_uncommon"):
-        Scene.include_uncommon = False
+    Scene.include_transparent = BoolProperty(
+        name="Include Transparent",
+        description="Include transparent ABS Plastic materials",
+        default=False)
+    Scene.include_uncommon = BoolProperty(
+        name="Include Uncommon",
+        description="Include uncommon ABS Plastic materials",
+        default=False)
 
     # Scene.Bricker_snapping = BoolProperty(
     #     name="Bricker Snap",
@@ -165,6 +169,8 @@ def unregister():
     del Scene.cmlist
     # bpy.types.VIEW3D_HT_header.remove(Bricker_snap_button)
     # del Scene.Bricker_snapping
+    del Scene.include_uncommon
+    del Scene.include_transparent
     del Scene.isBrickerInstalled
     del Scene.Bricker_copy_from_id
     del Scene.Bricker_last_active_object_name

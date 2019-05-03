@@ -753,20 +753,9 @@ class VIEW3D_PT_bricker_materials(Panel):
             col = layout.column(align=True)
             row = col.row(align=True)
             row.prop(cm, "customMat", text="")
-            if brick_materials_installed():
-                if bpy.context.scene.render.engine not in ("CYCLES", "BLENDER_EEVEE"):
-                    row = col.row(align=True)
-                    row.label(text="Switch to 'Cycles' or 'Eevee' for Brick materials")
-                elif not brick_materials_loaded():
-                    row = col.row(align=True)
-                    row.operator("abs.append_materials", text="Import Brick Materials", icon="IMPORT")
-                    # import settings
-                    if hasattr(bpy.props, "abs_mats_common"): # checks that ABS plastic mats are at least v2.1
-                        col = layout.column(align=True)
-                        row = col.row(align=True)
-                        row.prop(scn, "include_transparent")
-                        row = col.row(align=True)
-                        row.prop(scn, "include_uncommon")
+            if brick_materials_installed() and not brick_materials_loaded():
+                row = col.row(align=True)
+                row.operator("abs.append_materials", text="Import Brick Materials", icon="IMPORT")
             if cm.modelCreated or cm.animated:
                 col = layout.column(align=True)
                 row = col.row(align=True)
@@ -825,8 +814,6 @@ class VIEW3D_PT_bricker_materials(Panel):
             if cm.colorSnap == "ABS":
                 row = col.row(align=True)
                 row.prop(cm, "transparentWeight", text="Transparent Weight")
-                if hasattr(bpy.props, "abs_mats_common"): # checks that ABS plastic mats are at least v2.1
-                    row.active = False if not brick_materials_installed() else scn.include_transparent
 
         if cm.materialType == "RANDOM" or (cm.materialType == "SOURCE" and cm.colorSnap == "ABS"):
             matObj = getMatObject(cm.id, typ="RANDOM" if cm.materialType == "RANDOM" else "ABS")
@@ -851,8 +838,8 @@ class VIEW3D_PT_bricker_materials(Panel):
                         col.operator("abs.append_materials", text="Import Brick Materials", icon="IMPORT")
                     else:
                         col.operator("bricker.add_abs_plastic_materials", text="Add ABS Plastic Materials", icon="ADD" if b280() else "ZOOMIN")
-                    # import settings
-                    if hasattr(bpy.props, "abs_mats_common"): # checks that ABS plastic mats are at least v2.1
+                    # settings for adding materials
+                    if hasattr(bpy.props, "abs_mats_common"):  # checks that ABS plastic mats are at least v2.1
                         col = layout.column(align=True)
                         row = col.row(align=True)
                         row.prop(scn, "include_transparent")

@@ -131,7 +131,7 @@ def brick_materials_installed():
     return hasattr(bpy.ops, "abs") and hasattr(bpy.ops.abs, "append_materials")
 
 
-def getABSMatNames(all:bool=False):
+def getABSMatNames(all:bool=True):
     """ returns list of ABS Plastic Material names """
     if not brick_materials_installed():
         return []
@@ -140,9 +140,9 @@ def getABSMatNames(all:bool=False):
     # get common names (different properties for different versions)
     materials += bpy.props.abs_mats_common if hasattr(bpy.props, "abs_mats_common") else bpy.props.abs_plastic_materials
     # get transparent/uncommon names
-    if scn.include_transparent or all:
+    if all or scn.include_transparent:
         materials += bpy.props.abs_mats_transparent
-    if scn.include_uncommon or all:
+    if all or scn.include_uncommon:
         materials += bpy.props.abs_mats_uncommon
     return materials
 

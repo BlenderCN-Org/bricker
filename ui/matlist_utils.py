@@ -35,7 +35,7 @@ def addMaterialToList(self, context):
         return
     elif mat.name in matObj.data.materials.keys():
         cm.targetMaterial = "Already in list!"
-    elif typ == "ABS" and mat.name not in getABSMatNames(all=True):
+    elif typ == "ABS" and mat.name not in getABSMatNames():
         cm.targetMaterial = "Not ABS Plastic material"
     elif matObj is not None:
         matObj.data.materials.append(mat)

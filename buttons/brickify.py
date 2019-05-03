@@ -792,7 +792,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
                 return False
             # ensure ABS Plastic materials is updated to latest version
             if not hasattr(bpy.props, "abs_mat_properties"):
-                self.report({"WARNING"}, "Requires ABS Plastic Materials v2.1.2 or later – please update via the addon preferences")
+                self.report({"WARNING"}, "Requires ABS Plastic Materials v2.1.1 or later – please update via the addon preferences")
                 return False
             # ensure ABS Plastic materials UI list is populated
             matObj = getMatObject(cm.id, typ="ABS")

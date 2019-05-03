@@ -6,13 +6,19 @@
     * Add more brick types
     * Improve brick topology for 3D printing
     * Use shader-based bevel as opposed to geometry-based bevel
+    * When switching to Bricker v1.7, update the following properties to be of subtype 'percentage' (and update values from outdated versions of Bricker):
+        * cm.gap
+        * cm.logoScale
+        * cm.logoInset
     * improve intelligence of `getFirstImgTexNodes` function
         * choose prominent textures
         * ignore normal/bump textures
     * improve speed of `getFirstNode` function
         * store first nodes of materials so it doesn't have to recalculate every time
     * Custom UV unwrapper designed specifically for LEGO bricks
-    * (EASY) add 'show bevel in viewport' toggle
+    * Improve model connectivity
+        * Store each brick parent as a BMVert, with vert.co being the dictLoc
+        * connect each BMVert with an edge if the two bricks are connected
     * (EASY) New animation types (loop, boomerang, etc)
         * this would be implemented in the `handle_animation` function
 * Fixes
