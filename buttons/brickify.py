@@ -257,7 +257,7 @@ class BRICKER_OT_brickify(bpy.types.Operator):
         self.JobManager.max_attempts = 1
         self.debug_level = 0 if "ANIM" in self.action or bpy.props.Bricker_developer_mode == 0 else 1
         self.completed_frames = []
-        self.brickerAddonPath = dirname(dirname(abspath(__file__)))
+        self.brickerAddonPath = get_addon_directory()
         self.jobs = list()
         self.cm = cm
         # set up model dimensions variables sX, sY, and sZ

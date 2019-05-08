@@ -109,12 +109,12 @@ class BRICKER_OT_split_bricks(Operator):
 
     # properties
     vertical = bpy.props.BoolProperty(
-        name="Vertical",
-        description="Split brick(s) horizontally",
+        name="Vertical (plates)",
+        description="Split bricks into plates",
         default=False)
     horizontal = bpy.props.BoolProperty(
         name="Horizontal",
-        description="Split brick(s) vertically",
+        description="Split bricks into smaller bricks with minimum width and depth",
         default=False)
 
     #############################################

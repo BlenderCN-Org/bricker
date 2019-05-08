@@ -63,7 +63,7 @@ def register():
     bpy.props.bricker_version = str(bl_info["version"])[1:-1].replace(", ", ".")
 
     bpy.props.bricker_initialized = b280()  # automatically initialized (uses timer) in b280
-    bpy.props.bricker_undoUpdating = False
+    bpy.props.bricker_updating_undo_states = False
     bpy.props.Bricker_developer_mode = developer_mode
     bpy.props.running_bricksculpt_tool = False
     bpy.props.bricker_last_selected = []
@@ -122,7 +122,6 @@ def register():
     bpy.app.handlers.frame_change_pre.append(handle_animation)
     if b280():
         bpy.app.handlers.load_post.append(register_bricker_timers)
-        bpy.app.timers.register(handle_selections)
     else:
         bpy.app.handlers.scene_update_pre.append(handle_selections)
     bpy.app.handlers.load_pre.append(clear_bfm_cache)
@@ -154,6 +153,8 @@ def unregister():
     if b280():
         if bpy.app.timers.is_registered(handle_selections):
             bpy.app.timers.unregister(handle_selections)
+        if bpy.app.timers.is_registered(handle_undo_stack):
+            bpy.app.timers.unregister(handle_undo_stack)
         bpy.app.handlers.load_post.remove(register_bricker_timers)
     else:
         bpy.app.handlers.scene_update_pre.remove(handle_selections)
@@ -189,7 +190,7 @@ def unregister():
     del bpy.props.bricker_last_selected
     del bpy.props.running_bricksculpt_tool
     del bpy.props.Bricker_developer_mode
-    del bpy.props.bricker_undoUpdating
+    del bpy.props.bricker_updating_undo_states
     del bpy.props.bricker_initialized
     del bpy.props.bricker_version
     del bpy.props.bricker_module_name

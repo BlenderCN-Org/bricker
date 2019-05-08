@@ -31,6 +31,7 @@ from .app_handlers import brickerRunningBlockingOp
 from ..buttons.customize.undo_stack import *
 from ..functions import *
 from ..buttons.customize.tools import *
+from ..buttons.customize.undo_stack import *
 
 
 # def isBrickerObjVisible(scn, cm, n):
@@ -148,7 +149,7 @@ def handle_selections(junk=None):
 def handle_undo_stack():
     scn = bpy.context.scene
     undo_stack = UndoStack.get_instance()
-    if hasattr(bpy.props, "bricker_undoUpdating") and not undo_stack.isUpdating() and not brickerRunningBlockingOp() and scn.cmlist_index != -1:
+    if hasattr(bpy.props, "bricker_updating_undo_state") and not undo_stack.isUpdating() and not brickerRunningBlockingOp() and scn.cmlist_index != -1:
         global python_undo_state
         cm = scn.cmlist[scn.cmlist_index]
         if cm.id not in python_undo_state:
@@ -167,7 +168,7 @@ def handle_undo_stack():
 @persistent
 @blender_version_wrapper('>=','2.80')
 def register_bricker_timers(scn):
-    timer_fns = (handle_selections, handle_undo_stack)
+    timer_fns = (handle_selections, handle_undo_stack, update_undo_state_in_background)
     for timer_fn in timer_fns:
         if not bpy.app.timers.is_registered(timer_fn):
             bpy.app.timers.register(timer_fn)

@@ -52,7 +52,7 @@ def makeBricks(source, parent, logo, logo_details, dimensions, bricksDict, actio
     # initialize cm.zStep
     cm.zStep = getZStep(cm)
 
-    mergeVertical = (keys != "ALL" and "PLATES" in brickType) or cm.brickType == "BRICKS AND PLATES"
+    mergeVertical = (keys != "ALL" and "PLATES" in cm.brickType) or cm.brickType == "BRICKS AND PLATES"
 
     # get brick collection
     coll_name = coll_name or 'Bricker_%(n)s_bricks' % locals()
